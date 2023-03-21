@@ -3,9 +3,3 @@ name = "fabulist-core"
 version = "0.1.0"
 edition = "2021"
 authors = ["Daveren Cordero <daverencordero@gmail.com>"]
-
-[lib]
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-wasm-bindgen = "0.2.84"
