@@ -6,6 +6,5 @@ description = "A branching narrative engine"
 keywords = ["story", "gamedev", "narrative"]
 categories = ["story"]
 license = "MIT"
-license-file = "LICENSE"
 repository = "https://github.com/daverencordero/fabulist-core"
 authors = ["Daveren Cordero <daverencordero@gmail.com>"]
