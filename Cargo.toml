@@ -8,3 +8,7 @@ categories = ["story"]
 license = "MIT"
 repository = "https://github.com/daverencordero/fabulist-core"
 authors = ["Daveren Cordero <daverencordero@gmail.com>"]
+
+[lib]
+name = "fabulistlib"
+path = "src/lib/lib.rs"
