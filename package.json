@@ -1,0 +1,25 @@
+{
+  "name": "fabulist-core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "build:web": "webpack",
+    "dev": "webpack serve",
+    "build:wasm": "wasm-pack build --target web"
+  },
+  "prettier": "@vercel/style-guide/prettier",
+  "author": "Daveren Cordero<daverencordero@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "1.5.0",
+    "html-webpack-plugin": "^5.3.2",
+    "text-encoding": "^0.7.0",
+    "webpack": "^5.49.0",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^4.15.1",
+    "prettier": "3.0.3",
+    "@vercel/style-guide": "^5.0.0",
+    "concurrently": "^8.2.1"
+  }
+}

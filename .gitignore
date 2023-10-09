@@ -1,6 +1,13 @@
 # Build
 /target
-.idea
+/pkg
+/dist
 
 # Lock
 Cargo.lock
+
+# IDE
+.idea
+
+# Node
+node_modules
