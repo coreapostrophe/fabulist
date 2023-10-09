@@ -31,13 +31,14 @@ impl Display for StoryNodes {
             String::new(),
             |string_builder, (index, (key, rc_story_node))| {
                 let rc_story_node_value_str = rc_story_node.borrow().to_string();
-                let ending_comma =
-                    if index == story_nodes_len - 1 { String::from("") } else { String::from(", ") };
+                let ending_comma = if index == story_nodes_len - 1 {
+                    String::from("")
+                } else {
+                    String::from(", ")
+                };
                 let entry_str = format!(
                     "{{key: {}, value: {}}}{}",
-                    key,
-                    rc_story_node_value_str,
-                    ending_comma
+                    key, rc_story_node_value_str, ending_comma
                 );
                 string_builder.add(&entry_str)
             },
@@ -60,13 +61,11 @@ mod story_nodes_tests {
         let mut story_nodes = StoryNodes::new();
         story_nodes.insert(
             String::from("part"),
-            Rc::new(
-                RefCell::new(
-                    PartBuilder::new()
-                        .add_story_node(String::from("sample-dialogue"))
-                        .build()
-                )
-            ),
+            Rc::new(RefCell::new(
+                PartBuilder::new()
+                    .add_story_node(String::from("sample-dialogue"))
+                    .build(),
+            )),
         );
         assert_eq!(
             story_nodes.to_string(),

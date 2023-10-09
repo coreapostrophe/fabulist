@@ -1,45 +1,37 @@
-use std::fmt::{Display, Formatter};
-
-use crate::util::vec_to_str;
-
-pub mod part_builder;
+use super::StoryNode;
 
 pub struct Part {
-    story_nodes: Vec<String>,
+    story_nodes: Vec<*mut StoryNode>,
 }
 
 impl Part {
-    pub fn story_nodes(&self) -> &Vec<String> {
+    pub fn new() -> Self {
+        Self {
+            story_nodes: Vec::new(),
+        }
+    }
+    pub fn story_nodes(&self) -> &Vec<*mut StoryNode> {
         &self.story_nodes
     }
-    pub fn mut_story_nodes(&mut self) -> &mut Vec<String> {
-        &mut self.story_nodes
-    }
-    pub fn set_story_nodes(&mut self, story_nodes: Vec<String>) {
-        self.story_nodes = story_nodes;
-    }
 }
 
-impl Display for Part {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Part {}", vec_to_str(self.story_nodes()))
-    }
+pub struct PartBuilder {
+    story_nodes: Vec<*mut StoryNode>,
 }
 
-#[cfg(test)]
-mod part_tests {
-    use crate::story::story_node::part::part_builder::PartBuilder;
-
-    #[test]
-    fn it_displays() {
-        let part = PartBuilder::new()
-            .add_story_node(String::from("story-node-1"))
-            .add_story_node(String::from("story-node-2"))
-            .add_story_node(String::from("story-node-3"))
-            .build_classic();
-        assert_eq!(
-            part.to_string(),
-            "Part [story-node-1, story-node-2, story-node-3]"
-        )
+impl PartBuilder {
+    pub fn new() -> Self {
+        Self {
+            story_nodes: Vec::new(),
+        }
+    }
+    pub fn add_node(mut self, node: *mut StoryNode) -> Self {
+        self.story_nodes.push(node);
+        self
+    }
+    pub fn build(self) -> Part {
+        Part {
+            story_nodes: self.story_nodes,
+        }
     }
 }
