@@ -10,7 +10,11 @@ pub struct QuoteBuilder {
 
 impl QuoteBuilder {
     pub fn new(text: String) -> Self {
-        Self { text, response: None, story_link: StoryLink::new() }
+        Self {
+            text,
+            response: None,
+            story_link: StoryLink::new(),
+        }
     }
     pub fn response(mut self, response: String) -> QuoteBuilder {
         self.response = Some(response);
@@ -24,7 +28,6 @@ impl QuoteBuilder {
         self.story_link.set_change_context(change_context_closure);
         self
     }
-
     pub fn build(self) -> Quote {
         Quote {
             text: self.text,

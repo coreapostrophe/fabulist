@@ -37,6 +37,9 @@ mod part_tests {
             .add_story_node(String::from("story-node-2"))
             .add_story_node(String::from("story-node-3"))
             .build_classic();
-        assert_eq!(part.to_string(), "Part [story-node-1, story-node-2, story-node-3]")
+        assert_eq!(
+            part.to_string(),
+            "Part [story-node-1, story-node-2, story-node-3]"
+        )
     }
 }
