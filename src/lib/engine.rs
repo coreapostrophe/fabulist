@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::story::{context::Context, story_link::{ChangeContextClosure, NextClosure}, story_node::StoryNode};
-
-use super::story::Story;
+use crate::story::{context::Context, Story, story_link::{ChangeContextClosure, NextClosure}, story_node::StoryNode};
 
 use self::engine_error::{EngineError, EngineErrorType};
 
@@ -14,7 +12,7 @@ pub struct Engine {
     story: Option<Story>,
     context: Context,
     current_node: Option<String>,
-    choices: HashMap<String, usize>
+    choices: HashMap<String, usize>,
 }
 
 impl Engine {
@@ -63,7 +61,7 @@ impl Engine {
     pub fn set_current_node(&mut self, node_key: &str) {
         self.current_node = Some(node_key.to_string());
     }
-    
+
     pub fn start(&mut self) -> EngineResult {
         let new_current_node = {
             match self.current_node() {
@@ -127,12 +125,12 @@ impl Engine {
                     let quote = if has_choices {
                         match choice {
                             Some(choice_index) => Ok(dialogue.quotes().get(choice_index)
-                                        .ok_or(EngineError::new(EngineErrorType::QuoteDne))?),
+                                .ok_or(EngineError::new(EngineErrorType::QuoteDne))?),
                             None => Err(EngineError::new(EngineErrorType::MissingChoiceArg))
                         }
                     } else {
                         Ok(dialogue.first_quote()
-                                .ok_or(EngineError::new(EngineErrorType::NoQuotes))?)
+                            .ok_or(EngineError::new(EngineErrorType::NoQuotes))?)
                     }?;
                     let next_closure = match quote.story_link().next() {
                         Some(next_closure) => Some(next_closure.clone()),
@@ -168,7 +166,7 @@ impl Engine {
 
 #[cfg(test)]
 mod engine_tests {
-    use crate::story::{story_node::{dialogue::{DialogueBuilder, quote::QuoteBuilder}, StoryNode}, StoryBuilder, context::ContextValue};
+    use crate::story::{context::ContextValue, story_node::{dialogue::{DialogueBuilder, quote::QuoteBuilder}, StoryNode}, StoryBuilder};
 
     use super::*;
 
@@ -192,17 +190,17 @@ mod engine_tests {
                 "dialogue-1",
                 StoryNode::Dialogue(
                     DialogueBuilder::new("core")
-                    .add_quote(
-                        QuoteBuilder::new("Hello!")
-                            .set_next(|_| "dialogue-2".to_string())
-                            .build()
-                    )
-                    .add_quote(
-                        QuoteBuilder::new("Homie!")
-                            .set_next(|_| "dialogue-3".to_string())
-                            .build()
-                    )
-                    .build()
+                        .add_quote(
+                            QuoteBuilder::new("Hello!")
+                                .set_next(|_| "dialogue-2".to_string())
+                                .build()
+                        )
+                        .add_quote(
+                            QuoteBuilder::new("Homie!")
+                                .set_next(|_| "dialogue-3".to_string())
+                                .build()
+                        )
+                        .build()
                 ),
             )
             .add_node(
@@ -223,7 +221,7 @@ mod engine_tests {
                                 .build()
                         )
                         .build(),
-                )
+                ),
             )
             .build();
 
@@ -249,64 +247,64 @@ mod engine_tests {
                 "dialogue-0",
                 StoryNode::Dialogue(
                     DialogueBuilder::new("girl")
-                    .add_quote(
-                        QuoteBuilder::new("Don't you know?")
-                            .set_next(|_| "dialogue-1".to_string())
-                            .build()
-                    )
-                    .add_quote(
-                        QuoteBuilder::new("I'm sure of it.")
-                            .set_next(|_| "dialogue-1".to_string())
-                            .set_change_context(|c| {
-                                *c.get_mut("is-loved")
-                                    .expect("Story to have an `is-loved` context") =
-                                ContextValue::Bool(true);
-                            })
-                            .build()
-                    )
-                    .build(),
-                )
+                        .add_quote(
+                            QuoteBuilder::new("Don't you know?")
+                                .set_next(|_| "dialogue-1".to_string())
+                                .build()
+                        )
+                        .add_quote(
+                            QuoteBuilder::new("I'm sure of it.")
+                                .set_next(|_| "dialogue-1".to_string())
+                                .set_change_context(|context| {
+                                    *context.get_mut("is-loved")
+                                        .expect("Story to have an `is-loved` context") =
+                                        ContextValue::Bool(true);
+                                })
+                                .build()
+                        )
+                        .build(),
+                ),
             )
             .add_node(
                 "dialogue-1",
                 StoryNode::Dialogue(
                     DialogueBuilder::new("girl")
-                    .add_quote(
-                        QuoteBuilder::new("I love you.")
-                            .set_next(|c| {
-                                let is_loved = c.get("is-loved")
-                                    .expect("Story to have an `is-loved` context");
-                                return match is_loved {
-                                    ContextValue::Bool(is_loved_bool) => {
-                                        if is_loved_bool.clone() {
-                                            String::from("dialogue-2")
-                                        } else {
-                                            String::from("dialogue-3")
+                        .add_quote(
+                            QuoteBuilder::new("I love you.")
+                                .set_next(|context| {
+                                    let is_loved = context.get("is-loved")
+                                        .expect("Story to have an `is-loved` context");
+                                    return match is_loved {
+                                        ContextValue::Bool(is_loved_bool) => {
+                                            if is_loved_bool.clone() {
+                                                String::from("dialogue-2")
+                                            } else {
+                                                String::from("dialogue-3")
+                                            }
                                         }
-                                    }
-                                    _ => String::from("dialogue-3")
-                                };
-                            })
-                            .build()
-                    )
-                    .build(),
-                )
+                                        _ => String::from("dialogue-3")
+                                    };
+                                })
+                                .build()
+                        )
+                        .build(),
+                ),
             )
             .add_node(
                 "dialogue-2",
                 StoryNode::Dialogue(
                     DialogueBuilder::new("boy")
-                    .add_quote(QuoteBuilder::new("I love you too!").build())
-                    .build(),
-                )
+                        .add_quote(QuoteBuilder::new("I love you too!").build())
+                        .build(),
+                ),
             )
             .add_node(
                 "dialogue-3",
                 StoryNode::Dialogue(
                     DialogueBuilder::new("boy")
-                    .add_quote(QuoteBuilder::new("I'm... sorry.").build())
-                    .build(),
-                )
+                        .add_quote(QuoteBuilder::new("I'm... sorry.").build())
+                        .build(),
+                ),
             )
             .build();
 

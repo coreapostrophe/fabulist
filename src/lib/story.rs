@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use self::{story_node::{dialogue::speaker::Speaker, StoryNode}};
+use self::story_node::{dialogue::speaker::Speaker, StoryNode};
 
 pub mod context;
 pub mod story_link;
@@ -26,6 +26,7 @@ impl Story {
         &mut self.story_nodes
     }
 }
+
 pub struct StoryBuilder {
     start: String,
     speakers: HashMap<String, Speaker>,
@@ -37,7 +38,7 @@ impl StoryBuilder {
         Self {
             start: start_node_key.to_string(),
             speakers: HashMap::new(),
-            story_nodes: HashMap::new()
+            story_nodes: HashMap::new(),
         }
     }
     pub fn add_node(mut self, key: &str, node: StoryNode) -> Self {
@@ -52,7 +53,7 @@ impl StoryBuilder {
         Story {
             start: self.start,
             speakers: self.speakers,
-            story_nodes: self.story_nodes
+            story_nodes: self.story_nodes,
         }
     }
 }
@@ -60,7 +61,6 @@ impl StoryBuilder {
 #[cfg(test)]
 mod story_tests {
     use super::{*, story_node::dialogue::DialogueBuilder};
-
 
     #[test]
     fn matches_use_spec() {
@@ -78,7 +78,7 @@ mod story_tests {
         let _ = match story.story_nodes().get("story-node-1").unwrap() {
             StoryNode::Dialogue(dialogue) => {
                 assert_eq!(dialogue.speaker().as_str(), "speaker-1");
-            },
+            }
             StoryNode::Part(_) => panic!("should be a dialogue")
         };
     }

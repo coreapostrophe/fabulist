@@ -1,9 +1,9 @@
-use crate::story::story_link::{StoryLink, NextClosure, ChangeContextClosure};
+use crate::story::story_link::{ChangeContextClosure, NextClosure, StoryLink};
 
 pub struct Quote {
     text: String,
     response: Option<String>,
-    story_link: StoryLink
+    story_link: StoryLink,
 }
 
 impl Quote {
@@ -24,7 +24,7 @@ impl Quote {
 pub struct QuoteBuilder {
     text: String,
     response: Option<String>,
-    story_link: StoryLink
+    story_link: StoryLink,
 }
 
 impl QuoteBuilder {
@@ -32,7 +32,7 @@ impl QuoteBuilder {
         Self {
             text: text.to_string(),
             response: None,
-            story_link: StoryLink::new()
+            story_link: StoryLink::new(),
         }
     }
     pub fn set_response(mut self, response: Option<&str>) -> Self {
@@ -55,7 +55,7 @@ impl QuoteBuilder {
         Quote {
             text: self.text,
             response: self.response,
-            story_link: self.story_link
+            story_link: self.story_link,
         }
     }
 }

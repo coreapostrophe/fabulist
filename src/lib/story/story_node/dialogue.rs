@@ -5,7 +5,7 @@ pub mod speaker;
 
 pub struct Dialogue {
     speaker: String,
-    quotes: Vec<Quote>
+    quotes: Vec<Quote>,
 }
 
 impl Dialogue {
@@ -22,14 +22,14 @@ impl Dialogue {
 
 pub struct DialogueBuilder {
     speaker: String,
-    quotes: Vec<Quote>
+    quotes: Vec<Quote>,
 }
 
 impl DialogueBuilder {
     pub fn new(speaker: &str) -> Self {
         Self {
             speaker: speaker.to_string(),
-            quotes: Vec::new()
+            quotes: Vec::new(),
         }
     }
     pub fn add_quote(mut self, quote: Quote) -> Self {
@@ -39,7 +39,7 @@ impl DialogueBuilder {
     pub fn build(self) -> Dialogue {
         Dialogue {
             quotes: self.quotes,
-            speaker: self.speaker
+            speaker: self.speaker,
         }
     }
 }
