@@ -5,7 +5,7 @@ pub mod speaker;
 
 pub struct Dialogue {
     speaker: String,
-    quotes: Vec<Quote>,
+    quotes: Vec<Quote>
 }
 
 impl Dialogue {
@@ -15,11 +15,14 @@ impl Dialogue {
     pub fn quotes(&self) -> &Vec<Quote> {
         &self.quotes
     }
+    pub fn first_quote(&self) -> Option<&Quote> {
+        self.quotes.first()
+    }
 }
 
 pub struct DialogueBuilder {
     speaker: String,
-    quotes: Vec<Quote>,
+    quotes: Vec<Quote>
 }
 
 impl DialogueBuilder {
