@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(PartialEq, Debug)]
 pub enum ContextValue {
     Integer(i32),
     Bool(bool),
