@@ -1,14 +1,15 @@
 use crate::{
-    error::CompilerError,
+    error::{CompilerError, Source},
     token::{Token, TokenType},
 };
 
 pub struct Scanner {
     source: String,
     tokens: Vec<Token>,
-    start: usize,
-    current: usize,
-    line: u32,
+    start_index: usize,
+    current_char_index: usize,
+    current_line_number: u32,
+    current_line_offset: u32,
 }
 
 impl Scanner {
@@ -16,14 +17,17 @@ impl Scanner {
         Self {
             source: source.to_string(),
             tokens: vec![],
-            start: 0,
-            current: 0,
-            line: 1,
+            start_index: 0,
+            current_char_index: 0,
+            current_line_number: 1,
+            current_line_offset: 1,
         }
     }
 
-    fn identify_token(&self) -> Result<Token, CompilerError> {
-        let c = self.source.chars().nth(self.current).unwrap();
+    fn identify_token(&self) -> Result<(Token, bool), CompilerError> {
+        let c = self.source.chars().nth(self.current_char_index).unwrap();
+        let mut is_new_line = false;
+
         let token_type = match c {
             '[' => Ok(TokenType::LeftBracket),
             ']' => Ok(TokenType::RightBracket),
@@ -37,13 +41,20 @@ impl Scanner {
                     Ok(TokenType::Equal)
                 }
             }
-            _ => Err(CompilerError::UnexpectedCharacter(self.line)),
+            '\n' => {
+                is_new_line = true;
+                Ok(TokenType::NewLine)
+            }
+            _ => Err(CompilerError::UnexpectedCharacter(Source::new(
+                self.current_line_number,
+                self.current_line_offset,
+            ))),
         }?;
-        Ok(Token::new(token_type))
+        Ok((Token::new(token_type), is_new_line))
     }
 
     fn match_next(&self, expected: char) -> bool {
-        let next_char = self.source.chars().nth(self.current + 1);
+        let next_char = self.source.chars().nth(self.current_char_index + 1);
         match next_char {
             Some(c) => {
                 if c == expected {
@@ -57,19 +68,29 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source.len()
+        self.current_char_index >= self.source.len()
     }
 
     fn scan_tokens(&mut self) -> Result<(), CompilerError> {
         while !self.is_at_end() {
-            self.start = self.current;
-            self.tokens.push(self.identify_token()?);
-            self.current += 1;
+            self.start_index = self.current_char_index;
+
+            let (token, is_new_line) = self.identify_token()?;
+            self.tokens.push(token);
+
+            self.current_char_index += 1;
+
+            if is_new_line {
+                self.current_line_number += 1;
+                self.current_line_offset = 0;
+            } else {
+                self.current_line_offset += 1;
+            }
         }
 
         self.tokens.push(
             Token::new(TokenType::EndOfFile)
-                .set_line(self.line)
+                .set_line(self.current_line_number)
                 .set_lexeme("".to_string()),
         );
 

@@ -19,6 +19,7 @@ pub enum TokenType {
     LeftBrace,
     RightBrace,
     Colon,
+    NewLine,
 
     EndOfFile,
 }
