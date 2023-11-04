@@ -1,0 +1,10 @@
+[package]
+name = "fabulist"
+version = "0.1.0"
+edition = "2021"
+description = "A branching narrative engine"
+keywords = ["story", "gamedev", "narrative"]
+categories = ["story"]
+license = "MIT"
+repository = "https://github.com/coreapostrophe/fabulist-core"
+authors = ["Daveren Cordero <daverencordero@gmail.com>"]

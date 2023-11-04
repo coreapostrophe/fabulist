@@ -1,21 +1,5 @@
-[package]
-name = "fabulist-core"
-version = "0.1.0"
-edition = "2021"
-description = "A branching narrative engine"
-keywords = ["story", "gamedev", "narrative"]
-categories = ["story"]
-license = "MIT"
-repository = "https://github.com/daverencordero/fabulist-core"
-authors = ["Daveren Cordero <daverencordero@gmail.com>"]
+[workspace]
+resolver = "2"
+members = ["packages/*"]
 
-[lib]
-name = "fabulistlib"
-crate-type = ["cdylib"]
-path = "src/lib/lib.rs"
-
-[dependencies]
-serde = {version = "1.0.188" , features = ["derive"] }
-serde-wasm-bindgen = "0.6.0"
-wasm-bindgen = "0.2.86"
-wee_alloc = "0.4.5"
+[workspace.dependencies]

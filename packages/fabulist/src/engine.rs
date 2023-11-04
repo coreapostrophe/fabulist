@@ -17,7 +17,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn new() -> Self {
-        Self {
+        Self { 
             story: None,
             choices: HashMap::new(),
             context: Context::new(),
