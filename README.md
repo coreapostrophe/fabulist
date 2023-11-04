@@ -75,18 +75,18 @@ With that, an example flow of the narrative will go as follows.
 ```mermaid
 flowchart LR
     dialogue_1[Dialogue 1] --o dialogue_1_on_next
-    style dialogue_1 fill:#00E000,stroke:#008000
+    style dialogue_1 fill:#00E000,stroke:#008000,color:black
 
     dialogue_1_on_next("set are_friends to true")
-    style dialogue_1_on_next fill:#00E000,stroke:#008000
+    style dialogue_1_on_next fill:#00E000,stroke:#008000,color:black
     dialogue_1 --o dialogue_1_on_change
 
     dialogue_1_on_change{"are_friends == true"} -->|Yes| dialogue_2
     dialogue_1_on_change -->|No| dialogue_3
-    style dialogue_1_on_change fill:#00E000,stroke:#008000
+    style dialogue_1_on_change fill:#00E000,stroke:#008000,color:black
 
     dialogue_2[Dialogue 2]
-    style dialogue_2 fill:#00E000,stroke:#008000
+    style dialogue_2 fill:#00E000,stroke:#008000,color:black
     dialogue_3[Dialogue 3]
 ```
 
