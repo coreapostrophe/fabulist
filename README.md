@@ -15,7 +15,7 @@ The core will serve as the foundation of an ecosystem of applications planned to
 timeline
     February: Fabulist Core
     October: Refactored Fabulist Core
-    December: Fabulist compiler
+    December: Fabulist interpreter
 ```
 
 ### Design
