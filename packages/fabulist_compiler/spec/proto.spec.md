@@ -88,19 +88,38 @@ Hello! => 02
 ..
 ---
 <speaker>:
-<quote> => (<context reference>) {
+<quote> => {
     // any expression/mutation of context
     return <node id>
 }
-
 ```
 
 <u>example:</u>
 ```
 [01]
 Dave:
-Hello! => (context) {
-    context.has_greeted = true
+Hello! => {
+    has_greeted = true
     return 02
 }
+```
+
+#### Next node function
+
+<u>syntax:</u>
+```
+[<node_id: string | u32>]
+--- 
+<key>: <value>
+..
+---
+<speaker>:
+<quote> => /path/to/file
+```
+
+<u>example:</u>
+```
+[01]
+Dave:
+Hello! => /file.type
 ```
