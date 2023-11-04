@@ -39,7 +39,7 @@ classDiagram
     }
 ```
 1. **Dialogue** - the dialogue type is where most of the important information is stored. Things such as the speaker's name, what they said are all found inside the dialogue structure.
-> Note: **quotes** are the responses of the speakers. If the dialogue node only has one quote, then that suggests a linear progression. This means that the speaker simply said such quote. Multiple quotes, on the other hand, suggests that a decision of what the speaker should say is necessary. This is where branches are made from the narrative. 
+> **Quotes** are the responses of the speakers. If the dialogue node only has one quote, then that suggests a linear progression. This means that the speaker simply said such quote. Multiple quotes, on the other hand, suggests that a decision of what the speaker should say is necessary. This is where branches are made from the narrative. 
 2. **Part** - the part type is simply a container that groups other story nodes together. This introduces the concept of story partitions such as Scenes, Parts, Acts, or Chapters.
 
 An entire fabulist story is simply a collection of these two node types. As you can see, the structure is easily digestible or comprehensive.
@@ -58,7 +58,8 @@ classDiagram
     }
 ```
 
-We can mutate that value with the dialogue's `change_context()`.
+We can mutate that value with the dialogue's `change_context()` callback. This takes in the `Context` as an argument and changes its values given the user's intention. The `next()` callback, on the other hand, queries these values and return the id of the next node. If you're familiar with ternary expressions, you can imagine its content to be something akin to `if context.value == true ? dialogue_1 : dialogue_2`. These callbacks are called after each dialogue to determine the proceeding node.
+
 ```mermaid
 classDiagram
     class Dialogue{
@@ -69,45 +70,26 @@ classDiagram
     }
 ```
 
-The flow should look something like this.
+With that, an example flow of the narrative will go as follows.
+
 ```mermaid
 flowchart LR
     dialogue_1[Dialogue 1] --o dialogue_1_on_next
+    style dialogue_1 fill:#00E000,stroke:#008000
 
-    dialogue_1_on_next("`
-    change_context(context) {
-        context.are_friends = true;
-        return context;
-    }
-    `")
-    style dialogue_1_on_next text-align:left
-
+    dialogue_1_on_next("set are_friends to true")
+    style dialogue_1_on_next fill:#00E000,stroke:#008000
     dialogue_1 --o dialogue_1_on_change
 
-    dialogue_1_on_change{`are_friends` is true} -->|Yes| dialogue_2
+    dialogue_1_on_change{"are_friends == true"} -->|Yes| dialogue_2
     dialogue_1_on_change -->|No| dialogue_3
-    style dialogue_1_on_change text-align:left
+    style dialogue_1_on_change fill:#00E000,stroke:#008000
 
     dialogue_2[Dialogue 2]
+    style dialogue_2 fill:#00E000,stroke:#008000
     dialogue_3[Dialogue 3]
 ```
 
-In the statement, we defined a context with a property named `are_friends` that has a value of `true`. We then used this context as a reference upon defining `dialogue_1`. In its `get_next()` function, we have a condition that tests whether the `are_friends` property is true or not. Depending on the result, different dialogues are returned. On implementation, the `get_next()` function would be called upon progressing through the dialogue.
+This type of linking introduces a more idiomatic way of creating a branching narrative. Instead of linking nodes to a response, we instead base it on quantified states generated throughout the story. 
 
-This type of linking facilitates a more natural way of creating a narrative. Instead of linking nodes to a response, we instead base it on a value we stored from a context. 
-
-But how do we alter the context? The Context will be altered upon entering a new story node. Each story node could have a `change_context()` function that fires whenever it is in the active progression of the narrative. See the example below.
-
-```
-context = { are_friends = false }
-
-dialogue {
-    change_context() {
-        context.are_friends = true
-    }
-}
-```
-
-The application for this is limitless! Using dating simulators as an example (Only because they're a predominant part of the Visual Novel space), affection points of potential lovers could be stored inside the context as incrementing values. This would mean that each dialogue could update the context whence necessary resulting in a much more organic flow! 
-
-And, that's it. Nothing more but an incredibly simple, scalable, and approachable interface.
+The applications for this is limitless! Using dating visual novels as an example, affection points of potential lovers could be stored inside the context as incrementing values. This would eliminate a lot of the tedium from designing response trees, and allow creators to focus on just writing dialogues. That, in my opinion, is more organic.
