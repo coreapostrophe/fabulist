@@ -1,42 +1,95 @@
-![Fabulist core banner](./assets/readme-banner.png)
+![Fabulist banner](./assets/readme-banner.png)
 
-## Fabulist Core
-![Build](https://github.com/daverencordero/fabulist-core/actions/workflows/build.yml/badge.svg)
+## ✒️ Fabulist
 
 ### About
-This is a builder that uses a context-based decision tree model to create a branching narrative. A plethora of the currently existing API interfaces used for designing novels with user interactions *(e.g. Visual Novels or Text-based adventures)* are plagued with complexity and a steep learning curve. Due to this, the unique art medium is hardly used and is driven to obscurity. Fabulist aims to manifest the potential of branching narratives by introducing a new standard and making their creation facile to the masses.
+Fabulist is a builder that uses a context-based model to create a branching narrative. A plethora of the currently existing API interfaces used for designing interactive novels *(e.g. Visual Novels or Text-based adventures)* are plagued with complexity and a steep learning curve. I believe that it's due to this inaccessibility that drives the unique art medium to obscurity. This library aims to manifest the potential of branching narratives by introducing a new standard and making their creation approachable to the masses.
 
 ### Contents
-The library exports the main story structure as well as the structures made to build it. This allows developers to immediately integrate or iterate the concept immediately. In addition, an engine that uses the structure to create a story runtime is also included for debugging as well as future projects related to Fabulist.
+1. `fabulist_core` - The structural crate of the project. It contains the base specification of the library as well as the data structures that concerns it. 
 
 ### Roadmap
-The core will serve as a foundation of an ecosystem of applications planned to bring fabulist to everyone. As such, it is tantamount that it's entirely flexible and has all the utilities needed to create a narrative. Future iterations of this library aims to have transpilation to widely used languages (JavaScript, Java, and Python) as well as a markup language preprocessor for industry-use.
+The core will serve as the foundation of an ecosystem of applications planned to bring fabulist to everyone. As such, it is tantamount that it's entirely flexible and has all the utilities needed to create a narrative. Future iterations of this library aims to have transpilation to widely used languages (JavaScript, Java, and Python) as well as a markup language preprocessor for industry-use.
+
+```mermaid
+timeline
+    February: Fabulist Core
+    October: Refactored Fabulist Core
+    December: Fabulist compiler
+```
 
 ### Design
-The fabulist story model revolves around a tree structure. Each node of the tree can either be a `dialogue` or a `part`.
-```
-└── story node/
-    ├── dialogue
-    └── part
-```
-1. **Dialogue** - the dialogue type is where most of the important data is stored. Things such as the conversant's name, what they said, and the response options, they're all found inside the dialogue structure.
-2. **Part** - the part type is simply a container that groups dialogues together. This introduces the concept of story partitions such as Scenes, Parts, Acts, or Chapters.
 
-A fabulist story is basically a collection of these two types of nodes. But you're probably wondering, **how are they linked together?** Traditional branching narrative methods made it so that each response would have a corresponding dialogue linked to it. While this is effective, it is far from being optimal and usually results into little flexibility for future changes. This is why other API interfaces compensate for the lack of flexibility with a bloat of functions to fill the gap.
+#### Structure
+The fabulist story model revolves around a loose tree structure. Each node of the tree can either be a `dialogue` or a `part`.
 
-Fabulist is different.
-
-Instead of a direct link, fabulist uses context. **Context** is a metadata attached to the story that all the nodes can access. The context is what dictates the flow of the narrative as well as the linkages of the nodes. It can be any form of data that can be used as a condition. For example and clarification, refer to the pseudocode below.
-
-```
-context = { are_friends = true }
-
-dialogue_1 = {
-    get_next () {
-        if (context.are_friends = true) return dialogue_2
-        else return dialogue_3
+```mermaid
+classDiagram
+    StoryNode --|> Part
+    StoryNode --|> Dialogue
+    class StoryNode {
+        +"Part"|"Dialogue" node_type
     }
-}
+    class Part{
+        +StoryNode[] story_nodes
+    }
+    class Dialogue{
+        +String speaker
+        +Quote[] quotes
+    }
+```
+1. **Dialogue** - the dialogue type is where most of the important information is stored. Things such as the speaker's name, what they said are all found inside the dialogue structure.
+> Note: **quotes** are the responses of the speakers. If the dialogue node only has one quote, then that suggests a linear progression. This means that the speaker simply said such quote. Multiple quotes, on the other hand, suggests that a decision of what the speaker should say is necessary. This is where branches are made from the narrative. 
+2. **Part** - the part type is simply a container that groups other story nodes together. This introduces the concept of story partitions such as Scenes, Parts, Acts, or Chapters.
+
+An entire fabulist story is simply a collection of these two node types. As you can see, the structure is easily digestible or comprehensive.
+
+#### Linkages
+
+Instead of one-to-one correspondence between a response (common to traditional implementations), fabulist uses something called the **Context**. 
+
+The story context is a metadata attached to the story that is globally accessible to all the nodes. It is what dictates the flow of the narrative and is why I refer to the story structure as *loose*. 
+
+It's easier to explain its use from an example. Let's say we have a value named `are_friends` within our story's context.
+```mermaid
+classDiagram
+    class Context {
+        +bool are_friends
+    }
+```
+
+We can mutate that value with the dialogue's `change_context()`.
+```mermaid
+classDiagram
+    class Dialogue{
+        +String speaker
+        +Quote[] quotes
+        +change_context()
+        +next()
+    }
+```
+
+The flow should look something like this.
+```mermaid
+flowchart LR
+    dialogue_1[Dialogue 1] --o dialogue_1_on_next
+
+    dialogue_1_on_next("`
+    change_context(context) {
+        context.are_friends = true;
+        return context;
+    }
+    `")
+    style dialogue_1_on_next text-align:left
+
+    dialogue_1 --o dialogue_1_on_change
+
+    dialogue_1_on_change{`are_friends` is true} -->|Yes| dialogue_2
+    dialogue_1_on_change -->|No| dialogue_3
+    style dialogue_1_on_change text-align:left
+
+    dialogue_2[Dialogue 2]
+    dialogue_3[Dialogue 3]
 ```
 
 In the statement, we defined a context with a property named `are_friends` that has a value of `true`. We then used this context as a reference upon defining `dialogue_1`. In its `get_next()` function, we have a condition that tests whether the `are_friends` property is true or not. Depending on the result, different dialogues are returned. On implementation, the `get_next()` function would be called upon progressing through the dialogue.

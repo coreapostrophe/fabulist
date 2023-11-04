@@ -1,5 +1,5 @@
 [package]
-name = "fabulist"
+name = "fabulist_core"
 version = "0.1.0"
 edition = "2021"
 description = "A branching narrative engine"
