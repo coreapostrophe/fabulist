@@ -13,9 +13,12 @@ The core will serve as the foundation of an ecosystem of applications planned to
 
 ```mermaid
 timeline
-    February: Fabulist Core
-    October: Refactored Fabulist Core
-    December: Fabulist interpreter
+    section 2023
+        February: Fabulist Core
+        October: Refactored Fabulist Core
+    section 2024
+        January: Fabulist language
+        February: Fabulist Cli
 ```
 
 ### Design
