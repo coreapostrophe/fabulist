@@ -3,9 +3,6 @@
 /pkg
 /dist
 
-# Lock
-Cargo.lock
-
 # IDE
 /.idea
 /.vscode
