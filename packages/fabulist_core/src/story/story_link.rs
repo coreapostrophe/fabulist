@@ -18,13 +18,13 @@ impl StoryLink {
     pub fn next(&self) -> Option<&NextClosure> {
         match self.next {
             Some(ref next_closure) => Some(next_closure),
-            None => None
+            None => None,
         }
     }
     pub fn change_context(&self) -> Option<&ChangeContextClosure> {
         match self.change_context {
             Some(ref change_context_closure) => Some(change_context_closure),
-            None => None
+            None => None,
         }
     }
     pub fn set_next(&mut self, next: NextClosure) {
@@ -47,22 +47,26 @@ mod story_link_tests {
         let mut story_context = Context::new();
         story_context.insert(String::from("count"), ContextValue::Integer(0));
 
-        story_link.set_next(|context| {
-            match context.get("count").unwrap() {
-                ContextValue::Integer(count) => {
-                    if *count < 5 {
-                        String::from("first-story-node")
-                    } else {
-                        String::from("second-story-node")
-                    }
+        story_link.set_next(|context| match context.get("count").unwrap() {
+            ContextValue::Integer(count) => {
+                if *count < 5 {
+                    String::from("first-story-node")
+                } else {
+                    String::from("second-story-node")
                 }
-                _ => panic!("missing count")
             }
+            _ => panic!("missing count"),
         });
 
-        assert_eq!(story_link.next().unwrap()(&mut story_context), "first-story-node");
+        assert_eq!(
+            story_link.next().unwrap()(&mut story_context),
+            "first-story-node"
+        );
         *story_context.get_mut("count").unwrap() = ContextValue::Integer(6);
-        assert_eq!(story_link.next().unwrap()(&mut story_context), "second-story-node");
+        assert_eq!(
+            story_link.next().unwrap()(&mut story_context),
+            "second-story-node"
+        );
     }
 
     #[test]
@@ -71,14 +75,15 @@ mod story_link_tests {
         let mut story_context = Context::new();
         story_context.insert(String::from("count"), ContextValue::Integer(0));
 
-        story_link.set_change_context(|c| {
-            match c.get_mut("count").unwrap() {
-                ContextValue::Integer(count) => *count += 1,
-                _ => panic!("missing count")
-            }
+        story_link.set_change_context(|c| match c.get_mut("count").unwrap() {
+            ContextValue::Integer(count) => *count += 1,
+            _ => panic!("missing count"),
         });
 
         story_link.change_context().unwrap()(&mut story_context);
-        assert_eq!(*story_context.get("count").unwrap(), ContextValue::Integer(1));
+        assert_eq!(
+            *story_context.get("count").unwrap(),
+            ContextValue::Integer(1)
+        );
     }
 }

@@ -4,7 +4,9 @@ pub struct Speaker {
 
 impl Speaker {
     pub fn new(name: &str) -> Self {
-        Self { name: name.to_string() }
+        Self {
+            name: name.to_string(),
+        }
     }
     pub fn name(&self) -> &String {
         &self.name

@@ -50,7 +50,6 @@ mod dialogue_tests {
 
     use super::*;
 
-
     #[test]
     fn matches_use_spec() {
         let dialogue = DialogueBuilder::new("mock_speaker")

@@ -38,7 +38,7 @@ impl QuoteBuilder {
     pub fn set_response(mut self, response: Option<&str>) -> Self {
         let unwrapped_response = match response {
             Some(response_string) => Some(response_string.to_string()),
-            None => None
+            None => None,
         };
         self.response = unwrapped_response;
         self
@@ -70,6 +70,9 @@ mod quote_tests {
             .set_response(Some("mock_response"))
             .build();
         assert_eq!(quote.text().as_str(), "mock_text");
-        assert_eq!(quote.response().expect("to have a response").as_str(), "mock_response");
+        assert_eq!(
+            quote.response().expect("to have a response").as_str(),
+            "mock_response"
+        );
     }
 }

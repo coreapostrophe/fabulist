@@ -1,4 +1,7 @@
-use std::{error::Error, fmt::{Formatter, Display}};
+use std::{
+    error::Error,
+    fmt::{Display, Formatter},
+};
 
 #[derive(Debug, PartialEq)]
 pub enum EngineErrorType {
@@ -28,13 +31,17 @@ impl Display for EngineErrorType {
             EngineErrorType::NoDialogue => "Story does not have a dialogue",
             EngineErrorType::NoNextClosure => "StoryLink does not have a next closure",
             EngineErrorType::NoCurrentDialogue => "Story's current node does not have a dialogue",
-            EngineErrorType::NoChangeContextClosure => "StoryLink does not have a change context closure",
+            EngineErrorType::NoChangeContextClosure => {
+                "StoryLink does not have a change context closure"
+            }
 
-            EngineErrorType::MissingChoiceArg => "Consumer did not provide a choice argument to next",
+            EngineErrorType::MissingChoiceArg => {
+                "Consumer did not provide a choice argument to next"
+            }
 
             EngineErrorType::QuoteDne => "Quote does not exist in dialogue",
             EngineErrorType::ChoiceDne => "Choice does not exist in dialogue",
-            EngineErrorType::StoryNodeDne => "StoryNode does not exist in story"
+            EngineErrorType::StoryNodeDne => "StoryNode does not exist in story",
         };
         write!(f, "{}", error_message)
     }
@@ -48,7 +55,10 @@ pub struct EngineError {
 
 impl EngineError {
     pub fn new(error: EngineErrorType) -> Self {
-        Self { description: error.to_string(), error }
+        Self {
+            description: error.to_string(),
+            error,
+        }
     }
     pub fn error(&self) -> &EngineErrorType {
         &self.error
@@ -63,7 +73,6 @@ impl Display for EngineError {
         write!(f, "EngineError {{ description: {} }}", self.description)
     }
 }
-
 
 impl Error for EngineError {
     fn description(&self) -> &str {

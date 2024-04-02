@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::story::{context::Context, Story, story_link::{ChangeContextClosure, NextClosure}, story_node::StoryNode};
+use crate::story::{
+    context::Context,
+    story_link::{ChangeContextClosure, NextClosure},
+    story_node::StoryNode,
+    Story,
+};
 
 use self::engine_error::{EngineError, EngineErrorType};
 
@@ -17,7 +22,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn new() -> Self {
-        Self { 
+        Self {
             story: None,
             choices: HashMap::new(),
             context: Context::new(),
@@ -28,13 +33,13 @@ impl Engine {
     pub fn story(&self) -> Option<&Story> {
         match self.story {
             Some(ref story) => Some(story),
-            None => None
+            None => None,
         }
     }
     pub fn mut_story(&mut self) -> Option<&mut Story> {
         match &mut self.story {
             Some(ref mut story) => Some(story),
-            None => None
+            None => None,
         }
     }
     pub fn set_story(&mut self, story: Story) {
@@ -55,7 +60,7 @@ impl Engine {
     pub fn current_node(&self) -> Option<&String> {
         match self.current_node {
             Some(ref current_node) => Some(current_node),
-            None => None
+            None => None,
         }
     }
     pub fn set_current_node(&mut self, node_key: &str) {
@@ -67,7 +72,9 @@ impl Engine {
             match self.current_node() {
                 Some(current_node) => current_node.clone(),
                 None => {
-                    let story = self.mut_story().ok_or(EngineError::new(EngineErrorType::NoStory))?;
+                    let story = self
+                        .mut_story()
+                        .ok_or(EngineError::new(EngineErrorType::NoStory))?;
                     story.start().clone()
                 }
             }
@@ -77,18 +84,23 @@ impl Engine {
     }
 
     pub fn reset(&mut self) -> EngineResult {
-        let story = self.story().ok_or(EngineError::new(EngineErrorType::NoStory))?;
+        let story = self
+            .story()
+            .ok_or(EngineError::new(EngineErrorType::NoStory))?;
         let start_node = story.start().clone();
         self.set_current_node(&start_node);
         Ok(start_node)
     }
 
     pub fn get_node_dialogue(&self, node_key: &str) -> Result<String, EngineError> {
-        let story = self.story().ok_or(EngineError::new(EngineErrorType::NoStory))?;
+        let story = self
+            .story()
+            .ok_or(EngineError::new(EngineErrorType::NoStory))?;
         let mut search_stack = vec![node_key.to_string()];
         let mut result: Option<String> = None;
         while result.is_none() {
-            let first_query = search_stack.first()
+            let first_query = search_stack
+                .first()
                 .ok_or(EngineError::new(EngineErrorType::NoCurrentDialogue))?;
             let node = story.story_nodes().get(first_query);
             match node.ok_or(EngineError::new(EngineErrorType::StoryNodeDne))? {
@@ -104,56 +116,65 @@ impl Engine {
     }
 
     pub fn get_current_dialogue_key(&self) -> Result<String, EngineError> {
-        let current_node_key = self.current_node().ok_or(EngineError::new(EngineErrorType::NoCurrent))?;
+        let current_node_key = self
+            .current_node()
+            .ok_or(EngineError::new(EngineErrorType::NoCurrent))?;
         self.get_node_dialogue(current_node_key)
     }
 
     pub fn next(&mut self, choice: Option<usize>) -> EngineResult {
         let node_dialogue_key = self.get_current_dialogue_key()?;
 
-        let (
-            next_closure,
-            change_context_closure,
-            has_choices
-        ): (Option<NextClosure>, Option<ChangeContextClosure>, bool) = {
-            let story = self.story().ok_or(EngineError::new(EngineErrorType::NoStory))?;
-            let node_dialogue = story.story_nodes().get(&node_dialogue_key)
+        let (next_closure, change_context_closure, has_choices): (
+            Option<NextClosure>,
+            Option<ChangeContextClosure>,
+            bool,
+        ) = {
+            let story = self
+                .story()
+                .ok_or(EngineError::new(EngineErrorType::NoStory))?;
+            let node_dialogue = story
+                .story_nodes()
+                .get(&node_dialogue_key)
                 .ok_or(EngineError::new(EngineErrorType::StoryNodeDne))?;
             let result = match node_dialogue {
                 StoryNode::Dialogue(dialogue) => {
                     let has_choices = dialogue.quotes().len() > 1;
                     let quote = if has_choices {
                         match choice {
-                            Some(choice_index) => Ok(dialogue.quotes().get(choice_index)
+                            Some(choice_index) => Ok(dialogue
+                                .quotes()
+                                .get(choice_index)
                                 .ok_or(EngineError::new(EngineErrorType::QuoteDne))?),
-                            None => Err(EngineError::new(EngineErrorType::MissingChoiceArg))
+                            None => Err(EngineError::new(EngineErrorType::MissingChoiceArg)),
                         }
                     } else {
-                        Ok(dialogue.first_quote()
+                        Ok(dialogue
+                            .first_quote()
                             .ok_or(EngineError::new(EngineErrorType::NoQuotes))?)
                     }?;
                     let next_closure = match quote.story_link().next() {
                         Some(next_closure) => Some(next_closure.clone()),
-                        None => None
+                        None => None,
                     };
                     let change_context_closure = match quote.story_link().change_context() {
                         Some(change_context_closure) => Some(change_context_closure.clone()),
-                        None => None
+                        None => None,
                     };
                     Ok((next_closure, change_context_closure, has_choices))
                 }
-                _ => Err(EngineError::new(EngineErrorType::NoDialogue))
+                _ => Err(EngineError::new(EngineErrorType::NoDialogue)),
             }?;
             result
         };
 
         let next_node_key = match next_closure {
             Some(next_closure) => Ok(next_closure(self.context())),
-            None => Err(EngineError::new(EngineErrorType::NoNextClosure))
+            None => Err(EngineError::new(EngineErrorType::NoNextClosure)),
         }?;
         match change_context_closure {
             Some(change_context_closure) => change_context_closure(self.mut_context()),
-            None => ()
+            None => (),
         }
         if has_choices {
             let choice_index = choice.ok_or(EngineError::new(EngineErrorType::MissingChoiceArg))?;
@@ -166,14 +187,24 @@ impl Engine {
 
 #[cfg(test)]
 mod engine_tests {
-    use crate::story::{context::ContextValue, story_node::{dialogue::{DialogueBuilder, quote::QuoteBuilder}, StoryNode}, StoryBuilder};
+    use crate::story::{
+        context::ContextValue,
+        story_node::{
+            dialogue::{quote::QuoteBuilder, DialogueBuilder},
+            StoryNode,
+        },
+        StoryBuilder,
+    };
 
     use super::*;
 
     #[test]
     fn story_starts() {
         let story = StoryBuilder::new("dialogue-1")
-            .add_node("dialogue-1", StoryNode::Dialogue(DialogueBuilder::new("core").build()))
+            .add_node(
+                "dialogue-1",
+                StoryNode::Dialogue(DialogueBuilder::new("core").build()),
+            )
             .build();
 
         let mut engine = Engine::new();
@@ -193,14 +224,14 @@ mod engine_tests {
                         .add_quote(
                             QuoteBuilder::new("Hello!")
                                 .set_next(|_| "dialogue-2".to_string())
-                                .build()
+                                .build(),
                         )
                         .add_quote(
                             QuoteBuilder::new("Homie!")
                                 .set_next(|_| "dialogue-3".to_string())
-                                .build()
+                                .build(),
                         )
-                        .build()
+                        .build(),
                 ),
             )
             .add_node(
@@ -208,7 +239,7 @@ mod engine_tests {
                 StoryNode::Dialogue(
                     DialogueBuilder::new("jose")
                         .add_quote(QuoteBuilder::new("Hi there!").build())
-                        .build()
+                        .build(),
                 ),
             )
             .add_node(
@@ -218,7 +249,7 @@ mod engine_tests {
                         .add_quote(
                             QuoteBuilder::new("Who are you?")
                                 .set_next(|_| String::from("dialogue-4"))
-                                .build()
+                                .build(),
                         )
                         .build(),
                 ),
@@ -240,7 +271,9 @@ mod engine_tests {
     #[test]
     fn next_with_context_works() {
         let mut engine = Engine::new();
-        engine.mut_context().insert("is-loved".to_string(), ContextValue::Bool(false));
+        engine
+            .mut_context()
+            .insert("is-loved".to_string(), ContextValue::Bool(false));
 
         let story = StoryBuilder::new("dialogue-0")
             .add_node(
@@ -250,17 +283,18 @@ mod engine_tests {
                         .add_quote(
                             QuoteBuilder::new("Don't you know?")
                                 .set_next(|_| "dialogue-1".to_string())
-                                .build()
+                                .build(),
                         )
                         .add_quote(
                             QuoteBuilder::new("I'm sure of it.")
                                 .set_next(|_| "dialogue-1".to_string())
                                 .set_change_context(|context| {
-                                    *context.get_mut("is-loved")
+                                    *context
+                                        .get_mut("is-loved")
                                         .expect("Story to have an `is-loved` context") =
                                         ContextValue::Bool(true);
                                 })
-                                .build()
+                                .build(),
                         )
                         .build(),
                 ),
@@ -272,7 +306,8 @@ mod engine_tests {
                         .add_quote(
                             QuoteBuilder::new("I love you.")
                                 .set_next(|context| {
-                                    let is_loved = context.get("is-loved")
+                                    let is_loved = context
+                                        .get("is-loved")
                                         .expect("Story to have an `is-loved` context");
                                     return match is_loved {
                                         ContextValue::Bool(is_loved_bool) => {
@@ -282,10 +317,10 @@ mod engine_tests {
                                                 String::from("dialogue-3")
                                             }
                                         }
-                                        _ => String::from("dialogue-3")
+                                        _ => String::from("dialogue-3"),
                                     };
                                 })
-                                .build()
+                                .build(),
                         )
                         .build(),
                 ),

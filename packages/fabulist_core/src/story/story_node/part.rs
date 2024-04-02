@@ -38,7 +38,6 @@ impl PartBuilder {
 mod part_tests {
     use super::*;
 
-
     #[test]
     fn matches_use_spec() {
         let part = PartBuilder::new()

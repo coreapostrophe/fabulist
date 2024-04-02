@@ -60,18 +60,24 @@ impl StoryBuilder {
 
 #[cfg(test)]
 mod story_tests {
-    use super::{*, story_node::dialogue::DialogueBuilder};
+    use super::{story_node::dialogue::DialogueBuilder, *};
 
     #[test]
     fn matches_use_spec() {
         let story = StoryBuilder::new("mock-start-node")
             .add_speaker("speaker-1", Speaker::new("Speaker 1"))
-            .add_node("story-node-1", StoryNode::Dialogue(DialogueBuilder::new("speaker-1").build()))
+            .add_node(
+                "story-node-1",
+                StoryNode::Dialogue(DialogueBuilder::new("speaker-1").build()),
+            )
             .build();
         assert_eq!(story.start().as_str(), "mock-start-node");
 
         assert_eq!(story.speakers().len(), 1);
-        assert_eq!(story.speakers().get("speaker-1").unwrap().name().as_str(), "Speaker 1");
+        assert_eq!(
+            story.speakers().get("speaker-1").unwrap().name().as_str(),
+            "Speaker 1"
+        );
 
         assert_eq!(story.story_nodes().len(), 1);
 
@@ -79,7 +85,7 @@ mod story_tests {
             StoryNode::Dialogue(dialogue) => {
                 assert_eq!(dialogue.speaker().as_str(), "speaker-1");
             }
-            StoryNode::Part(_) => panic!("should be a dialogue")
+            StoryNode::Part(_) => panic!("should be a dialogue"),
         };
     }
 }
