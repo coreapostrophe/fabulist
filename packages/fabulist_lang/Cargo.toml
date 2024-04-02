@@ -1,0 +1,11 @@
+[package]
+name = "fabulist_lang"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pest = "2.7.9"
+pest_derive = { version = "2.7.9", features = ["grammar-extras"] }
+thiserror = "1.0.58"
