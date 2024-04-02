@@ -41,5 +41,7 @@ mod parser_tests {
         assert!(result.is_ok());
         let result = FabulistLang::parse("dsafa = \"dsa\"");
         assert!(result.is_ok());
+        let result = FabulistLang::parse("dsafa(dadas, sdad)");
+        assert!(result.is_ok());
     }
 }
