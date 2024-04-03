@@ -8,12 +8,14 @@ none_keyword  = _{ "none" }
 keyword       = _{ true_keyword | false_keyword | none_keyword }
 
 // PRIMITIVE VALUE
-string_interior = ${ (!("\"") ~ ANY)* }
-string          = ${ "\"" ~ string_interior ~ "\"" }
-number          = ${ ASCII_DIGIT+ }
-boolean         = ${ true_keyword | false_keyword }
-none            = ${ none_keyword }
-identifier      = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+string_interior     = ${ (!("\"") ~ ANY)* }
+string              = ${ "\"" ~ string_interior ~ "\"" }
+raw_string_interior = ${ (!("\"" ~ PEEK) ~ ANY)* }
+raw_string          = ${ "r" ~ PUSH("#"*) ~ "\"" ~ raw_string_interior ~ "\"" ~ POP }
+number              = ${ ASCII_DIGIT+ }
+boolean             = ${ true_keyword | false_keyword }
+none                = ${ none_keyword }
+identifier          = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
 
 // OPERATORS
 unary_operator      = { "!" | "-" }
@@ -42,7 +44,7 @@ dialogue  = { ">" ~ string ~ quote* }
 monologue = { character ~ dialogue+ }
 
 // EXPRESSIONS
-primary    = _{ string | number | boolean | lambda_function | grouping | none | identifier | object }
+primary    = _{ raw_string | string | number | boolean | lambda_function | grouping | none | identifier | object }
 call       =  { #callee = primary ~ argument_body* }
 unary      =  { (#operator = unary_operator ~ #right = unary) | call }
 factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }

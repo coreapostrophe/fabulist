@@ -44,6 +44,7 @@ mod parser_tests {
         assert_primitive(Rule::boolean, "true");
         assert_primitive(Rule::boolean, "false");
         assert_primitive(Rule::identifier, "sample_identifier");
+        assert_primitive(Rule::raw_string, "r#\"sample raw string\"#");
     }
 
     #[test]
@@ -57,6 +58,7 @@ mod parser_tests {
         assert_primary(Rule::none, "none");
         assert_primary(Rule::object, "{\"key\":\"value\"}");
         assert_primary(Rule::lambda_function, "(arg1, arg2)=>{ 5; }");
+        assert_primary(Rule::raw_string, "r##\"sample raw string\"##");
     }
 
     #[test]
