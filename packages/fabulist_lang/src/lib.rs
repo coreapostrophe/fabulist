@@ -33,28 +33,65 @@ impl FabulistLang {
 
 #[cfg(test)]
 mod parser_tests {
-    use crate::FabulistLang;
+    use pest::Parser;
+
+    use crate::{GrammarParser, Rule};
+
+    #[test]
+    fn parses_primitives() {
+        let result = GrammarParser::parse(Rule::number, "5");
+        assert!(result.is_ok());
+        let result = GrammarParser::parse(Rule::string, "\"sample string\"");
+        assert!(result.is_ok());
+        let result = GrammarParser::parse(Rule::boolean, "true");
+        assert!(result.is_ok());
+        let result = GrammarParser::parse(Rule::boolean, "false");
+        assert!(result.is_ok());
+        let result = GrammarParser::parse(Rule::identifier, "sample_identifier");
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn parses_primaries() {
-        // let result = FabulistLang::parse("!5+4*(215-215)/false>4==5");
-        // assert!(result.is_ok());
-        // let result = FabulistLang::parse("dsafa = \"dsa\"");
-        // assert!(result.is_ok());
-        // let result = FabulistLang::parse("dsafa(dadas, sdad)");
-        // assert!(result.is_ok());
-        let result = FabulistLang::parse(
-            r##"
-        #"dialogue-1" => {
-            "test": () => {
-
-            }
-        }
-        [Jose]
-        > "What's up?"
-        "##,
+        let result = GrammarParser::parse(Rule::primary, "5");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::number
         );
-        println!("{:#?}", result);
-        // assert!(result.is_ok());
+        let result = GrammarParser::parse(Rule::primary, "\"sample string\"");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::string
+        );
+        let result = GrammarParser::parse(Rule::primary, "true");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::boolean
+        );
+        let result = GrammarParser::parse(Rule::primary, "sample_identifier");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::identifier
+        );
+        let result = GrammarParser::parse(Rule::primary, "(5 + 5)");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::grouping
+        );
+        let result = GrammarParser::parse(Rule::primary, "none");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::none
+        );
+        let result = GrammarParser::parse(Rule::primary, "{\"key\":\"value\"}");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::object
+        );
+        let result = GrammarParser::parse(Rule::primary, "(arg1, arg2)=>{ 5; }");
+        assert_eq!(
+            result.clone().unwrap().next().unwrap().as_rule(),
+            Rule::lambda_function
+        );
     }
 }

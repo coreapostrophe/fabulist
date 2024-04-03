@@ -2,15 +2,16 @@
 WHITESPACE = _{ " " | "\n" }
 
 // KEYWORDS
-true  = _{ "true" }
-false = _{ "false" }
-none  = _{ "none" }
+true_keyword  = _{ "true" }
+false_keyword = _{ "false" }
+none_keyword  = _{ "none" }
 
 // PRIMITIVE VALUE
 string_interior = ${ (!("\"") ~ ANY)* }
 string          = ${ "\"" ~ string_interior ~ "\"" }
 number          = ${ ASCII_DIGIT+ }
-boolean         = ${ true | false }
+boolean         = ${ true_keyword | false_keyword }
+none            = ${ none_keyword }
 identifier      = ${ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
 
 // OPERATORS
