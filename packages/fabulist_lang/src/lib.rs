@@ -46,7 +46,9 @@ mod parser_tests {
         let result = FabulistLang::parse(
             r##"
         #"dialogue-1" => {
-            
+            "test": () => {
+
+            }
         }
         [Jose]
         > "What's up?"

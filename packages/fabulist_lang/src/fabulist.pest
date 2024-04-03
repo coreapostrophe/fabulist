@@ -21,32 +21,35 @@ comparison_operator = { ">" | ">=" | "<" | "<=" }
 equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
 
-// EXPRESSIONS
-object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
-object          =  { "{" ~ object_interior? ~ "}" }
-grouping        =  { "(" ~ expression ~ ")" }
-primary         = _{ string | number | boolean | grouping | none | identifier | object }
-arguments       =  { identifier ~ ("," ~ identifier)* }
-call            =  { #callee = primary ~ ("(" ~ arguments* ~ ")")* }
-unary           =  { call | (#operator = unary_operator ~ #right = (unary)+) }
-factor          =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
-term            =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* }
-comparison      =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
-equality        =  { #left = comparison ~ (#operator = equality_operator ~ #right = comparison)* }
-logical         =  { #left = equality ~ (#operator = logical_operator ~ #right = equality)* }
-assignment      =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
-expression      =  { assignment }
-
 // DECLARATIONS
-id_declaration        = { "#" ~ string ~ ("=>" ~ object)? }
-character_declaration = { "[" ~ identifier ~ "]" }
-quote_declaration     = { "-" ~ string ~ ("=>" ~ object)? }
-dialogue_declaration  = { ">" ~ string ~ quote_declaration* }
-monologue_declaration = { character_declaration ~ dialogue_declaration+ }
+object_interior = { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
+object          = { "{" ~ object_interior? ~ "}" }
+grouping        = { "(" ~ expression ~ ")" }
+id              = { "#" ~ string ~ ("=>" ~ object)? }
+character       = { "[" ~ identifier ~ "]" }
+quote           = { "-" ~ string ~ ("=>" ~ object)? }
+dialogue        = { ">" ~ string ~ quote* }
+monologue       = { character ~ dialogue+ }
+function_body   = { "{" ~ action_statement* ~ "}" }
+lambda_function = { "(" ~ arguments* ~ ")" ~ "=>" ~ function_body }
+
+// EXPRESSIONS
+primary    = _{ string | number | boolean | grouping | none | identifier | object | lambda_function }
+arguments  =  { identifier ~ ("," ~ identifier)* }
+call       =  { #callee = primary ~ ("(" ~ arguments* ~ ")")* }
+unary      =  { call | (#operator = unary_operator ~ #right = (unary)+) }
+factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
+term       =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* }
+comparison =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
+equality   =  { #left = comparison ~ (#operator = equality_operator ~ #right = comparison)* }
+logical    =  { #left = equality ~ (#operator = logical_operator ~ #right = equality)* }
+assignment =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
+expression =  { assignment }
 
 // STATEMENTS
 expression_statement = { expression ~ ";" }
-node_statement       = { id_declaration ~ monologue_declaration* }
-statement            = { expression_statement | node_statement }
+action_statement     = { expression_statement }
+node_statement       = { id ~ monologue* }
+statement            = { node_statement }
 
 fabulist = { SOI ~ statement ~ EOI }
