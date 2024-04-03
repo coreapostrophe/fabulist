@@ -28,21 +28,23 @@ parameters      = { identifier ~ ("," ~ identifier)* }
 arguments       = { expression ~ ("," ~ expression)* }
 object_interior = { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
 object          = { "{" ~ object_interior? ~ "}" }
-grouping        = { "(" ~ expression ~ ")" }
 statement_body  = { "{" ~ action_statement* ~ "}" }
+grouping        = { "(" ~ expression ~ ")" }
 argument_body   = { "(" ~ arguments* ~ ")" }
 parameter_body  = { "(" ~ parameters* ~ ")" }
 lambda_function = { parameter_body ~ "=>" ~ statement_body }
-id              = { "#" ~ string ~ ("=>" ~ object)? }
-character       = { "[" ~ identifier ~ "]" }
-quote           = { "-" ~ string ~ ("=>" ~ object)? }
-dialogue        = { ">" ~ string ~ quote* }
-monologue       = { character ~ dialogue+ }
+
+// ELEMENT DEFINITIONS
+character = { "[" ~ identifier ~ "]" }
+id        = { "#" ~ string ~ ("=>" ~ object)? }
+quote     = { "-" ~ string ~ ("=>" ~ object)? }
+dialogue  = { ">" ~ string ~ quote* }
+monologue = { character ~ dialogue+ }
 
 // EXPRESSIONS
 primary    = _{ string | number | boolean | lambda_function | grouping | none | identifier | object }
 call       =  { #callee = primary ~ argument_body* }
-unary      =  { call | (#operator = unary_operator ~ #right = (unary)+) }
+unary      =  { (#operator = unary_operator ~ #right = (unary)+) | call }
 factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
 term       =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* }
 comparison =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
