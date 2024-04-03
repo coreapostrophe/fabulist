@@ -77,7 +77,10 @@ mod parser_tests {
                     .next()
                     .unwrap()
                     .into_inner()
-                    .find(|p| p.as_rule() == Rule::arguments)
+                    .find(|p| p.as_rule() == Rule::argument_body)
+                    .unwrap()
+                    .into_inner()
+                    .next()
                     .unwrap()
                     .into_inner()
                     .map(|p| p.as_str())
@@ -118,9 +121,10 @@ mod parser_tests {
         };
     }
 
-    macro_rules! assert_factor {
-        ($source:expr, $left:expr, $operator:expr, $right:expr) => {
-            let result = GrammarParser::parse(Rule::factor, $source);
+    macro_rules! assert_binomial_operation {
+        ($rule:expr, $source:expr, ($left:expr, $operator:expr, $right:expr)) => {
+            let result = GrammarParser::parse($rule, $source);
+            println!("{:#?}", result.clone());
             assert_eq!(
                 result
                     .clone()
@@ -149,7 +153,6 @@ mod parser_tests {
             );
             assert_eq!(
                 result
-                    .clone()
                     .unwrap()
                     .next()
                     .unwrap()
@@ -215,8 +218,40 @@ mod parser_tests {
 
     #[test]
     fn parses_factor() {
-        assert_factor!("5 /5", "5 ", "/", "5");
-        assert_factor!("5 *(1+2)", "5 ", "*", "(1+2)");
-        assert_factor!("true /5", "true ", "/", "5");
+        assert_binomial_operation!(Rule::factor, "5 /5", ("5 ", "/", "5"));
+        assert_binomial_operation!(Rule::factor, "5 *(1+2)", ("5 ", "*", "(1+2)"));
+        assert_binomial_operation!(Rule::factor, "true /5", ("true ", "/", "5"));
+    }
+
+    #[test]
+    fn parses_term() {
+        assert_binomial_operation!(Rule::term, "1 +7", ("1 ", "+", "7"));
+        assert_binomial_operation!(Rule::term, "6 -   9", ("6 ", "-", "9"));
+        assert_binomial_operation!(Rule::term, "3 + (5)", ("3 ", "+", "(5)"));
+        assert_binomial_operation!(Rule::term, "5-3", ("5", "-", "3"));
+    }
+
+    #[test]
+    fn parses_comparison() {
+        assert_binomial_operation!(Rule::comparison, "6 < 7", ("6 ", "<", "7"));
+        assert_binomial_operation!(Rule::comparison, "8<= (7)(true)", ("8", "<=", "(7)(true)"));
+        assert_binomial_operation!(Rule::comparison, "1    >2", ("1    ", ">", "2"));
+        assert_binomial_operation!(Rule::comparison, "0>= (1 + 5)", ("0", ">=", "(1 + 5)"));
+    }
+
+    #[test]
+    fn parses_equality() {
+        assert_binomial_operation!(Rule::equality, "2 == 9", ("2 ", "==", "9"));
+        assert_binomial_operation!(Rule::equality, "6    != false", ("6    ", "!=", "false"));
+        assert_binomial_operation!(Rule::equality, "4==(i)=>{i;}", ("4", "==", "(i)=>{i;}"));
+        assert_binomial_operation!(Rule::equality, "7 != true", ("7 ", "!=", "true"));
+    }
+
+    #[test]
+    fn parses_logical() {
+        assert_binomial_operation!(Rule::logical, "1&&1", ("1", "&&", "1"));
+        assert_binomial_operation!(Rule::logical, "yo ||   yo1", ("yo ", "||", "yo1"));
+        assert_binomial_operation!(Rule::logical, "true && false", ("true ", "&&", "false"));
+        assert_binomial_operation!(Rule::logical, "hello|| test()", ("hello", "||", "test()"));
     }
 }
