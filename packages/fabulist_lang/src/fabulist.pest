@@ -5,6 +5,7 @@ WHITESPACE = _{ " " | "\n" }
 true_keyword  = _{ "true" }
 false_keyword = _{ "false" }
 none_keyword  = _{ "none" }
+keyword       = _{ true_keyword | false_keyword | none_keyword }
 
 // PRIMITIVE VALUE
 string_interior = ${ (!("\"") ~ ANY)* }
@@ -12,7 +13,7 @@ string          = ${ "\"" ~ string_interior ~ "\"" }
 number          = ${ ASCII_DIGIT+ }
 boolean         = ${ true_keyword | false_keyword }
 none            = ${ none_keyword }
-identifier      = ${ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+identifier      = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
 
 // OPERATORS
 unary_operator      = { "!" | "-" }
