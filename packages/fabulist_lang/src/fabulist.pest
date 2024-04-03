@@ -44,7 +44,7 @@ monologue = { character ~ dialogue+ }
 // EXPRESSIONS
 primary    = _{ string | number | boolean | lambda_function | grouping | none | identifier | object }
 call       =  { #callee = primary ~ argument_body* }
-unary      =  { (#operator = unary_operator ~ #right = (unary)+) | call }
+unary      =  { (#operator = unary_operator ~ #right = unary) | call }
 factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
 term       =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* }
 comparison =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
@@ -54,9 +54,9 @@ assignment =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
 expression =  { assignment }
 
 // STATEMENTS
-expression_statement = { expression ~ ";" }
-action_statement     = { expression_statement }
-node_statement       = { id ~ monologue* }
-statement            = { node_statement }
+expression_statement =  { expression ~ ";" }
+action_statement     = _{ expression_statement }
+node_statement       =  { id ~ monologue* }
+statement            =  { node_statement }
 
 fabulist = { SOI ~ statement* ~ EOI }
