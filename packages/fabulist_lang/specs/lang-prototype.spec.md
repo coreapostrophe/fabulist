@@ -3,7 +3,7 @@
 ## Simple Dialogue
 
 ```plaintext
-# dialogue-1
+# "dialogue-1"
 [Jose]
 > "What's up?"
     - "The ceiling." => {
@@ -19,7 +19,7 @@
 ## Simple Monologue
 
 ```plaintext
-# monologue-1
+# "monologue-1"
 [Jose]
 > "What's up?"
 > "Doing good?"
@@ -31,7 +31,7 @@
 ## Simple Part
 
 ```plaintext
-# dialogue-3 => {
+# "dialogue-3" => {
     background: "./bg/starry_night.png"
 }
 [Jose]

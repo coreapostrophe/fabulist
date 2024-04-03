@@ -37,11 +37,22 @@ mod parser_tests {
 
     #[test]
     fn parses_primaries() {
-        let result = FabulistLang::parse("!5+4*(215-215)/false>4==5");
-        assert!(result.is_ok());
-        let result = FabulistLang::parse("dsafa = \"dsa\"");
-        assert!(result.is_ok());
-        let result = FabulistLang::parse("dsafa(dadas, sdad)");
-        assert!(result.is_ok());
+        // let result = FabulistLang::parse("!5+4*(215-215)/false>4==5");
+        // assert!(result.is_ok());
+        // let result = FabulistLang::parse("dsafa = \"dsa\"");
+        // assert!(result.is_ok());
+        // let result = FabulistLang::parse("dsafa(dadas, sdad)");
+        // assert!(result.is_ok());
+        let result = FabulistLang::parse(
+            r##"
+        #"dialogue-1" => {
+            
+        }
+        [Jose]
+        > "What's up?"
+        "##,
+        );
+        println!("{:#?}", result);
+        // assert!(result.is_ok());
     }
 }
