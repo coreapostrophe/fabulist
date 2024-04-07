@@ -2,10 +2,14 @@
 WHITESPACE = _{ " " | "\n" }
 
 // KEYWORDS
-true_keyword  = _{ "true" }
-false_keyword = _{ "false" }
-none_keyword  = _{ "none" }
-keyword       = _{ true_keyword | false_keyword | none_keyword }
+true_keyword   = _{ "true" }
+false_keyword  = _{ "false" }
+none_keyword   = _{ "none" }
+meta_keyword   = _{ "story" }
+if_keyword     = _{ "if" }
+else_keyword   = _{ "else" }
+return_keyword = _{ "return" }
+keyword        = _{ true_keyword | false_keyword | none_keyword | meta_keyword }
 
 // PRIMITIVE VALUE
 string_interior     = ${ (!("\"") ~ ANY)* }
@@ -30,21 +34,31 @@ parameters      = { identifier ~ ("," ~ identifier)* }
 arguments       = { expression ~ ("," ~ expression)* }
 object_interior = { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
 object          = { "{" ~ object_interior? ~ "}" }
-statement_body  = { "{" ~ action_statement* ~ "}" }
+statement_body  = { "{" ~ control_statement* ~ "}" }
 grouping        = { "(" ~ expression ~ ")" }
 argument_body   = { "(" ~ arguments* ~ ")" }
 parameter_body  = { "(" ~ parameters* ~ ")" }
 lambda_function = { parameter_body ~ "=>" ~ statement_body }
 
 // ELEMENT DEFINITIONS
-character = { "[" ~ identifier ~ "]" }
-id        = { "#" ~ string ~ ("=>" ~ object)? }
-quote     = { "-" ~ string ~ ("=>" ~ object)? }
-dialogue  = { ">" ~ string ~ quote* }
-monologue = { character ~ dialogue+ }
+character     = { "[" ~ identifier ~ "]" }
+id            = { "#" ~ string ~ ("=>" ~ object)? }
+quote         = { "-" ~ string ~ ("=>" ~ object)? }
+dialogue_body = { ">" ~ string ~ quote* }
+dialogue      = { character ~ dialogue_body+ }
 
 // EXPRESSIONS
-primary    = _{ raw_string | string | number | boolean | lambda_function | grouping | none | identifier | object }
+primary    = _{
+    raw_string
+  | string
+  | number
+  | boolean
+  | lambda_function
+  | grouping
+  | none
+  | identifier
+  | object
+}
 call       =  { #callee = primary ~ argument_body* }
 unary      =  { (#operator = unary_operator ~ #right = unary) | call }
 factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
@@ -55,10 +69,18 @@ logical    =  { #left = equality ~ (#operator = logical_operator ~ #right = equa
 assignment =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
 expression =  { assignment }
 
-// STATEMENTS
-expression_statement =  { expression ~ ";" }
-action_statement     = _{ expression_statement }
-node_statement       =  { id ~ monologue* }
-statement            =  { node_statement }
+// CONTROL STATEMENTS
+expression_statement = { expression ~ ";" }
+return_statement     = { return_keyword ~ expression_statement }
+else_statement       = { else_keyword ~ #body = statement_body }
+else_if_statement    = { else_keyword ~ if_keyword ~ #condition = grouping ~ #body = statement_body }
+if_statement         = { if_keyword ~ #condition = grouping ~ #body = statement_body }
+if_else_statement    = { if_statement ~ else_if_statement* ~ else_statement? }
 
-fabulist = { SOI ~ statement* ~ EOI }
+// STATEMENTS
+meta_statement    =  { meta_keyword ~ object }
+control_statement = _{ expression_statement | if_else_statement | return_statement }
+part_statement    =  { id ~ dialogue* }
+statement         =  { part_statement }
+
+fabulist = { SOI ~ meta_statement? ~ statement* ~ EOI }

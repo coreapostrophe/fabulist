@@ -147,4 +147,12 @@ mod parser_tests {
         assert_binomial_operation(Rule::logical, "true && false", ["true ", "&&", "false"]);
         assert_binomial_operation(Rule::logical, "hello|| test()", ["hello", "||", "test()"]);
     }
+
+    #[test]
+    fn parses_assignment() {
+        assert_assignment("num = 5", "num", "5");
+        assert_assignment("callback = (arg) => {arg;}", "callback", "(arg) => {arg;}");
+        assert_assignment("flag = false", "flag", "false");
+        assert_assignment("text = \"Hello world!\"", "text", "\"Hello world!\"");
+    }
 }

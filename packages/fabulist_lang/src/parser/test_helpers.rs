@@ -50,7 +50,7 @@ pub fn assert_lambda_function(
     let statements = statement_body
         .clone()
         .into_inner()
-        .find(|p| p.as_rule() == Rule::action_statement);
+        .find(|p| p.as_rule() == Rule::control_statement);
     match statements {
         Some(statements) => {
             let statement_array: Vec<_> = statements.into_inner().map(|p| p.as_str()).collect();
@@ -136,4 +136,24 @@ pub fn assert_binomial_operation(rule: Rule, source: &str, assertions: [&str; 3]
         .next()
         .expect("Failed to extract right pair.");
     assert_eq!(right.as_str(), right_assertion);
+}
+
+pub fn assert_assignment(source: &str, name_assertion: &str, value_assertion: &str) {
+    let result = GrammarParser::parse(Rule::assignment, source);
+    let mut result = result.expect("Failed to parse source.");
+    let assignment = result.next().expect("Failed to extract assignment pair.");
+    let name = assignment
+        .clone()
+        .into_inner()
+        .find_tagged("name")
+        .next()
+        .expect("Failed to extract name pair.");
+    assert_eq!(name.as_str(), name_assertion);
+    let value = assignment
+        .clone()
+        .into_inner()
+        .find_tagged("value")
+        .next()
+        .expect("Failed to extract value pair.");
+    assert_eq!(value.as_str(), value_assertion);
 }
