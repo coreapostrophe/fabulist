@@ -1,91 +1,100 @@
 use std::collections::HashMap;
 
-use self::story_node::{dialogue::speaker::Speaker, StoryNode};
+use crate::{
+    error::{Error, Result},
+    state::{DialogueIndex, State},
+};
 
+use self::{character::Character, part::Part, traits::Progressive};
+
+pub mod actions;
+pub mod character;
+pub mod choice;
 pub mod context;
-pub mod story_link;
-pub mod story_node;
+pub mod dialogue;
+pub mod part;
+pub mod traits;
 
 pub struct Story {
-    start: String,
-    speakers: HashMap<String, Speaker>,
-    story_nodes: HashMap<String, StoryNode>,
+    start: Option<String>,
+    characters: HashMap<String, Character>,
+    parts: HashMap<String, Part>,
 }
 
 impl Story {
-    pub fn start(&self) -> &String {
-        &self.start
+    pub fn start(&self) -> Option<String> {
+        match self.start.as_ref() {
+            Some(start) => Some(start.clone()),
+            None => None,
+        }
     }
-    pub fn speakers(&self) -> &HashMap<String, Speaker> {
-        &self.speakers
+    pub fn characters(&self) -> &HashMap<String, Character> {
+        &self.characters
     }
-    pub fn story_nodes(&self) -> &HashMap<String, StoryNode> {
-        &self.story_nodes
+    pub fn parts(&self) -> &HashMap<String, Part> {
+        &self.parts
     }
-    pub fn mut_story_nodes(&mut self) -> &mut HashMap<String, StoryNode> {
-        &mut self.story_nodes
+    pub fn part(&self, key: &String) -> Result<&Part> {
+        match self.parts.get(key) {
+            Some(part) => Ok(part),
+            None => Err(Error::PartDoesNotExist {
+                part_key: key.clone(),
+            }),
+        }
+    }
+    pub fn mut_part(&mut self, key: &String) -> Result<&mut Part> {
+        match self.parts.get_mut(key) {
+            Some(part) => Ok(part),
+            None => Err(Error::PartDoesNotExist {
+                part_key: key.clone(),
+            }),
+        }
     }
 }
 
 pub struct StoryBuilder {
-    start: String,
-    speakers: HashMap<String, Speaker>,
-    story_nodes: HashMap<String, StoryNode>,
+    start: Option<String>,
+    characters: HashMap<String, Character>,
+    parts: HashMap<String, Part>,
 }
 
 impl StoryBuilder {
-    pub fn new(start_node_key: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            start: start_node_key.to_string(),
-            speakers: HashMap::new(),
-            story_nodes: HashMap::new(),
+            start: None,
+            characters: HashMap::new(),
+            parts: HashMap::new(),
         }
     }
-    pub fn add_node(mut self, key: &str, node: StoryNode) -> Self {
-        self.story_nodes.insert(key.to_string(), node);
+    pub fn set_start(mut self, part_key: impl Into<String>) -> Self {
+        self.start = Some(part_key.into());
         self
     }
-    pub fn add_speaker(mut self, key: &str, speaker: Speaker) -> Self {
-        self.speakers.insert(key.to_string(), speaker);
+    pub fn add_part(mut self, part: Part) -> Self {
+        self.parts.insert(part.id().clone(), part);
+        self
+    }
+    pub fn add_character(mut self, character: Character) -> Self {
+        self.characters.insert(character.id.clone(), character);
         self
     }
     pub fn build(self) -> Story {
         Story {
             start: self.start,
-            speakers: self.speakers,
-            story_nodes: self.story_nodes,
+            characters: self.characters,
+            parts: self.parts,
         }
     }
 }
 
-#[cfg(test)]
-mod story_tests {
-    use super::{story_node::dialogue::DialogueBuilder, *};
-
-    #[test]
-    fn matches_use_spec() {
-        let story = StoryBuilder::new("mock-start-node")
-            .add_speaker("speaker-1", Speaker::new("Speaker 1"))
-            .add_node(
-                "story-node-1",
-                StoryNode::Dialogue(DialogueBuilder::new("speaker-1").build()),
-            )
-            .build();
-        assert_eq!(story.start().as_str(), "mock-start-node");
-
-        assert_eq!(story.speakers().len(), 1);
-        assert_eq!(
-            story.speakers().get("speaker-1").unwrap().name().as_str(),
-            "Speaker 1"
-        );
-
-        assert_eq!(story.story_nodes().len(), 1);
-
-        let _ = match story.story_nodes().get("story-node-1").unwrap() {
-            StoryNode::Dialogue(dialogue) => {
-                assert_eq!(dialogue.speaker().as_str(), "speaker-1");
-            }
-            StoryNode::Part(_) => panic!("should be a dialogue"),
-        };
+impl Progressive for Story {
+    type Output = Result<DialogueIndex>;
+    fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
+        if let Some(part_key) = state.current_part() {
+            let part = self.part(part_key)?;
+            return part.next(state, choice_index);
+        }
+        state.reset();
+        Err(Error::EndOfStory)
     }
 }

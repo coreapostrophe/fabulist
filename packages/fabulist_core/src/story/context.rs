@@ -1,27 +1,20 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug)]
 pub enum ContextValue {
     Integer(i32),
     Bool(bool),
+    String(String),
 }
 
+#[derive(Debug)]
 pub struct Context(pub HashMap<String, ContextValue>);
 
 impl Context {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-    pub fn insert(&mut self, key: String, value: ContextValue) {
-        self.0.insert(key, value);
-    }
-    pub fn get(&self, key: &str) -> Option<&ContextValue> {
-        self.0.get(key)
-    }
-    pub fn get_mut(&mut self, key: &str) -> Option<&mut ContextValue> {
-        self.0.get_mut(key)
+    pub fn clear(&mut self) {
+        self.0.clear();
     }
 }
