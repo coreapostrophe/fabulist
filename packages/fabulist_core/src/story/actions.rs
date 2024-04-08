@@ -1,4 +1,4 @@
 use super::context::Context;
 
-pub type NextClosure = fn(&Context) -> String;
+pub type QueryNextClosure = fn(&Context) -> String;
 pub type ChangeContextClosure = fn(&mut Context) -> ();

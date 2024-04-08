@@ -1,21 +1,49 @@
 use crate::state::State;
 
 use super::{
-    actions::{ChangeContextClosure, NextClosure},
+    actions::{ChangeContextClosure, QueryNextClosure},
     traits::Progressive,
 };
 
+#[derive(Debug)]
 pub struct Choice {
-    pub text: String,
-    pub response: Option<String>,
-    pub next: Option<NextClosure>,
-    pub change_context: Option<ChangeContextClosure>,
+    text: String,
+    response: Option<String>,
+    query_next: Option<QueryNextClosure>,
+    change_context: Option<ChangeContextClosure>,
+}
+
+impl Choice {
+    pub fn text(&self) -> &String {
+        &self.text
+    }
+    pub fn set_text(&mut self, text: impl Into<String>) {
+        self.text = text.into();
+    }
+    pub fn response(&self) -> Option<&String> {
+        self.response.as_ref()
+    }
+    pub fn set_response(&mut self, response: Option<String>) {
+        self.response = response;
+    }
+    pub fn query_next(&self) -> Option<&QueryNextClosure> {
+        self.query_next.as_ref()
+    }
+    pub fn set_query_next(&mut self, closure: QueryNextClosure) {
+        self.query_next = Some(closure);
+    }
+    pub fn change_context(&self) -> Option<&ChangeContextClosure> {
+        self.change_context.as_ref()
+    }
+    pub fn set_change_context(&mut self, closure: ChangeContextClosure) {
+        self.change_context = Some(closure);
+    }
 }
 
 pub struct ChoiceBuilder {
     text: String,
     response: Option<String>,
-    next: Option<NextClosure>,
+    query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
 
@@ -24,7 +52,7 @@ impl ChoiceBuilder {
         Self {
             text: text.into(),
             response: None,
-            next: None,
+            query_next: None,
             change_context: None,
         }
     }
@@ -32,8 +60,8 @@ impl ChoiceBuilder {
         self.response = Some(response);
         self
     }
-    pub fn set_next(mut self, closure: NextClosure) -> Self {
-        self.next = Some(closure);
+    pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
+        self.query_next = Some(closure);
         self
     }
     pub fn set_change_context(mut self, closure: ChangeContextClosure) -> Self {
@@ -44,8 +72,19 @@ impl ChoiceBuilder {
         Choice {
             text: self.text,
             response: self.response,
-            next: self.next,
+            query_next: self.query_next,
             change_context: self.change_context,
+        }
+    }
+}
+
+impl From<ChoiceBuilder> for Choice {
+    fn from(value: ChoiceBuilder) -> Self {
+        Self {
+            text: value.text,
+            response: value.response,
+            query_next: value.query_next,
+            change_context: value.change_context,
         }
     }
 }
@@ -59,7 +98,7 @@ impl Progressive for Choice {
             }
             None => (),
         }
-        match self.next {
+        match self.query_next {
             Some(next_closure) => Some(next_closure(state.context())),
             None => None,
         }

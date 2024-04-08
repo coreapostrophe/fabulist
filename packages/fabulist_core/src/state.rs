@@ -1,12 +1,6 @@
 use std::collections::HashMap;
 
-use crate::story::context::Context;
-
-#[derive(Debug)]
-pub struct DialogueIndex {
-    pub part_key: String,
-    pub dialogue_index: usize,
-}
+use crate::story::{context::Context, DialogueIndex};
 
 #[derive(Debug)]
 pub struct State {
@@ -27,6 +21,9 @@ impl State {
     }
     pub fn decisions(&self) -> &HashMap<DialogueIndex, usize> {
         &self.decisions
+    }
+    pub fn mut_decisions(&mut self) -> &mut HashMap<DialogueIndex, usize> {
+        &mut self.decisions
     }
     pub fn context(&self) -> &Context {
         &self.context

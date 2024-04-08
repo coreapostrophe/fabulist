@@ -1,10 +1,11 @@
 use crate::{
     error::{Error, Result},
-    state::{DialogueIndex, State},
+    state::State,
 };
 
-use super::{dialogue::Dialogue, traits::Progressive};
+use super::{dialogue::Dialogue, traits::Progressive, DialogueIndex};
 
+#[derive(Debug)]
 pub struct Part {
     id: String,
     dialogues: Vec<Dialogue>,
@@ -17,6 +18,9 @@ impl Part {
     pub fn dialogues(&self) -> &Vec<Dialogue> {
         &self.dialogues
     }
+    pub fn mut_dialogues(&mut self) -> &mut Vec<Dialogue> {
+        &mut self.dialogues
+    }
     pub fn dialogue(&self, index: usize) -> Result<&Dialogue> {
         match self.dialogues.get(index) {
             Some(dialogue) => Ok(dialogue),
@@ -28,8 +32,20 @@ impl Part {
             }
         }
     }
+    pub fn mut_dialogue(&mut self, index: usize) -> Result<&mut Dialogue> {
+        match self.dialogues.get_mut(index) {
+            Some(dialogue) => Ok(dialogue),
+            None => {
+                return Err(Error::DialogueDoesNotExist {
+                    dialogue_index: index,
+                    part_key: self.id.clone(),
+                })
+            }
+        }
+    }
 }
 
+#[derive(Debug)]
 pub struct PartBuilder {
     id: String,
     dialogues: Vec<Dialogue>,
@@ -42,14 +58,23 @@ impl PartBuilder {
             dialogues: Vec::new(),
         }
     }
-    pub fn add_dialogue(mut self, dialogue: Dialogue) -> Self {
-        self.dialogues.push(dialogue);
+    pub fn add_dialogue(mut self, dialogue: impl Into<Dialogue>) -> Self {
+        self.dialogues.push(dialogue.into());
         self
     }
     pub fn build(self) -> Part {
         Part {
             id: self.id,
             dialogues: self.dialogues,
+        }
+    }
+}
+
+impl From<PartBuilder> for Part {
+    fn from(value: PartBuilder) -> Self {
+        Self {
+            id: value.id,
+            dialogues: value.dialogues,
         }
     }
 }
