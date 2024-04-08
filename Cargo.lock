@@ -54,6 +54,7 @@ version = "0.1.0"
 name = "fabulist_lang"
 version = "0.1.0"
 dependencies = [
+ "fabulist_core",
  "pest",
  "pest_derive",
  "thiserror",

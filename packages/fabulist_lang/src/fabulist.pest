@@ -72,10 +72,10 @@ expression =  { assignment }
 // CONTROL STATEMENTS
 expression_statement = { expression ~ ";" }
 return_statement     = { return_keyword ~ expression_statement }
-else_statement       = { else_keyword ~ #body = statement_body }
-else_if_statement    = { else_keyword ~ if_keyword ~ #condition = grouping ~ #body = statement_body }
-if_statement         = { if_keyword ~ #condition = grouping ~ #body = statement_body }
-if_else_statement    = { if_statement ~ else_if_statement* ~ else_statement? }
+else_block           = { else_keyword ~ #body = statement_body }
+else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ #body = statement_body }
+if_block             = { if_keyword ~ #condition = grouping ~ #body = statement_body }
+if_else_statement    = { if_block ~ else_if_block* ~ else_block? }
 
 // STATEMENTS
 meta_statement    =  { meta_keyword ~ object }

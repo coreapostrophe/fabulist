@@ -4,6 +4,9 @@
     <img src="./assets/readme-logo.png" style="height:200px"/>
 </p>
 <p align="center">
+    A branching narrative utility for interactive novels.
+</p>
+<p align="center">
     <img src="https://github.com/coreapostrophe/makinilya/actions/workflows/build.yml/badge.svg">
 </p>
 
