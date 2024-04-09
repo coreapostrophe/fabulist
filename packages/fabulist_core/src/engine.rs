@@ -1,38 +1,51 @@
+use std::borrow::BorrowMut;
+
 use crate::{
     error::Result,
     state::State,
     story::{traits::Progressive, DialogueIndex, Story},
 };
 
-pub struct Engine {
-    state: State,
-    story: Story,
+pub struct Engine<Str, Stt>
+where
+    Str: BorrowMut<Story>,
+    Stt: BorrowMut<State>,
+{
+    story: Str,
+    state: Stt,
 }
 
-impl Engine {
-    pub fn new(story: impl Into<Story>, state: impl Into<State>) -> Self {
-        Self {
-            story: story.into(),
-            state: state.into(),
-        }
+impl<Str, Stt> Engine<Str, Stt>
+where
+    Str: BorrowMut<Story>,
+    Stt: BorrowMut<State>,
+{
+    pub fn new(story: Str, state: Stt) -> Self {
+        Self { story, state }
     }
-    pub fn state(&self) -> &State {
+    pub fn state(&self) -> &Stt {
         &self.state
     }
-    pub fn mut_state(&mut self) -> &mut State {
+    pub fn mut_state(&mut self) -> &mut Stt {
         &mut self.state
     }
-    pub fn story(&self) -> &Story {
+    pub fn story(&self) -> &Str {
         &self.story
     }
-    pub fn mut_story(&mut self) -> &mut Story {
+    pub fn mut_story(&mut self) -> &mut Str {
         &mut self.story
     }
     pub fn start(&mut self) -> Result<DialogueIndex> {
-        self.state.set_current_part(self.story.start());
+        self.state
+            .borrow_mut()
+            .set_current_part(self.story.borrow().start());
         self.next(None)
     }
     pub fn next(&mut self, choice_index: Option<usize>) -> Result<DialogueIndex> {
-        self.story.next(&mut self.state, choice_index)
+        Story::next(
+            self.story.borrow_mut(),
+            self.state.borrow_mut(),
+            choice_index,
+        )
     }
 }

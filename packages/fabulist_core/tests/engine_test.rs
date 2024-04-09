@@ -73,9 +73,11 @@ pub fn engine_runs_basic_story() {
                 text: "Me too!",
                 character: "dave",
             })),
-        );
+        )
+        .build();
 
-    let mut engine = Engine::new(story, State::new());
+    let mut state = State::new();
+    let mut engine = Engine::new(story, &mut state);
 
     let result = engine.start().unwrap();
     assert_eq!(result.part_key, "start-scene");
