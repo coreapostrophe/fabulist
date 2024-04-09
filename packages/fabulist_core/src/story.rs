@@ -5,7 +5,13 @@ use crate::{
     state::State,
 };
 
-use self::{character::Character, dialogue::Dialogue, part::Part, traits::Progressive};
+use self::{
+    character::Character,
+    dialogue::Dialogue,
+    part::Part,
+    reference::{DialogueIndex, ListKey},
+    traits::Progressive,
+};
 
 pub mod actions;
 pub mod character;
@@ -13,64 +19,67 @@ pub mod choice;
 pub mod context;
 pub mod dialogue;
 pub mod part;
+pub mod reference;
 pub mod traits;
 
-#[derive(Debug)]
-pub struct DialogueIndex {
-    pub part_key: String,
-    pub dialogue_index: usize,
-}
-
 pub struct Story {
-    start: Option<String>,
-    characters: HashMap<String, Character>,
-    parts: HashMap<String, Part>,
+    start: Option<ListKey<String>>,
+    parts: HashMap<ListKey<String>, Part>,
+    characters: HashMap<ListKey<String>, Character>,
 }
 
 impl Story {
-    pub fn start(&self) -> Option<String> {
+    pub fn start(&self) -> Option<&ListKey<String>> {
         match self.start.as_ref() {
-            Some(start) => Some(start.clone()),
+            Some(start) => Some(start),
             None => None,
         }
     }
-    pub fn set_start(&mut self, start: Option<String>) {
+    pub fn set_start(&mut self, start: Option<ListKey<String>>) {
         self.start = start;
     }
-    pub fn characters(&self) -> &HashMap<String, Character> {
+    pub fn characters(&self) -> &HashMap<ListKey<String>, Character> {
         &self.characters
     }
-    pub fn mut_characters(&mut self) -> &mut HashMap<String, Character> {
+    pub fn mut_characters(&mut self) -> &mut HashMap<ListKey<String>, Character> {
         &mut self.characters
     }
-    pub fn parts(&self) -> &HashMap<String, Part> {
+    pub fn parts(&self) -> &HashMap<ListKey<String>, Part> {
         &self.parts
     }
-    pub fn mut_parts(&mut self) -> &mut HashMap<String, Part> {
+    pub fn mut_parts(&mut self) -> &mut HashMap<ListKey<String>, Part> {
         &mut self.parts
     }
     pub fn character(&self, key: &str) -> Result<&Character> {
-        match self.characters.get(key) {
+        match self.characters.get(&key.into()) {
             Some(character) => Ok(character),
-            None => Err(Error::CharacterDoesNotExist { key: key.into() }),
+            None => Err(Error::CharacterDoesNotExist {
+                key: key.to_owned(),
+            }),
         }
     }
     pub fn mut_character(&mut self, key: &str) -> Result<&mut Character> {
-        match self.characters.get_mut(key) {
+        match self.characters.get_mut(&key.into()) {
             Some(character) => Ok(character),
-            None => Err(Error::CharacterDoesNotExist { key: key.into() }),
+            None => Err(Error::CharacterDoesNotExist {
+                key: key.to_owned(),
+            }),
         }
     }
-    pub fn part(&self, key: &str) -> Result<&Part> {
-        match self.parts.get(key) {
+    pub fn part(&self, key: &ListKey<String>) -> Result<&Part> {
+        match self.parts.get(&key) {
             Some(part) => Ok(part),
-            None => Err(Error::PartDoesNotExist { key: key.into() }),
+            None => Err(Error::PartDoesNotExist {
+                key: key.to_owned(),
+            }),
         }
     }
-    pub fn mut_part(&mut self, key: &str) -> Result<&mut Part> {
+    pub fn mut_part(&mut self, key: &ListKey<String>) -> Result<&mut Part> {
         match self.parts.get_mut(key) {
             Some(part) => Ok(part),
-            None => Err(Error::PartDoesNotExist { key: key.into() }),
+            None => Err(Error::PartDoesNotExist {
+                key: key.to_owned(),
+            }),
         }
     }
     pub fn dialogue(&self, index: DialogueIndex) -> Result<&Dialogue> {
@@ -89,9 +98,9 @@ impl Story {
 
 #[derive(Debug)]
 pub struct StoryBuilder {
-    start: Option<String>,
-    characters: HashMap<String, Character>,
-    parts: HashMap<String, Part>,
+    start: Option<ListKey<String>>,
+    parts: HashMap<ListKey<String>, Part>,
+    characters: HashMap<ListKey<String>, Character>,
 }
 
 impl StoryBuilder {
@@ -102,25 +111,41 @@ impl StoryBuilder {
             parts: HashMap::new(),
         }
     }
-    pub fn set_start(mut self, part_key: impl Into<String>) -> Self {
+    pub fn set_start(mut self, part_key: impl Into<ListKey<String>>) -> Self {
         self.start = Some(part_key.into());
         self
     }
-    pub fn add_part(mut self, part: impl Into<Part>) -> Self {
+    pub fn add_part_module<const N: usize>(
+        mut self,
+        module_key: [&str; N],
+        part: impl Into<Part>,
+    ) -> Self {
         let part = part.into();
-        self.parts.insert(part.id().clone(), part);
+        let part_key = [&module_key[..], &[part.id()]].concat();
+        self.parts.insert(part_key.into(), part);
         self
     }
-    pub fn add_character(mut self, character: impl Into<Character>) -> Self {
+    pub fn add_part(self, part: impl Into<Part>) -> Self {
+        self.add_part_module([], part)
+    }
+    pub fn add_character_module<const N: usize>(
+        mut self,
+        module_key: [&str; N],
+        character: impl Into<Character>,
+    ) -> Self {
         let character = character.into();
-        self.characters.insert(character.id().clone(), character);
+        let character_key = [&module_key[..], &[character.id()]].concat();
+        self.characters.insert(character_key.into(), character);
         self
+    }
+    pub fn add_character(self, character: impl Into<Character>) -> Self {
+        self.add_character_module([], character)
     }
     pub fn build(self) -> Story {
         Story {
             start: self.start,
-            characters: self.characters,
             parts: self.parts,
+            characters: self.characters,
         }
     }
 }
@@ -129,8 +154,8 @@ impl From<StoryBuilder> for Story {
     fn from(value: StoryBuilder) -> Self {
         Self {
             start: value.start,
-            characters: value.characters,
             parts: value.parts,
+            characters: value.characters,
         }
     }
 }

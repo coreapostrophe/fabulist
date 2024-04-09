@@ -1,3 +1,5 @@
+use crate::story::reference::ListKey;
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Required choice index was not provided.")]
@@ -10,7 +12,7 @@ pub enum Error {
         part_key: String,
     },
     #[error("Part `{key}` does not exist.")]
-    PartDoesNotExist { key: String },
+    PartDoesNotExist { key: ListKey<String> },
     #[error("Part `{key}` does not exist.")]
     CharacterDoesNotExist { key: String },
     #[error("Story was not started.")]

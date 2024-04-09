@@ -80,19 +80,19 @@ pub fn engine_runs_basic_story() {
     let mut engine = Engine::new(story, &mut state);
 
     let result = engine.start().unwrap();
-    assert_eq!(result.part_key, "start-scene");
+    assert_eq!(result.part_key, "start-scene".into());
     assert_eq!(result.dialogue_index, 0);
 
     let result = engine.next(None).unwrap();
-    assert_eq!(result.part_key, "start-scene");
+    assert_eq!(result.part_key, "start-scene".into());
     assert_eq!(result.dialogue_index, 1);
 
     let result = engine.next(Some(0)).unwrap();
-    assert_eq!(result.part_key, "start-scene");
+    assert_eq!(result.part_key, "start-scene".into());
     assert_eq!(result.dialogue_index, 2);
 
     let result = engine.next(None).unwrap();
-    assert_eq!(result.part_key, "fail-scene");
+    assert_eq!(result.part_key, "fail-scene".into());
     assert_eq!(result.dialogue_index, 0);
 
     let result = engine.next(None);

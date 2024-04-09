@@ -3,7 +3,7 @@ use std::borrow::BorrowMut;
 use crate::{
     error::Result,
     state::State,
-    story::{traits::Progressive, DialogueIndex, Story},
+    story::{reference::DialogueIndex, traits::Progressive, Story},
 };
 
 pub struct Engine<Str, Stt>
@@ -36,9 +36,8 @@ where
         &mut self.story
     }
     pub fn start(&mut self) -> Result<DialogueIndex> {
-        self.state
-            .borrow_mut()
-            .set_current_part(self.story.borrow().start());
+        let start_key = self.story.borrow().start().cloned();
+        self.state.borrow_mut().set_current_part(start_key);
         self.next(None)
     }
     pub fn next(&mut self, choice_index: Option<usize>) -> Result<DialogueIndex> {

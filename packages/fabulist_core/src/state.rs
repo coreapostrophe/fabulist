@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
-use crate::story::{context::Context, DialogueIndex};
+use crate::story::{
+    context::Context,
+    reference::{DialogueIndex, ListKey},
+};
 
 #[derive(Debug)]
 pub struct State {
     context: Context,
-    current_part: Option<String>,
+    current_part: Option<ListKey<String>>,
     current_dialogue: Option<usize>,
     decisions: HashMap<DialogueIndex, usize>,
 }
@@ -31,10 +34,10 @@ impl State {
     pub fn mut_context(&mut self) -> &mut Context {
         &mut self.context
     }
-    pub fn current_part(&self) -> Option<&String> {
+    pub fn current_part(&self) -> Option<&ListKey<String>> {
         self.current_part.as_ref()
     }
-    pub fn set_current_part(&mut self, part_key: Option<String>) {
+    pub fn set_current_part(&mut self, part_key: Option<ListKey<String>>) {
         self.current_part = part_key;
     }
     pub fn current_dialogue(&self) -> Option<usize> {

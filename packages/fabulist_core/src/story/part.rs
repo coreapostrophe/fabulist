@@ -87,7 +87,7 @@ impl Progressive for Part {
                 state.set_current_dialogue(Some(0));
 
                 return Ok(DialogueIndex {
-                    part_key: self.id().clone(),
+                    part_key: self.id().clone().into(),
                     dialogue_index: 0,
                 });
             }
@@ -98,11 +98,11 @@ impl Progressive for Part {
 
                 match next_result {
                     Some(next_part) => {
-                        state.set_current_part(Some(next_part.clone()));
+                        state.set_current_part(Some(next_part.clone().into()));
                         state.set_current_dialogue(Some(0));
 
                         return Ok(DialogueIndex {
-                            part_key: next_part,
+                            part_key: next_part.clone().into(),
                             dialogue_index: 0,
                         });
                     }
@@ -112,7 +112,7 @@ impl Progressive for Part {
                             state.set_current_dialogue(Some(next_dialogue_index));
 
                             return Ok(DialogueIndex {
-                                part_key: self.id().clone(),
+                                part_key: self.id().clone().into(),
                                 dialogue_index: next_dialogue_index,
                             });
                         }
