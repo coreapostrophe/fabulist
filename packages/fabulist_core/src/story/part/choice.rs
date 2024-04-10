@@ -1,9 +1,6 @@
-use crate::state::State;
+use crate::{error::Result, state::State, story::traits::Progressive};
 
-use super::{
-    actions::{ChangeContextClosure, QueryNextClosure},
-    traits::Progressive,
-};
+use super::actions::{ChangeContextClosure, QueryNextClosure};
 
 #[derive(Debug)]
 pub struct Choice {
@@ -90,7 +87,7 @@ impl From<ChoiceBuilder> for Choice {
 }
 
 impl Progressive for Choice {
-    type Output = Option<String>;
+    type Output = Result<Option<String>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         match self.change_context {
             Some(change_context_closure) => {
@@ -98,9 +95,10 @@ impl Progressive for Choice {
             }
             None => (),
         }
-        match self.query_next {
+        let next_part_key = match self.query_next {
             Some(next_closure) => Some(next_closure(state.context())),
             None => None,
-        }
+        };
+        Ok(next_part_key)
     }
 }

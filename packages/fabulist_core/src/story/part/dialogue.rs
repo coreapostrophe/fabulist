@@ -1,19 +1,14 @@
-use crate::{
-    error::{Error, Result},
-    state::State,
-};
+use crate::{error::Result, state::State, story::traits::Progressive};
 
 use super::{
     actions::{ChangeContextClosure, QueryNextClosure},
-    choice::Choice,
-    traits::Progressive,
+    Quote,
 };
 
 #[derive(Debug)]
 pub struct Dialogue {
     text: String,
     character: String,
-    choices: Vec<Choice>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
@@ -30,12 +25,6 @@ impl Dialogue {
     }
     pub fn set_character(&mut self, character: impl Into<String>) {
         self.character = character.into();
-    }
-    pub fn choices(&self) -> &Vec<Choice> {
-        &self.choices
-    }
-    pub fn mut_choices(&mut self) -> &mut Vec<Choice> {
-        &mut self.choices
     }
     pub fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
@@ -55,7 +44,6 @@ impl Dialogue {
 pub struct DialogueBuilder {
     text: String,
     character: String,
-    choices: Vec<Choice>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
@@ -71,14 +59,9 @@ impl DialogueBuilder {
         Self {
             text: layout.text.to_string(),
             character: layout.character.to_string(),
-            choices: Vec::new(),
             query_next: None,
             change_context: None,
         }
-    }
-    pub fn add_choice(mut self, choice: impl Into<Choice>) -> Self {
-        self.choices.push(choice.into());
-        self
     }
     pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
         self.query_next = Some(closure);
@@ -92,7 +75,6 @@ impl DialogueBuilder {
         Dialogue {
             text: self.text,
             character: self.character,
-            choices: self.choices,
             query_next: self.query_next,
             change_context: self.change_context,
         }
@@ -104,40 +86,36 @@ impl From<DialogueBuilder> for Dialogue {
         Self {
             text: value.text,
             character: value.character,
-            choices: value.choices,
             query_next: value.query_next,
             change_context: value.change_context,
         }
     }
 }
 
+impl From<DialogueBuilder> for Box<Quote> {
+    fn from(value: DialogueBuilder) -> Self {
+        Box::new(Dialogue {
+            text: value.text,
+            character: value.character,
+            query_next: value.query_next,
+            change_context: value.change_context,
+        })
+    }
+}
+
 impl Progressive for Dialogue {
     type Output = Result<Option<String>>;
-    fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
-        if self.choices.is_empty() {
-            match self.change_context {
-                Some(change_context_closure) => {
-                    change_context_closure(state.mut_context());
-                }
-                None => (),
+    fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
+        match self.change_context {
+            Some(change_context_closure) => {
+                change_context_closure(state.mut_context());
             }
-            match self.query_next {
-                Some(next_closure) => Ok(Some(next_closure(state.context()))),
-                None => Ok(None),
-            }
-        } else {
-            let choice = match choice_index {
-                Some(choice_index) => match self.choices.get(choice_index) {
-                    Some(choice) => choice,
-                    None => {
-                        return Err(Error::InvalidChoice {
-                            index: choice_index,
-                        })
-                    }
-                },
-                None => return Err(Error::ChoiceWasNotProvided),
-            };
-            Ok(choice.next(state, choice_index))
+            None => (),
         }
+        let next_part_key = match self.query_next {
+            Some(next_closure) => Some(next_closure(state.context())),
+            None => None,
+        };
+        Ok(next_part_key)
     }
 }

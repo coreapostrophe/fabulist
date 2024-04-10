@@ -7,21 +7,18 @@ use crate::{
 
 use self::{
     character::Character,
-    dialogue::Dialogue,
-    part::Part,
+    part::{Part, Quote},
     reference::{DialogueIndex, ListKey},
     traits::Progressive,
 };
 
-pub mod actions;
 pub mod character;
-pub mod choice;
 pub mod context;
-pub mod dialogue;
 pub mod part;
 pub mod reference;
 pub mod traits;
 
+#[derive(Debug)]
 pub struct Story {
     start: Option<ListKey<String>>,
     parts: HashMap<ListKey<String>, Part>,
@@ -82,17 +79,17 @@ impl Story {
             }),
         }
     }
-    pub fn dialogue(&self, index: DialogueIndex) -> Result<&Dialogue> {
+    pub fn dialogue(&self, index: DialogueIndex) -> Result<&Box<Quote>> {
         let part_key = &index.part_key;
         let part = self.part(part_key)?;
         let dialogue_index = &index.dialogue_index;
-        part.dialogue(*dialogue_index)
+        part.quote(*dialogue_index)
     }
-    pub fn mut_dialogue(&mut self, index: DialogueIndex) -> Result<&mut Dialogue> {
+    pub fn mut_dialogue(&mut self, index: DialogueIndex) -> Result<&mut Box<Quote>> {
         let part_key = &index.part_key;
         let part = self.mut_part(part_key)?;
         let dialogue_index = &index.dialogue_index;
-        part.mut_dialogue(*dialogue_index)
+        part.mut_quote(*dialogue_index)
     }
 }
 

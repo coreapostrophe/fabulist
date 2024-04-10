@@ -3,10 +3,13 @@ use fabulist_core::{
     state::State,
     story::{
         character::CharacterBuilder,
-        choice::ChoiceBuilder,
         context::ContextValue,
-        dialogue::{DialogueBuilder, DialogueLayout},
-        part::PartBuilder,
+        part::{
+            choice::ChoiceBuilder,
+            choices::SelectionBuilder,
+            dialogue::{DialogueBuilder, DialogueLayout},
+            PartBuilder,
+        },
         StoryBuilder,
     },
 };
@@ -22,25 +25,24 @@ pub fn engine_runs_basic_story() {
         )
         .add_part(
             PartBuilder::new("start-scene")
-                .add_dialogue(DialogueBuilder::new(DialogueLayout {
+                .add_quote(DialogueBuilder::new(DialogueLayout {
                     text: "Hi, there!",
                     character: "dave",
                 }))
-                .add_dialogue(
-                    DialogueBuilder::new(DialogueLayout {
-                        text: "What's your favorite fruit?",
-                        character: "dave",
-                    })
-                    .add_choice(ChoiceBuilder::new("Apple").set_change_context(|context| {
-                        context.insert("favorite_fruit", "Apple");
-                    }))
-                    .add_choice(
-                        ChoiceBuilder::new("Banana").set_change_context(|context| {
+                .add_quote(DialogueBuilder::new(DialogueLayout {
+                    text: "What's your favorite fruit?",
+                    character: "dave",
+                }))
+                .add_quote(
+                    SelectionBuilder::new()
+                        .add_choice(ChoiceBuilder::new("Apple").set_change_context(|context| {
+                            context.insert("favorite_fruit", "Apple");
+                        }))
+                        .add_choice(ChoiceBuilder::new("Banana").set_change_context(|context| {
                             context.insert("favorite_fruit", "Banana");
-                        }),
-                    ),
+                        })),
                 )
-                .add_dialogue(
+                .add_quote(
                     DialogueBuilder::new(DialogueLayout {
                         text: "Oh cool! But that's a bit...",
                         character: "dave",
@@ -63,13 +65,13 @@ pub fn engine_runs_basic_story() {
                 ),
         )
         .add_part(
-            PartBuilder::new("fail-scene").add_dialogue(DialogueBuilder::new(DialogueLayout {
+            PartBuilder::new("fail-scene").add_quote(DialogueBuilder::new(DialogueLayout {
                 text: "Oh. That's pretty generic.",
                 character: "dave",
             })),
         )
         .add_part(
-            PartBuilder::new("success-scene").add_dialogue(DialogueBuilder::new(DialogueLayout {
+            PartBuilder::new("success-scene").add_quote(DialogueBuilder::new(DialogueLayout {
                 text: "Me too!",
                 character: "dave",
             })),
@@ -87,9 +89,13 @@ pub fn engine_runs_basic_story() {
     assert_eq!(result.part_key, "start-scene".into());
     assert_eq!(result.dialogue_index, 1);
 
-    let result = engine.next(Some(0)).unwrap();
+    let result = engine.next(None).unwrap();
     assert_eq!(result.part_key, "start-scene".into());
     assert_eq!(result.dialogue_index, 2);
+
+    let result = engine.next(Some(0)).unwrap();
+    assert_eq!(result.part_key, "start-scene".into());
+    assert_eq!(result.dialogue_index, 3);
 
     let result = engine.next(None).unwrap();
     assert_eq!(result.part_key, "fail-scene".into());
