@@ -13,26 +13,26 @@ pub mod choice;
 pub mod choices;
 pub mod dialogue;
 
-pub type Quote = ProgressiveElement<Result<Option<String>>>;
+pub type PartElement = ProgressiveElement<Result<Option<String>>>;
 
 #[derive(Debug)]
 pub struct Part {
     id: String,
-    quotes: Vec<Box<Quote>>,
+    elements: Vec<Box<PartElement>>,
 }
 
 impl Part {
     pub fn id(&self) -> &String {
         &self.id
     }
-    pub fn quotes(&self) -> &Vec<Box<Quote>> {
-        &self.quotes
+    pub fn elements(&self) -> &Vec<Box<PartElement>> {
+        &self.elements
     }
-    pub fn mut_quotes(&mut self) -> &mut Vec<Box<Quote>> {
-        &mut self.quotes
+    pub fn mut_elements(&mut self) -> &mut Vec<Box<PartElement>> {
+        &mut self.elements
     }
-    pub fn quote(&self, index: usize) -> Result<&Box<Quote>> {
-        match self.quotes.get(index) {
+    pub fn element(&self, index: usize) -> Result<&Box<PartElement>> {
+        match self.elements.get(index) {
             Some(dialogue) => Ok(dialogue),
             None => {
                 return Err(Error::DialogueDoesNotExist {
@@ -42,8 +42,8 @@ impl Part {
             }
         }
     }
-    pub fn mut_quote(&mut self, index: usize) -> Result<&mut Box<Quote>> {
-        match self.quotes.get_mut(index) {
+    pub fn mut_element(&mut self, index: usize) -> Result<&mut Box<PartElement>> {
+        match self.elements.get_mut(index) {
             Some(dialogue) => Ok(dialogue),
             None => {
                 return Err(Error::DialogueDoesNotExist {
@@ -58,7 +58,7 @@ impl Part {
 #[derive(Debug)]
 pub struct PartBuilder {
     id: String,
-    quotes: Vec<Box<Quote>>,
+    quotes: Vec<Box<PartElement>>,
 }
 
 impl PartBuilder {
@@ -68,14 +68,14 @@ impl PartBuilder {
             quotes: Vec::new(),
         }
     }
-    pub fn add_quote(mut self, dialogue: impl Into<Box<Quote>>) -> Self {
+    pub fn add_element(mut self, dialogue: impl Into<Box<PartElement>>) -> Self {
         self.quotes.push(dialogue.into());
         self
     }
     pub fn build(self) -> Part {
         Part {
             id: self.id,
-            quotes: self.quotes,
+            elements: self.quotes,
         }
     }
 }
@@ -84,7 +84,7 @@ impl From<PartBuilder> for Part {
     fn from(value: PartBuilder) -> Self {
         Self {
             id: value.id,
-            quotes: value.quotes,
+            elements: value.quotes,
         }
     }
 }
@@ -93,7 +93,7 @@ impl Progressive for Part {
     type Output = Result<DialogueIndex>;
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
         if state.current_dialogue().is_none() {
-            if !self.quotes.is_empty() {
+            if !self.elements.is_empty() {
                 state.set_current_dialogue(Some(0));
 
                 return Ok(DialogueIndex {
@@ -103,7 +103,7 @@ impl Progressive for Part {
             }
         } else {
             if let Some(dialogue_index) = state.current_dialogue() {
-                let dialogue = self.quote(dialogue_index)?;
+                let dialogue = self.element(dialogue_index)?;
                 let next_result = dialogue.next(state, choice_index)?;
 
                 match next_result {
@@ -118,7 +118,7 @@ impl Progressive for Part {
                     }
                     None => {
                         let next_dialogue_index = dialogue_index + 1;
-                        if self.quotes.get(next_dialogue_index).is_some() {
+                        if self.elements.get(next_dialogue_index).is_some() {
                             state.set_current_dialogue(Some(next_dialogue_index));
 
                             return Ok(DialogueIndex {

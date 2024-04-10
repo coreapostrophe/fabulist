@@ -25,15 +25,15 @@ pub fn engine_runs_basic_story() {
         )
         .add_part(
             PartBuilder::new("start-scene")
-                .add_quote(DialogueBuilder::new(DialogueLayout {
+                .add_element(DialogueBuilder::new(DialogueLayout {
                     text: "Hi, there!",
                     character: "dave",
                 }))
-                .add_quote(DialogueBuilder::new(DialogueLayout {
+                .add_element(DialogueBuilder::new(DialogueLayout {
                     text: "What's your favorite fruit?",
                     character: "dave",
                 }))
-                .add_quote(
+                .add_element(
                     SelectionBuilder::new()
                         .add_choice(ChoiceBuilder::new("Apple").set_change_context(|context| {
                             context.insert("favorite_fruit", "Apple");
@@ -42,7 +42,7 @@ pub fn engine_runs_basic_story() {
                             context.insert("favorite_fruit", "Banana");
                         })),
                 )
-                .add_quote(
+                .add_element(
                     DialogueBuilder::new(DialogueLayout {
                         text: "Oh cool! But that's a bit...",
                         character: "dave",
@@ -65,13 +65,13 @@ pub fn engine_runs_basic_story() {
                 ),
         )
         .add_part(
-            PartBuilder::new("fail-scene").add_quote(DialogueBuilder::new(DialogueLayout {
+            PartBuilder::new("fail-scene").add_element(DialogueBuilder::new(DialogueLayout {
                 text: "Oh. That's pretty generic.",
                 character: "dave",
             })),
         )
         .add_part(
-            PartBuilder::new("success-scene").add_quote(DialogueBuilder::new(DialogueLayout {
+            PartBuilder::new("success-scene").add_element(DialogueBuilder::new(DialogueLayout {
                 text: "Me too!",
                 character: "dave",
             })),

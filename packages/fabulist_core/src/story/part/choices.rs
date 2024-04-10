@@ -3,7 +3,7 @@ use crate::{
     story::traits::Progressive,
 };
 
-use super::{choice::Choice, Quote};
+use super::{choice::Choice, PartElement};
 
 #[derive(Debug)]
 pub struct Selection(Vec<Choice>);
@@ -39,7 +39,7 @@ impl From<SelectionBuilder> for Selection {
     }
 }
 
-impl From<SelectionBuilder> for Box<Quote> {
+impl From<SelectionBuilder> for Box<PartElement> {
     fn from(value: SelectionBuilder) -> Self {
         Box::new(Selection(value.0))
     }

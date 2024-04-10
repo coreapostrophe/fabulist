@@ -7,7 +7,7 @@ use crate::{
 
 use self::{
     character::Character,
-    part::{Part, Quote},
+    part::{Part, PartElement},
     reference::{DialogueIndex, ListKey},
     traits::Progressive,
 };
@@ -79,17 +79,17 @@ impl Story {
             }),
         }
     }
-    pub fn dialogue(&self, index: DialogueIndex) -> Result<&Box<Quote>> {
+    pub fn dialogue(&self, index: DialogueIndex) -> Result<&Box<PartElement>> {
         let part_key = &index.part_key;
         let part = self.part(part_key)?;
         let dialogue_index = &index.dialogue_index;
-        part.quote(*dialogue_index)
+        part.element(*dialogue_index)
     }
-    pub fn mut_dialogue(&mut self, index: DialogueIndex) -> Result<&mut Box<Quote>> {
+    pub fn mut_dialogue(&mut self, index: DialogueIndex) -> Result<&mut Box<PartElement>> {
         let part_key = &index.part_key;
         let part = self.mut_part(part_key)?;
         let dialogue_index = &index.dialogue_index;
-        part.mut_quote(*dialogue_index)
+        part.mut_element(*dialogue_index)
     }
 }
 

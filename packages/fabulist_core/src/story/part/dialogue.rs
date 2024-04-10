@@ -2,7 +2,7 @@ use crate::{error::Result, state::State, story::traits::Progressive};
 
 use super::{
     actions::{ChangeContextClosure, QueryNextClosure},
-    Quote,
+    PartElement,
 };
 
 #[derive(Debug)]
@@ -92,7 +92,7 @@ impl From<DialogueBuilder> for Dialogue {
     }
 }
 
-impl From<DialogueBuilder> for Box<Quote> {
+impl From<DialogueBuilder> for Box<PartElement> {
     fn from(value: DialogueBuilder) -> Self {
         Box::new(Dialogue {
             text: value.text,
