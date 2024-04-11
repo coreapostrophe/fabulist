@@ -9,7 +9,16 @@ meta_keyword   = _{ "story" }
 if_keyword     = _{ "if" }
 else_keyword   = _{ "else" }
 return_keyword = _{ "return" }
-keyword        = _{ true_keyword | false_keyword | none_keyword | meta_keyword }
+import_keyword = _{ "keyword" }
+from_keyword   = _{ "from" }
+keyword        = _{
+    true_keyword
+  | false_keyword
+  | none_keyword
+  | meta_keyword
+  | import_keyword
+  | from_keyword
+}
 
 // PRIMITIVE VALUE
 string_interior     = ${ (!("\"") ~ ANY)* }
@@ -70,17 +79,23 @@ assignment =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
 expression =  { assignment }
 
 // CONTROL STATEMENTS
+import_statement     = { import_keyword ~ identifier ~ from_keyword ~ #path = string ~ ";" }
 expression_statement = { expression ~ ";" }
 return_statement     = { return_keyword ~ expression_statement }
-else_block           = { else_keyword ~ #body = statement_body }
-else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ #body = statement_body }
-if_block             = { if_keyword ~ #condition = grouping ~ #body = statement_body }
+else_block           = { else_keyword ~ statement_body }
+else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ statement_body }
+if_block             = { if_keyword ~ #condition = grouping ~ statement_body }
 if_else_statement    = { if_block ~ else_if_block* ~ else_block? }
 
 // STATEMENTS
-meta_statement    =  { meta_keyword ~ object }
-control_statement = _{ expression_statement | if_else_statement | return_statement }
 part_statement    =  { id ~ dialogue* }
+meta_statement    =  { meta_keyword ~ object }
+control_statement = _{
+    expression_statement
+  | if_else_statement
+  | return_statement
+  | import_statement
+}
 statement         =  { part_statement }
 
 fabulist = { SOI ~ meta_statement? ~ statement* ~ EOI }
