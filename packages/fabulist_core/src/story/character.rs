@@ -1,11 +1,13 @@
-#[derive(Debug)]
+use super::traits::Keyed;
+
+#[derive(Debug, Clone)]
 pub struct Name {
     pub short: String,
     pub long: Option<String>,
     pub nick: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Character {
     id: String,
     name: Name,
@@ -21,9 +23,6 @@ impl Character {
                 nick: None,
             },
         }
-    }
-    pub fn id(&self) -> &String {
-        &self.id
     }
     pub fn name(&self) -> &Name {
         &self.name
@@ -66,6 +65,12 @@ impl CharacterBuilder {
             id: self.id,
             name: self.name,
         }
+    }
+}
+
+impl Keyed for Character {
+    fn id(&self) -> &String {
+        &self.id
     }
 }
 

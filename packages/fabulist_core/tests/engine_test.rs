@@ -18,11 +18,10 @@ use fabulist_core::{
 pub fn engine_runs_basic_story() {
     let story = StoryBuilder::new()
         .set_start("start-scene")
-        .add_character(
-            CharacterBuilder::new("dave", "Dave")
-                .set_long("Daveren Cordero")
-                .set_nick("Core"),
-        )
+        .add_res_collection([CharacterBuilder::new("dave", "Dave")
+            .set_long("Daveren Cordero")
+            .set_nick("Core")
+            .build()])
         .add_part(
             PartBuilder::new("start-scene")
                 .add_element(DialogueBuilder::new(DialogueLayout {

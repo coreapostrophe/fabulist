@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    story::traits::Progressive,
+    story::traits::{Element, Progressive},
 };
 
 use super::{choice::Choice, PartElement};
@@ -44,6 +44,8 @@ impl From<SelectionBuilder> for Box<PartElement> {
         Box::new(Selection(value.0))
     }
 }
+
+impl Element for Selection {}
 
 impl Progressive for Selection {
     type Output = Result<Option<String>>;

@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::{
-    traits::{Progressive, ProgressiveElement},
+    traits::{Element, Progressive},
     DialogueIndex,
 };
 
@@ -13,7 +13,7 @@ pub mod choice;
 pub mod choices;
 pub mod dialogue;
 
-pub type PartElement = ProgressiveElement<Result<Option<String>>>;
+pub type PartElement = dyn Element<Output = Result<Option<String>>>;
 
 #[derive(Debug)]
 pub struct Part {
@@ -33,9 +33,9 @@ impl Part {
     }
     pub fn element(&self, index: usize) -> Result<&Box<PartElement>> {
         match self.elements.get(index) {
-            Some(dialogue) => Ok(dialogue),
+            Some(element) => Ok(element),
             None => {
-                return Err(Error::DialogueDoesNotExist {
+                return Err(Error::ElementDoesNotExist {
                     dialogue_index: index,
                     part_key: self.id.clone(),
                 })
@@ -44,9 +44,9 @@ impl Part {
     }
     pub fn mut_element(&mut self, index: usize) -> Result<&mut Box<PartElement>> {
         match self.elements.get_mut(index) {
-            Some(dialogue) => Ok(dialogue),
+            Some(element) => Ok(element),
             None => {
-                return Err(Error::DialogueDoesNotExist {
+                return Err(Error::ElementDoesNotExist {
                     dialogue_index: index,
                     part_key: self.id.clone(),
                 })

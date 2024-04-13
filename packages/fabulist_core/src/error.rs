@@ -6,8 +6,8 @@ pub enum Error {
     ChoiceWasNotProvided,
     #[error("Provided choice index `{index}` is invalid.")]
     InvalidChoice { index: usize },
-    #[error("Dialogue index `{dialogue_index}` does not exist in part.")]
-    DialogueDoesNotExist {
+    #[error("Element `{dialogue_index}` does not exist in part `{part_key}`.")]
+    ElementDoesNotExist {
         dialogue_index: usize,
         part_key: String,
     },

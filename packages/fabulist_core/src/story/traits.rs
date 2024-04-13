@@ -7,4 +7,8 @@ pub trait Progressive: Debug {
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output;
 }
 
-pub type ProgressiveElement<T> = dyn Progressive<Output = T>;
+pub trait Element: Progressive {}
+
+pub trait Keyed {
+    fn id(&self) -> &String;
+}

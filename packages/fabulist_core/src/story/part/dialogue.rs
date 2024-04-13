@@ -1,4 +1,8 @@
-use crate::{error::Result, state::State, story::traits::Progressive};
+use crate::{
+    error::Result,
+    state::State,
+    story::traits::{Element, Progressive},
+};
 
 use super::{
     actions::{ChangeContextClosure, QueryNextClosure},
@@ -80,7 +84,6 @@ impl DialogueBuilder {
         }
     }
 }
-
 impl From<DialogueBuilder> for Dialogue {
     fn from(value: DialogueBuilder) -> Self {
         Self {
@@ -102,6 +105,8 @@ impl From<DialogueBuilder> for Box<PartElement> {
         })
     }
 }
+
+impl Element for Dialogue {}
 
 impl Progressive for Dialogue {
     type Output = Result<Option<String>>;
