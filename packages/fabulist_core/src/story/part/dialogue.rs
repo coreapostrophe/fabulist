@@ -1,19 +1,17 @@
+use fabulist_derive::ElementInternal;
+
 use crate::{
     error::Result,
     state::State,
-    story::{
-        character::Character,
-        resource::{Inset, InterpInset},
-        Progressive,
-    },
+    story::{character::Character, resource::Inset, Progressive},
 };
 
 use super::{
     actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure},
-    Element, PartElement,
+    PartElement,
 };
 
-#[derive(Debug)]
+#[derive(ElementInternal, Debug)]
 pub struct Dialogue {
     text: String,
     character: Inset<Character>,
@@ -27,12 +25,6 @@ impl Dialogue {
     }
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
-    }
-    pub fn character(&self) -> &Inset<Character> {
-        &self.character
-    }
-    pub fn set_character(&mut self, id: impl Into<String>) {
-        self.character.set_id(id);
     }
 }
 
@@ -106,13 +98,6 @@ impl From<DialogueBuilder> for Dialogue {
     }
 }
 
-impl InterpInset for Dialogue {
-    fn interp_inset(&mut self, resources: &mut crate::story::resource::Resources) {
-        let resource = resources.get::<Character>(self.character.id());
-        self.character.set_value(resource.clone());
-    }
-}
-
 impl From<DialogueBuilder> for Box<PartElement> {
     fn from(value: DialogueBuilder) -> Self {
         Box::new(Dialogue {
@@ -123,8 +108,6 @@ impl From<DialogueBuilder> for Box<PartElement> {
         })
     }
 }
-
-impl Element for Dialogue {}
 
 impl Progressive for Dialogue {
     type Output = Result<Option<String>>;

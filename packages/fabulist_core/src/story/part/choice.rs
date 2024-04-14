@@ -1,8 +1,4 @@
-use crate::{
-    error::Result,
-    state::State,
-    story::{resource::InterpInset, Progressive},
-};
+use crate::{error::Result, state::State, story::Progressive};
 
 use super::actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure};
 
@@ -94,10 +90,6 @@ impl From<ChoiceBuilder> for Choice {
             change_context: value.change_context,
         }
     }
-}
-
-impl InterpInset for Choice {
-    fn interp_inset(&mut self, _resource: &mut crate::story::resource::Resources) {}
 }
 
 impl Progressive for Choice {

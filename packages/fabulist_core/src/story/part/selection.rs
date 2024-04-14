@@ -1,11 +1,13 @@
+use fabulist_derive::ElementInternal;
+
 use crate::{
     error::{Error, Result},
-    story::{resource::InterpInset, Progressive},
+    story::Progressive,
 };
 
-use super::{choice::Choice, Element, PartElement};
+use super::{choice::Choice, PartElement};
 
-#[derive(Debug)]
+#[derive(ElementInternal, Debug)]
 pub struct Selection(Vec<Choice>);
 
 impl Selection {
@@ -44,12 +46,6 @@ impl From<SelectionBuilder> for Box<PartElement> {
         Box::new(Selection(value.0))
     }
 }
-
-impl InterpInset for Selection {
-    fn interp_inset(&mut self, _resource: &mut crate::story::resource::Resources) {}
-}
-
-impl Element for Selection {}
 
 impl Progressive for Selection {
     type Output = Result<Option<String>>;

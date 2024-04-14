@@ -1,0 +1,26 @@
+[package]
+name = "fabulist_derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+proc-macro = true
+
+[[test]]
+name = "all"
+path = "tests/all.rs"
+
+[dependencies]
+syn = "2.0.58"
+quote = "1.0.36"
+proc-macro2 = "1.0.79"
+cfg-if = "1.0.0"
+prettyplease = "0.2.17"
+
+[dev-dependencies]
+trybuild = "1.0.91"
+fabulist_core = { path = "../fabulist_core" }
+
+[features]
+debug = []

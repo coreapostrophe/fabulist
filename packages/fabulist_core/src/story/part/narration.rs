@@ -1,11 +1,13 @@
-use crate::{engine::Progressive, error::Result, state::State, story::resource::InterpInset};
+use fabulist_derive::ElementInternal;
+
+use crate::{engine::Progressive, error::Result, state::State};
 
 use super::{
     actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure},
-    Element, PartElement,
+    PartElement,
 };
 
-#[derive(Debug)]
+#[derive(ElementInternal, Debug)]
 pub struct Narration {
     text: String,
     query_next: Option<QueryNextClosure>,
@@ -89,12 +91,6 @@ impl From<NarrationBuilder> for Box<PartElement> {
         })
     }
 }
-
-impl InterpInset for Narration {
-    fn interp_inset(&mut self, _resources: &mut crate::story::resource::Resources) {}
-}
-
-impl Element for Narration {}
 
 impl Progressive for Narration {
     type Output = Result<Option<String>>;
