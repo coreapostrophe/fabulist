@@ -15,7 +15,6 @@ path = "tests/all.rs"
 syn = "2.0.58"
 quote = "1.0.36"
 proc-macro2 = "1.0.79"
-cfg-if = "1.0.0"
 prettyplease = "0.2.17"
 
 [dev-dependencies]
