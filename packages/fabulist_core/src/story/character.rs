@@ -1,4 +1,4 @@
-use super::traits::Keyed;
+use super::resource::Keyed;
 
 #[derive(Debug, Clone)]
 pub struct Name {

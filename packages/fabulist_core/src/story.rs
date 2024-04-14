@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{
+    engine::Progressive,
     error::{Error, Result},
     state::State,
 };
@@ -8,8 +9,7 @@ use crate::{
 use self::{
     part::{Part, PartElement},
     reference::{DialogueIndex, ListKey},
-    resource::Resources,
-    traits::{Keyed, Progressive},
+    resource::{InterpInset, Keyed, Resources},
 };
 
 pub mod character;
@@ -17,7 +17,6 @@ pub mod context;
 pub mod part;
 pub mod reference;
 pub mod resource;
-pub mod traits;
 
 #[derive(Debug)]
 pub struct Story {
@@ -124,7 +123,12 @@ impl StoryBuilder {
         self.resources.insert_collection::<T, N>(collection);
         self
     }
-    pub fn build(self) -> Story {
+    pub fn build(mut self) -> Story {
+        // Interpolates inset values with resources
+        self.parts
+            .iter_mut()
+            .for_each(|(_, part)| part.interp_inset(&mut self.resources));
+
         Story {
             start: self.start,
             parts: self.parts,

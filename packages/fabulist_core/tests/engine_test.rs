@@ -6,8 +6,8 @@ use fabulist_core::{
         context::ContextValue,
         part::{
             choice::ChoiceBuilder,
-            choices::SelectionBuilder,
             dialogue::{DialogueBuilder, DialogueLayout},
+            selection::SelectionBuilder,
             PartBuilder,
         },
         StoryBuilder,

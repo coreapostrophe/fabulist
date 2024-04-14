@@ -3,15 +3,14 @@ use crate::{
     state::State,
 };
 
-use super::{
-    traits::{Element, Progressive},
-    DialogueIndex,
-};
+use super::{resource::InterpInset, DialogueIndex, Progressive};
 
 pub mod actions;
 pub mod choice;
-pub mod choices;
 pub mod dialogue;
+pub mod selection;
+
+pub trait Element: Progressive + InterpInset {}
 
 pub type PartElement = dyn Element<Output = Result<Option<String>>>;
 
@@ -89,12 +88,20 @@ impl From<PartBuilder> for Part {
     }
 }
 
+impl InterpInset for Part {
+    fn interp_inset(&mut self, resource: &mut super::resource::Resources) {
+        self.elements
+            .iter_mut()
+            .for_each(|element| element.interp_inset(resource));
+    }
+}
+
 impl Progressive for Part {
     type Output = Result<DialogueIndex>;
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
-        if state.current_dialogue().is_none() {
+        if state.current_element().is_none() {
             if !self.elements.is_empty() {
-                state.set_current_dialogue(Some(0));
+                state.set_current_element(Some(0));
 
                 return Ok(DialogueIndex {
                     part_key: self.id().clone().into(),
@@ -102,14 +109,14 @@ impl Progressive for Part {
                 });
             }
         } else {
-            if let Some(dialogue_index) = state.current_dialogue() {
+            if let Some(dialogue_index) = state.current_element() {
                 let dialogue = self.element(dialogue_index)?;
                 let next_result = dialogue.next(state, choice_index)?;
 
                 match next_result {
                     Some(next_part) => {
                         state.set_current_part(Some(next_part.clone().into()));
-                        state.set_current_dialogue(Some(0));
+                        state.set_current_element(Some(0));
 
                         return Ok(DialogueIndex {
                             part_key: next_part.clone().into(),
@@ -119,7 +126,7 @@ impl Progressive for Part {
                     None => {
                         let next_dialogue_index = dialogue_index + 1;
                         if self.elements.get(next_dialogue_index).is_some() {
-                            state.set_current_dialogue(Some(next_dialogue_index));
+                            state.set_current_element(Some(next_dialogue_index));
 
                             return Ok(DialogueIndex {
                                 part_key: self.id().clone().into(),

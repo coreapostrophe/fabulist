@@ -1,9 +1,9 @@
 use crate::{
     error::{Error, Result},
-    story::traits::{Element, Progressive},
+    story::{resource::InterpInset, Progressive},
 };
 
-use super::{choice::Choice, PartElement};
+use super::{choice::Choice, Element, PartElement};
 
 #[derive(Debug)]
 pub struct Selection(Vec<Choice>);
@@ -43,6 +43,10 @@ impl From<SelectionBuilder> for Box<PartElement> {
     fn from(value: SelectionBuilder) -> Self {
         Box::new(Selection(value.0))
     }
+}
+
+impl InterpInset for Selection {
+    fn interp_inset(&mut self, _resource: &mut crate::story::resource::Resources) {}
 }
 
 impl Element for Selection {}

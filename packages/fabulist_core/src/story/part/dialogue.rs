@@ -1,18 +1,22 @@
 use crate::{
     error::Result,
     state::State,
-    story::traits::{Element, Progressive},
+    story::{
+        character::Character,
+        resource::{Inset, InterpInset},
+        Progressive,
+    },
 };
 
 use super::{
     actions::{ChangeContextClosure, QueryNextClosure},
-    PartElement,
+    Element, PartElement,
 };
 
 #[derive(Debug)]
 pub struct Dialogue {
     text: String,
-    character: String,
+    character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
@@ -24,11 +28,11 @@ impl Dialogue {
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
-    pub fn character(&self) -> &String {
+    pub fn character(&self) -> &Inset<Character> {
         &self.character
     }
-    pub fn set_character(&mut self, character: impl Into<String>) {
-        self.character = character.into();
+    pub fn set_character(&mut self, id: impl Into<String>) {
+        self.character.set_id(id);
     }
     pub fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
@@ -47,7 +51,7 @@ impl Dialogue {
 #[derive(Debug)]
 pub struct DialogueBuilder {
     text: String,
-    character: String,
+    character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
@@ -62,7 +66,7 @@ impl DialogueBuilder {
     pub fn new(layout: DialogueLayout) -> Self {
         Self {
             text: layout.text.to_string(),
-            character: layout.character.to_string(),
+            character: Inset::new(layout.character.to_string()),
             query_next: None,
             change_context: None,
         }
@@ -92,6 +96,13 @@ impl From<DialogueBuilder> for Dialogue {
             query_next: value.query_next,
             change_context: value.change_context,
         }
+    }
+}
+
+impl InterpInset for Dialogue {
+    fn interp_inset(&mut self, resources: &mut crate::story::resource::Resources) {
+        let resource = resources.get::<Character>(self.character.id());
+        self.character.set_value(resource.clone());
     }
 }
 

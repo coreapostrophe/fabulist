@@ -1,10 +1,15 @@
-use std::borrow::BorrowMut;
+use std::{borrow::BorrowMut, fmt::Debug};
 
 use crate::{
     error::Result,
     state::State,
-    story::{reference::DialogueIndex, traits::Progressive, Story},
+    story::{reference::DialogueIndex, Story},
 };
+
+pub trait Progressive: Debug {
+    type Output;
+    fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output;
+}
 
 pub struct Engine<Str, Stt>
 where

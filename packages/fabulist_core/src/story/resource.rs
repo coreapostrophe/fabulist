@@ -2,18 +2,21 @@ use std::{
     any::{Any, TypeId},
     collections::HashMap,
     fmt::Debug,
+    rc::Rc,
 };
 
-use super::traits::Keyed;
+pub trait Keyed {
+    fn id(&self) -> &String;
+}
 
 #[derive(Debug)]
-pub struct Resources(HashMap<TypeId, HashMap<String, Box<dyn Any>>>);
+pub struct Resources(HashMap<TypeId, HashMap<String, Rc<dyn Any>>>);
 
 impl Resources {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
-    pub fn get<T>(&self, key: impl Into<String>) -> Option<&T>
+    pub fn get<T: Debug>(&self, key: impl Into<String>) -> Option<Rc<T>>
     where
         T: 'static,
     {
@@ -26,30 +29,11 @@ impl Resources {
         };
         match resource {
             Some(resource) => {
-                let downcasted_resource = resource
-                    .downcast_ref::<T>()
-                    .expect(&format!("Resource map value to match type `{}`.", key));
-                Some(downcasted_resource)
-            }
-            None => None,
-        }
-    }
-    pub fn get_mut<T>(&mut self, key: impl Into<String>) -> Option<&mut T>
-    where
-        T: 'static,
-    {
-        let key = key.into();
-        let type_name = TypeId::of::<T>();
-        let resource_map = self.0.get_mut(&type_name);
-        let resource = match resource_map {
-            Some(resource_map) => resource_map.get_mut(&key),
-            None => None,
-        };
-        match resource {
-            Some(resource) => {
-                let downcasted_resource = resource
-                    .downcast_mut::<T>()
-                    .expect(&format!("Resource map value to match type `{}`.", key));
+                let resource = resource.clone();
+                let downcasted_resource = resource.downcast::<T>().expect(&format!(
+                    "Resource map value to match type `{}`.",
+                    std::any::type_name::<T>()
+                ));
                 Some(downcasted_resource)
             }
             None => None,
@@ -65,10 +49,35 @@ impl Resources {
     where
         T: Keyed + Clone + 'static,
     {
-        let mut resource_map: HashMap<String, Box<dyn Any>> = HashMap::new();
+        let mut resource_map: HashMap<String, Rc<dyn Any>> = HashMap::new();
         collection.iter().for_each(|res| {
-            resource_map.insert(res.id().clone(), Box::new(res.to_owned()));
+            resource_map.insert(res.id().clone(), Rc::new(res.to_owned()));
         });
         self.0.insert(TypeId::of::<T>(), resource_map);
     }
+}
+
+#[derive(Debug)]
+pub struct Inset<T>(String, Option<Rc<T>>);
+
+impl<T> Inset<T> {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into(), None)
+    }
+    pub fn id(&self) -> &String {
+        &self.0
+    }
+    pub fn set_id(&mut self, id: impl Into<String>) {
+        self.0 = id.into();
+    }
+    pub fn value(&self) -> Option<&Rc<T>> {
+        self.1.as_ref()
+    }
+    pub fn set_value(&mut self, value: Option<Rc<T>>) {
+        self.1 = value;
+    }
+}
+
+pub trait InterpInset {
+    fn interp_inset(&mut self, resource: &mut Resources);
 }
