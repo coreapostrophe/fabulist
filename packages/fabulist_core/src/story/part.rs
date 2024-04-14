@@ -5,9 +5,15 @@ use crate::{
 
 use super::{resource::InterpInset, DialogueIndex, Progressive};
 
+#[cfg(feature = "actions")]
 pub mod actions;
+#[cfg(feature = "selection")]
 pub mod choice;
+#[cfg(feature = "dialogue")]
 pub mod dialogue;
+#[cfg(feature = "narration")]
+pub mod narration;
+#[cfg(feature = "selection")]
 pub mod selection;
 
 pub trait Element: Progressive + InterpInset {}

@@ -1,12 +1,4 @@
-use crate::{
-    error::Result,
-    state::State,
-    story::{
-        character::Character,
-        resource::{Inset, InterpInset},
-        Progressive,
-    },
-};
+use crate::{engine::Progressive, error::Result, state::State, story::resource::InterpInset};
 
 use super::{
     actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure},
@@ -14,29 +6,22 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct Dialogue {
+pub struct Narration {
     text: String,
-    character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
 
-impl Dialogue {
+impl Narration {
     pub fn text(&self) -> &String {
         &self.text
     }
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
-    pub fn character(&self) -> &Inset<Character> {
-        &self.character
-    }
-    pub fn set_character(&mut self, id: impl Into<String>) {
-        self.character.set_id(id);
-    }
 }
 
-impl QueryNext for Dialogue {
+impl QueryNext for Narration {
     fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
     }
@@ -45,7 +30,7 @@ impl QueryNext for Dialogue {
     }
 }
 
-impl ChangeContext for Dialogue {
+impl ChangeContext for Narration {
     fn change_context(&self) -> Option<&ChangeContextClosure> {
         self.change_context.as_ref()
     }
@@ -54,25 +39,16 @@ impl ChangeContext for Dialogue {
     }
 }
 
-#[derive(Debug)]
-pub struct DialogueBuilder {
+pub struct NarrationBuilder {
     text: String,
-    character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
 
-#[derive(Debug)]
-pub struct DialogueLayout<'a> {
-    pub text: &'a str,
-    pub character: &'a str,
-}
-
-impl DialogueBuilder {
-    pub fn new(layout: DialogueLayout) -> Self {
+impl NarrationBuilder {
+    pub fn new(text: impl Into<String>) -> Self {
         Self {
-            text: layout.text.to_string(),
-            character: Inset::new(layout.character.to_string()),
+            text: text.into(),
             query_next: None,
             change_context: None,
         }
@@ -85,48 +61,42 @@ impl DialogueBuilder {
         self.change_context = Some(closure);
         self
     }
-    pub fn build(self) -> Dialogue {
-        Dialogue {
+    pub fn build(self) -> Narration {
+        Narration {
             text: self.text,
-            character: self.character,
             query_next: self.query_next,
             change_context: self.change_context,
         }
     }
 }
 
-impl From<DialogueBuilder> for Dialogue {
-    fn from(value: DialogueBuilder) -> Self {
+impl From<NarrationBuilder> for Narration {
+    fn from(value: NarrationBuilder) -> Self {
         Self {
             text: value.text,
-            character: value.character,
             query_next: value.query_next,
             change_context: value.change_context,
         }
     }
 }
 
-impl InterpInset for Dialogue {
-    fn interp_inset(&mut self, resources: &mut crate::story::resource::Resources) {
-        let resource = resources.get::<Character>(self.character.id());
-        self.character.set_value(resource.clone());
-    }
-}
-
-impl From<DialogueBuilder> for Box<PartElement> {
-    fn from(value: DialogueBuilder) -> Self {
-        Box::new(Dialogue {
+impl From<NarrationBuilder> for Box<PartElement> {
+    fn from(value: NarrationBuilder) -> Self {
+        Box::new(Narration {
             text: value.text,
-            character: value.character,
             query_next: value.query_next,
             change_context: value.change_context,
         })
     }
 }
 
-impl Element for Dialogue {}
+impl InterpInset for Narration {
+    fn interp_inset(&mut self, _resources: &mut crate::story::resource::Resources) {}
+}
 
-impl Progressive for Dialogue {
+impl Element for Narration {}
+
+impl Progressive for Narration {
     type Output = Result<Option<String>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         match self.change_context {

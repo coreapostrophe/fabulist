@@ -11,3 +11,10 @@ authors = ["Daveren Cordero <daverencordero@gmail.com>"]
 
 [dependencies]
 thiserror = "1.0.58"
+
+[features]
+default = ["selection", "actions", "dialogue", "narration"]
+selection = ["actions"]
+dialogue = ["actions"]
+narration = ["actions"]
+actions = []

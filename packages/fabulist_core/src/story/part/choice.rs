@@ -4,7 +4,7 @@ use crate::{
     story::{resource::InterpInset, Progressive},
 };
 
-use super::actions::{ChangeContextClosure, QueryNextClosure};
+use super::actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure};
 
 #[derive(Debug)]
 pub struct Choice {
@@ -27,16 +27,22 @@ impl Choice {
     pub fn set_response(&mut self, response: Option<String>) {
         self.response = response;
     }
-    pub fn query_next(&self) -> Option<&QueryNextClosure> {
+}
+
+impl QueryNext for Choice {
+    fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
     }
-    pub fn set_query_next(&mut self, closure: QueryNextClosure) {
+    fn set_query_next(&mut self, closure: QueryNextClosure) {
         self.query_next = Some(closure);
     }
-    pub fn change_context(&self) -> Option<&ChangeContextClosure> {
+}
+
+impl ChangeContext for Choice {
+    fn change_context(&self) -> Option<&ChangeContextClosure> {
         self.change_context.as_ref()
     }
-    pub fn set_change_context(&mut self, closure: ChangeContextClosure) {
+    fn set_change_context(&mut self, closure: ChangeContextClosure) {
         self.change_context = Some(closure);
     }
 }
