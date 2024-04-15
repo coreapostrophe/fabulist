@@ -26,6 +26,13 @@ pub struct Story {
 }
 
 impl Story {
+    pub fn new() -> Self {
+        Self {
+            start: None,
+            parts: HashMap::new(),
+            resources: Resources::new(),
+        }
+    }
     pub fn start(&self) -> Option<&ListKey<String>> {
         match self.start.as_ref() {
             Some(start) => Some(start),
@@ -37,6 +44,19 @@ impl Story {
     }
     pub fn parts(&self) -> &HashMap<ListKey<String>, Part> {
         &self.parts
+    }
+
+    pub fn add_part_module<const N: usize>(
+        &mut self,
+        module_key: [&str; N],
+        part: impl Into<Part>,
+    ) {
+        let part = part.into();
+        let part_key = [&module_key[..], &[part.id()]].concat();
+        self.parts.insert(part_key.into(), part);
+    }
+    pub fn add_part(&mut self, part: impl Into<Part>) {
+        self.add_part_module([], part);
     }
     pub fn mut_parts(&mut self) -> &mut HashMap<ListKey<String>, Part> {
         &mut self.parts

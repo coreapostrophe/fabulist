@@ -45,8 +45,8 @@ object_interior = { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression
 object          = { "{" ~ object_interior? ~ "}" }
 statement_body  = { "{" ~ control_statement* ~ "}" }
 grouping        = { "(" ~ expression ~ ")" }
-argument_body   = { "(" ~ arguments* ~ ")" }
-parameter_body  = { "(" ~ parameters* ~ ")" }
+argument_body   = { "(" ~ arguments? ~ ")" }
+parameter_body  = { "(" ~ parameters? ~ ")" }
 lambda_function = { parameter_body ~ "=>" ~ statement_body }
 
 // ELEMENT DEFINITIONS
@@ -75,13 +75,14 @@ term       =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* 
 comparison =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
 equality   =  { #left = comparison ~ (#operator = equality_operator ~ #right = comparison)* }
 logical    =  { #left = equality ~ (#operator = logical_operator ~ #right = equality)* }
-assignment =  { (#name = identifier ~ "=" ~ #value = logical) | logical }
-expression =  { assignment }
+expression =  { logical }
 
 // CONTROL STATEMENTS
-import_statement     = { import_keyword ~ identifier ~ from_keyword ~ #path = string ~ ";" }
+import_statement     = { import_keyword ~ #name = identifier ~ from_keyword ~ #path = string ~ ";" }
 expression_statement = { expression ~ ";" }
-return_statement     = { return_keyword ~ expression_statement }
+assignment_statement = { #name = identifier ~ #value = expression ~ ";" }
+var_decl_statement   = { "let" ~ #name = identifier ~ #value = expression ~ ";" }
+return_statement     = { return_keyword ~ #value = expression ~ ";" }
 else_block           = { else_keyword ~ statement_body }
 else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ statement_body }
 if_block             = { if_keyword ~ #condition = grouping ~ statement_body }
@@ -91,10 +92,12 @@ if_else_statement    = { if_block ~ else_if_block* ~ else_block? }
 part_statement    =  { id ~ dialogue* }
 meta_statement    =  { meta_keyword ~ object }
 control_statement = _{
-    expression_statement
+    assignment_statement
   | if_else_statement
   | return_statement
   | import_statement
+  | var_decl_statement
+  | expression_statement
 }
 statement         =  { part_statement }
 
