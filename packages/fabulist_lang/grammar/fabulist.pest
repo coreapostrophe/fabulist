@@ -29,6 +29,7 @@ number              = ${ ASCII_DIGIT+ }
 boolean             = ${ true_keyword | false_keyword }
 none                = ${ none_keyword }
 identifier          = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+kebab_identifier    = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
 
 // OPERATORS
 unary_operator      = { "!" | "-" }
@@ -48,13 +49,6 @@ grouping        = { "(" ~ expression ~ ")" }
 argument_body   = { "(" ~ arguments? ~ ")" }
 parameter_body  = { "(" ~ parameters? ~ ")" }
 lambda_function = { parameter_body ~ "=>" ~ statement_body }
-
-// ELEMENT DEFINITIONS
-character     = { "[" ~ identifier ~ "]" }
-id            = { "#" ~ string ~ ("=>" ~ object)? }
-quote         = { "-" ~ string ~ ("=>" ~ object)? }
-dialogue_body = { ">" ~ string ~ quote* }
-dialogue      = { character ~ dialogue_body+ }
 
 // EXPRESSIONS
 primary    = _{
@@ -88,8 +82,17 @@ else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ sta
 if_block             = { if_keyword ~ #condition = grouping ~ statement_body }
 if_else_statement    = { if_block ~ else_if_block* ~ else_block? }
 
+// ELEMENT DEFINITIONS
+character     = { "[" ~ #name = kebab_identifier ~ "]" }
+id            = { "#" ~ #name = kebab_identifier }
+choice        = { "-" ~ #text = string ~ ("=>" ~ object)? }
+narration     = { "*" ~ #text = string ~ ("=>" ~ object)? }
+dialogue_body = { ">" ~ #text = string ~ ("=>" ~ object)? }
+dialogue      = { #char = character ~ dialogue_body+ }
+element       = { dialogue | choice | narration }
+
 // STATEMENTS
-part_statement    =  { id ~ dialogue* }
+part_statement    =  { #id = id ~ element* }
 meta_statement    =  { meta_keyword ~ object }
 control_statement = _{
     assignment_statement

@@ -47,7 +47,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_rule = value.as_rule();
-        match value.as_rule() {
+        match value_rule {
             Rule::expression => match value.into_inner().next() {
                 Some(inner) => Ok(Expr::try_from(inner)?),
                 None => Err(Error::InvalidRule(value_rule)),
