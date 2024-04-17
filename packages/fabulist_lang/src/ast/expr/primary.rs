@@ -21,7 +21,7 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_rule = value.as_rule();
         match value_rule {
-            Rule::primary => match value.into_inner().next() {
+            Rule::primary_expr => match value.into_inner().next() {
                 Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
                 None => Err(Error::InvalidRule(value_rule)),
             },
@@ -67,7 +67,7 @@ mod primary_expr_tests {
 
     fn parse_primary(source: &str) -> PrimaryExpr {
         let mut result =
-            GrammarParser::parse(Rule::primary, source).expect("Failed to parse string.");
+            GrammarParser::parse(Rule::primary_expr, source).expect("Failed to parse string.");
         let primary = result.next().expect("Failed to parse primary expression");
         let primary_ast = PrimaryExpr::try_from(primary);
         assert!(primary_ast.is_ok());

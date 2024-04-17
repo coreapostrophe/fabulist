@@ -14,8 +14,8 @@ pub mod unary;
 #[derive(Debug)]
 pub enum Expr {
     Primary(Box<PrimaryExpr>),
-    Call(Box<CallExpr>),
     Unary(Box<UnaryExpr>),
+    Call(Box<CallExpr>),
     Binary(Box<BinaryExpr>),
 }
 
@@ -53,16 +53,16 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
                 None => Err(Error::InvalidRule(value_rule)),
             },
 
-            Rule::unary => Ok(UnaryExpr::try_from(value)?.into()),
-            Rule::call => Ok(CallExpr::try_from(value)?.into()),
+            Rule::unary_expr => Ok(UnaryExpr::try_from(value)?.into()),
+            Rule::call_expr => Ok(CallExpr::try_from(value)?.into()),
 
-            Rule::logical => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::equality => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::comparison => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::term => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::factor => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::logical_expr => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::equality_expr => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::comparison_expr => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::term_expr => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::factor_expr => Ok(BinaryExpr::try_from(value)?.into()),
 
-            Rule::primary => Ok(PrimaryExpr::try_from(value)?.into()),
+            Rule::primary_expr => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::number => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::identifier => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::string => Ok(PrimaryExpr::try_from(value)?.into()),

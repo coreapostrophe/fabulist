@@ -41,7 +41,8 @@ mod call_expr_tests {
     use super::*;
 
     fn parse_call_expr(source: &str) -> CallExpr {
-        let mut result = GrammarParser::parse(Rule::call, source).expect("Failed to parse string.");
+        let mut result =
+            GrammarParser::parse(Rule::call_expr, source).expect("Failed to parse string.");
         let call = result.next().expect("Failed to parse call expression");
         let call_ast = CallExpr::try_from(call);
         assert!(call_ast.is_ok());

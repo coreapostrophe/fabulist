@@ -1,9 +1,7 @@
 use crate::parser::Rule;
 
-pub mod ctrl_stmt;
 pub mod dfn;
 pub mod expr;
-pub mod stmt;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

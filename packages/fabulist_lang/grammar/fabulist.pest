@@ -2,22 +2,33 @@
 WHITESPACE = _{ " " | "\n" }
 
 // KEYWORDS
-true_keyword   = _{ "true" }
-false_keyword  = _{ "false" }
-none_keyword   = _{ "none" }
-meta_keyword   = _{ "story" }
-if_keyword     = _{ "if" }
-else_keyword   = _{ "else" }
-return_keyword = _{ "return" }
-import_keyword = _{ "keyword" }
-from_keyword   = _{ "from" }
-keyword        = _{
+true_keyword  = _{ "true" }
+false_keyword = _{ "false" }
+none_keyword  = _{ "none" }
+meta_keyword  = _{ "story" }
+from_keyword  = _{ "from" }
+set_keyword   = _{ "set" }
+let_keyword   = _{ "let" }
+get_keyword   = _{ "get" }
+if_keyword    = _{ "if" }
+else_keyword  = _{ "else" }
+mod_keyword   = _{ "module" }
+as_keyword    = _{ "as" }
+goto_keyword  = _{ "goto" }
+keyword       = _{
     true_keyword
   | false_keyword
   | none_keyword
   | meta_keyword
-  | import_keyword
   | from_keyword
+  | set_keyword
+  | let_keyword
+  | get_keyword
+  | if_keyword
+  | else_keyword
+  | mod_keyword
+  | as_keyword
+  | goto_keyword
 }
 
 // PRIMITIVE VALUE
@@ -28,8 +39,6 @@ raw_string          = ${ "r" ~ PUSH("#"*) ~ "\"" ~ raw_string_interior ~ "\"" ~ 
 number              = ${ ASCII_DIGIT+ }
 boolean             = ${ true_keyword | false_keyword }
 none                = ${ none_keyword }
-identifier          = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
-kebab_identifier    = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
 
 // OPERATORS
 unary_operator      = { "!" | "-" }
@@ -40,68 +49,64 @@ equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
 
 // DEFINITIONS
-parameters      = { identifier ~ ("," ~ identifier)* }
-arguments       = { expression ~ ("," ~ expression)* }
-object_interior = { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
-object          = { "{" ~ object_interior? ~ "}" }
-statement_body  = { "{" ~ control_statement* ~ "}" }
-grouping        = { "(" ~ expression ~ ")" }
-argument_body   = { "(" ~ arguments? ~ ")" }
-parameter_body  = { "(" ~ parameters? ~ ")" }
-lambda_function = { parameter_body ~ "=>" ~ statement_body }
+raw_identifier  = ${ "r#" ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+identifier      = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+list_interior   =  { expression ~ ("," ~ expression)* }
+list            =  { "[" ~ list_interior? ~ "]" }
+object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
+object          =  { "{" ~ object_interior? ~ "}" }
+grouping        =  { "(" ~ expression ~ ")" }
+mutator         =  { "|>" ~ block_stmt }
+arguments       =  { expression ~ ("," ~ expression)* }
+argument_body   =  { "(" ~ arguments? ~ ")" }
+get             =  { get_keyword ~ "(" ~ identifier ~ ")" }
 
 // EXPRESSIONS
-primary    = _{
+primary_expr    = _{
     raw_string
+  | get
   | string
   | number
   | boolean
-  | lambda_function
   | grouping
   | none
+  | raw_identifier
   | identifier
   | object
+  | list
+  | mutator
 }
-call       =  { #callee = primary ~ argument_body* }
-unary      =  { (#operator = unary_operator ~ #right = unary) | call }
-factor     =  { #left = unary ~ (#operator = factor_operator ~ #right = unary)* }
-term       =  { #left = factor ~ (#operator = term_operator ~ #right = factor)* }
-comparison =  { #left = term ~ (#operator = comparison_operator ~ #right = term)* }
-equality   =  { #left = comparison ~ (#operator = equality_operator ~ #right = comparison)* }
-logical    =  { #left = equality ~ (#operator = logical_operator ~ #right = equality)* }
-expression =  { logical }
+call_expr       =  { #callee = primary_expr ~ argument_body* }
+unary_expr      =  { (#operator = unary_operator ~ #right = unary_expr) | call_expr }
+factor_expr     =  { #left = unary_expr ~ (#operator = factor_operator ~ #right = unary_expr)* }
+term_expr       =  { #left = factor_expr ~ (#operator = term_operator ~ #right = factor_expr)* }
+comparison_expr =  { #left = term_expr ~ (#operator = comparison_operator ~ #right = term_expr)* }
+equality_expr   =  { #left = comparison_expr ~ (#operator = equality_operator ~ #right = comparison_expr)* }
+logical_expr    =  { #left = equality_expr ~ (#operator = logical_operator ~ #right = equality_expr)* }
+expression      =  { logical_expr }
 
-// CONTROL STATEMENTS
-import_statement     = { import_keyword ~ #name = identifier ~ from_keyword ~ #path = string ~ ";" }
-expression_statement = { expression ~ ";" }
-assignment_statement = { #name = identifier ~ #value = expression ~ ";" }
-var_decl_statement   = { "let" ~ #name = identifier ~ #value = expression ~ ";" }
-return_statement     = { return_keyword ~ #value = expression ~ ";" }
-else_block           = { else_keyword ~ statement_body }
-else_if_block        = { else_keyword ~ if_keyword ~ #condition = grouping ~ statement_body }
-if_block             = { if_keyword ~ #condition = grouping ~ statement_body }
-if_else_statement    = { if_block ~ else_if_block* ~ else_block? }
+// DECLARATIONS
+character_decl = { "[" ~ #name = identifier ~ "]" }
+id_decl        = { "#" ~ #name = identifier }
+choice_decl    = { "-" ~ #text = string ~ ("=>" ~ object)? }
+narration_decl = { "*" ~ #text = string ~ ("=>" ~ object)? }
+quote_decl     = { ">" ~ #text = string ~ ("=>" ~ object)? }
+dialogue_decl  = { #character = character_decl ~ quote_decl+ }
+element_decl   = { dialogue_decl | choice_decl | narration_decl }
 
-// ELEMENT DEFINITIONS
-character     = { "[" ~ #name = kebab_identifier ~ "]" }
-id            = { "#" ~ #name = kebab_identifier }
-choice        = { "-" ~ #text = string ~ ("=>" ~ object)? }
-narration     = { "*" ~ #text = string ~ ("=>" ~ object)? }
-dialogue_body = { ">" ~ #text = string ~ ("=>" ~ object)? }
-dialogue      = { #char = character ~ dialogue_body+ }
-element       = { dialogue | choice | narration }
+// SEQUENCE STATEMENT
+block_stmt   = { "{" ~ mutator_stmt* ~ "}" }
+set_stmt     = { set_keyword ~ identifier ~ "=" ~ expression ~ ";" }
+let_stmt     = { let_keyword ~ identifier ~ "=" ~ expression ~ ";" }
+goto_stmt    = { goto_keyword ~ identifier }
+else_stmt    = { else_keyword ~ (if_stmt | block_stmt) }
+if_stmt      = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
+mutator_stmt = { block_stmt | set_stmt | let_stmt | if_stmt | goto_stmt }
 
 // STATEMENTS
-part_statement    =  { #id = id ~ element* }
-meta_statement    =  { meta_keyword ~ object }
-control_statement = _{
-    assignment_statement
-  | if_else_statement
-  | return_statement
-  | import_statement
-  | var_decl_statement
-  | expression_statement
-}
-statement         =  { part_statement }
+mod_stmt  = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" }
+part_stmt = { #id = id_decl ~ element_decl* }
+meta_stmt = { meta_keyword ~ object }
+statement = { part_stmt }
 
-fabulist = { SOI ~ meta_statement? ~ statement* ~ EOI }
+fabulist = { SOI ~ mod_stmt* ~ meta_stmt? ~ statement* ~ EOI }

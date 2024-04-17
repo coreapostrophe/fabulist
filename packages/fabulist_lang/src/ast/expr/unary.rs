@@ -36,7 +36,7 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
         let value_rule = value.as_rule();
         let inner = value.into_inner();
 
-        let call = inner.clone().find(|pair| pair.as_rule() == Rule::call);
+        let call = inner.clone().find(|pair| pair.as_rule() == Rule::call_expr);
 
         if let Some(call) = call {
             Ok(UnaryExpr::Expr(Expr::try_from(call)?))
@@ -65,7 +65,7 @@ mod unary_expr_tests {
 
     fn parse_unary_expr(source: &str) -> UnaryExpr {
         let mut result =
-            GrammarParser::parse(Rule::unary, source).expect("Failed to parse string.");
+            GrammarParser::parse(Rule::unary_expr, source).expect("Failed to parse string.");
         let unary = result.next().expect("Failed to parse unary expression");
         let unary_ast = UnaryExpr::try_from(unary);
         assert!(unary_ast.is_ok());
