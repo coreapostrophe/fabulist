@@ -23,7 +23,7 @@ impl TryFrom<Pair<'_, Rule>> for PartStmt {
             None => Err(Error::InvalidRule(value_rule)),
         }?;
         let elements = inner
-            .filter(|pair| pair.as_rule() == Rule::element)
+            .filter(|pair| pair.as_rule() == Rule::element_decl)
             .map(|pair| ElementStmt::try_from(pair))
             .collect::<Result<Vec<ElementStmt>, Error>>()?;
 
@@ -41,7 +41,7 @@ mod part_stmt_tests {
 
     fn parse_part_stmt(source: &str) -> PartStmt {
         let mut result =
-            GrammarParser::parse(Rule::part_statement, source).expect("Failed to parse string.");
+            GrammarParser::parse(Rule::part_stmt, source).expect("Failed to parse string.");
         let part = result.next().expect("Failed to parse part statement");
         let part_ast = PartStmt::try_from(part);
         assert!(part_ast.is_ok());

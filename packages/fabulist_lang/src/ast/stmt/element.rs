@@ -2,17 +2,18 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use self::{content::ContentElem, dialogue::DialogueElem};
+use self::{dialogue::DialogueElem, quote::QuoteElem};
 
 use super::Error;
 
-pub mod content;
 pub mod dialogue;
+pub mod quote;
 
+#[derive(Debug)]
 pub enum ElementStmt {
     Dialogue(DialogueElem),
-    Choice(ContentElem),
-    Narration(ContentElem),
+    Choice(QuoteElem),
+    Narration(QuoteElem),
 }
 
 impl From<DialogueElem> for ElementStmt {
@@ -27,17 +28,17 @@ impl TryFrom<Pair<'_, Rule>> for ElementStmt {
         let value_rule = value.as_rule();
 
         match value_rule {
-            Rule::element => match value.into_inner().next() {
+            Rule::element_decl => match value.into_inner().next() {
                 Some(inner) => Ok(ElementStmt::try_from(inner)?),
                 None => Err(Error::InvalidRule(value_rule)),
             },
-            Rule::dialogue => Ok(DialogueElem::try_from(value)?.into()),
-            Rule::choice => {
-                let content = ContentElem::try_from(value)?;
+            Rule::dialogue_decl => Ok(DialogueElem::try_from(value)?.into()),
+            Rule::choice_decl => {
+                let content = QuoteElem::try_from(value)?;
                 Ok(ElementStmt::Choice(content))
             }
-            Rule::narration => {
-                let content = ContentElem::try_from(value)?;
+            Rule::narration_decl => {
+                let content = QuoteElem::try_from(value)?;
                 Ok(ElementStmt::Narration(content))
             }
             _ => Err(Error::InvalidRule(value_rule)),
@@ -55,7 +56,7 @@ mod element_stmt_tests {
 
     fn parse_element_stmt(source: &str) -> ElementStmt {
         let mut result =
-            GrammarParser::parse(Rule::element, source).expect("Failed to parse string.");
+            GrammarParser::parse(Rule::element_decl, source).expect("Failed to parse string.");
         let element = result.next().expect("Failed to parse element statement");
         let element_ast = ElementStmt::try_from(element);
         assert!(element_ast.is_ok());

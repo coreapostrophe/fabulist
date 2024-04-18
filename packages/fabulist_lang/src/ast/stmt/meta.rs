@@ -9,7 +9,7 @@ pub struct MetaStmt(pub Object);
 impl TryFrom<Pair<'_, Rule>> for MetaStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        if value.as_rule() == Rule::meta_statement {
+        if value.as_rule() == Rule::meta_stmt {
             if let Some(object) = value
                 .clone()
                 .into_inner()
@@ -32,7 +32,7 @@ mod meta_stmt_tests {
 
     fn parse_meta_stmt(source: &str) -> MetaStmt {
         let mut result =
-            GrammarParser::parse(Rule::meta_statement, source).expect("Failed to parse string.");
+            GrammarParser::parse(Rule::meta_stmt, source).expect("Failed to parse string.");
         let meta = result.next().expect("Failed to parse call expression");
         let meta_ast = MetaStmt::try_from(meta);
         assert!(meta_ast.is_ok());

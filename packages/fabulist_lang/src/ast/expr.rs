@@ -2,12 +2,15 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use self::{binary::BinaryExpr, call::CallExpr, primary::PrimaryExpr, unary::UnaryExpr};
+use self::{
+    binary::BinaryExpr, call::CallExpr, member::MemberExpr, primary::PrimaryExpr, unary::UnaryExpr,
+};
 
 use super::Error;
 
 pub mod binary;
 pub mod call;
+pub mod member;
 pub mod primary;
 pub mod unary;
 
@@ -16,6 +19,7 @@ pub enum Expr {
     Primary(Box<PrimaryExpr>),
     Unary(Box<UnaryExpr>),
     Call(Box<CallExpr>),
+    Member(Box<MemberExpr>),
     Binary(Box<BinaryExpr>),
 }
 
@@ -43,6 +47,12 @@ impl From<CallExpr> for Expr {
     }
 }
 
+impl From<MemberExpr> for Expr {
+    fn from(value: MemberExpr) -> Self {
+        Expr::Member(Box::new(value))
+    }
+}
+
 impl TryFrom<Pair<'_, Rule>> for Expr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
@@ -55,6 +65,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
 
             Rule::unary_expr => Ok(UnaryExpr::try_from(value)?.into()),
             Rule::call_expr => Ok(CallExpr::try_from(value)?.into()),
+            Rule::member_expr => Ok(MemberExpr::try_from(value)?.into()),
 
             Rule::logical_expr => Ok(BinaryExpr::try_from(value)?.into()),
             Rule::equality_expr => Ok(BinaryExpr::try_from(value)?.into()),

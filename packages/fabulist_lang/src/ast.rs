@@ -2,6 +2,7 @@ use crate::parser::Rule;
 
 pub mod dfn;
 pub mod expr;
+pub mod stmt;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

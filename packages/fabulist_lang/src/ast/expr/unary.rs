@@ -36,10 +36,12 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
         let value_rule = value.as_rule();
         let inner = value.into_inner();
 
-        let call = inner.clone().find(|pair| pair.as_rule() == Rule::call_expr);
+        let member = inner
+            .clone()
+            .find(|pair| pair.as_rule() == Rule::member_expr);
 
-        if let Some(call) = call {
-            Ok(UnaryExpr::Expr(Expr::try_from(call)?))
+        if let Some(member) = member {
+            Ok(UnaryExpr::Expr(Expr::try_from(member)?))
         } else {
             let operator = match inner.find_first_tagged("operator") {
                 Some(operator) => Ok(UnaryOperator::try_from(operator.as_str().to_string())?),

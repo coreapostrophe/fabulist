@@ -77,7 +77,8 @@ primary_expr    = _{
   | mutator
 }
 call_expr       =  { #callee = primary_expr ~ argument_body* }
-unary_expr      =  { (#operator = unary_operator ~ #right = unary_expr) | call_expr }
+member_expr     =  { #left = call_expr ~ ("." ~ member_expr)* }
+unary_expr      =  { (#operator = unary_operator ~ #right = unary_expr) | member_expr }
 factor_expr     =  { #left = unary_expr ~ (#operator = factor_operator ~ #right = unary_expr)* }
 term_expr       =  { #left = factor_expr ~ (#operator = term_operator ~ #right = factor_expr)* }
 comparison_expr =  { #left = term_expr ~ (#operator = comparison_operator ~ #right = term_expr)* }
