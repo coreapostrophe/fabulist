@@ -1,4 +1,8 @@
-use crate::{error::Result, state::State, story::Progressive};
+use crate::{
+    error::Result,
+    state::State,
+    story::{reference::ListKey, Progressive},
+};
 
 use super::actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure};
 
@@ -93,7 +97,7 @@ impl From<ChoiceBuilder> for Choice {
 }
 
 impl Progressive for Choice {
-    type Output = Result<Option<String>>;
+    type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         match self.change_context {
             Some(change_context_closure) => {

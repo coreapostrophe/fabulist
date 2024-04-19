@@ -1,6 +1,6 @@
-use crate::story::context::Context;
+use crate::story::{context::Context, reference::ListKey};
 
-pub type QueryNextClosure = fn(&Context) -> String;
+pub type QueryNextClosure = fn(&Context) -> ListKey<String>;
 pub trait QueryNext {
     fn query_next(&self) -> Option<&QueryNextClosure>;
     fn set_query_next(&mut self, closure: QueryNextClosure);

@@ -2,7 +2,7 @@ use fabulist_derive::ElementInternal;
 
 use crate::{
     error::{Error, Result},
-    story::Progressive,
+    story::{reference::ListKey, Progressive},
 };
 
 use super::{choice::Choice, PartElement};
@@ -48,7 +48,7 @@ impl From<SelectionBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Selection {
-    type Output = Result<Option<String>>;
+    type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut crate::state::State, choice_index: Option<usize>) -> Self::Output {
         if !self.0.is_empty() {
             let choice = match choice_index {

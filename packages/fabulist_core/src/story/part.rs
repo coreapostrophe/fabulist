@@ -3,7 +3,7 @@ use crate::{
     state::State,
 };
 
-use super::{resource::InterpInset, DialogueIndex, Progressive};
+use super::{reference::ListKey, resource::InterpInset, DialogueIndex, Progressive};
 
 #[cfg(feature = "actions")]
 pub mod actions;
@@ -18,7 +18,7 @@ pub mod selection;
 
 pub trait Element: Progressive + InterpInset {}
 
-pub type PartElement = dyn Element<Output = Result<Option<String>>>;
+pub type PartElement = dyn Element<Output = Result<Option<ListKey<String>>>>;
 
 #[derive(Debug)]
 pub struct Part {

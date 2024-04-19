@@ -3,7 +3,7 @@ use fabulist_derive::ElementInternal;
 use crate::{
     error::Result,
     state::State,
-    story::{character::Character, resource::Inset, Progressive},
+    story::{character::Character, reference::ListKey, resource::Inset, Progressive},
 };
 
 use super::{
@@ -110,7 +110,7 @@ impl From<DialogueBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Dialogue {
-    type Output = Result<Option<String>>;
+    type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         match self.change_context {
             Some(change_context_closure) => {

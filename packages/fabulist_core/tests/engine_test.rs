@@ -56,9 +56,9 @@ pub fn engine_runs_basic_story() {
                             _ => panic!("Context value `favorite_fruit` was not a string."),
                         };
                         if favorite_fruit == "Apple" {
-                            "fail-scene".to_string()
+                            "fail-scene".into()
                         } else {
-                            "success-scene".to_string()
+                            "success-scene".into()
                         }
                     }),
                 ),
