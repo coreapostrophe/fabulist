@@ -25,6 +25,10 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
                 None => Err(Error::InvalidRule(value_rule)),
             },
+            Rule::identifier => match value.into_inner().next() {
+                Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
+                None => Err(Error::InvalidRule(value_rule)),
+            },
             Rule::string => match value.into_inner().next() {
                 Some(interior) => Ok(PrimaryExpr::String(interior.as_str().to_string())),
                 None => Err(Error::InvalidRule(value_rule)),
@@ -45,8 +49,8 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 None => Err(Error::InvalidRule(value_rule)),
             },
             Rule::none => Ok(PrimaryExpr::None),
-            Rule::identifier => Ok(PrimaryExpr::Identifier(value.as_str().to_string())),
-            Rule::raw_identifier => match value.into_inner().next() {
+            Rule::strict_ident => Ok(PrimaryExpr::Identifier(value.as_str().to_string())),
+            Rule::raw_ident => match value.into_inner().next() {
                 Some(interior) => Ok(PrimaryExpr::Identifier(interior.as_str().to_string())),
                 None => Err(Error::InvalidRule(value_rule)),
             },

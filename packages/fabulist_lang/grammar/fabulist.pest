@@ -15,7 +15,7 @@ else_keyword  = _{ "else" }
 mod_keyword   = _{ "module" }
 as_keyword    = _{ "as" }
 goto_keyword  = _{ "goto" }
-keyword       = _{
+raw_keyword   = _{
     true_keyword
   | false_keyword
   | none_keyword
@@ -30,6 +30,7 @@ keyword       = _{
   | as_keyword
   | goto_keyword
 }
+keyword       = _{ raw_keyword ~ !ident_continue }
 
 // PRIMITIVE VALUE
 string_interior     = ${ (!("\"") ~ ANY)* }
@@ -49,18 +50,22 @@ equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
 
 // DEFINITIONS
-raw_identifier_interior = ${ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
-raw_identifier          = ${ "r#" ~ raw_identifier_interior }
-identifier              = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
-list_interior           =  { expression ~ ("," ~ expression)* }
-list                    =  { "[" ~ list_interior? ~ "]" }
-object_interior         =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
-object                  =  { "{" ~ object_interior? ~ "}" }
-grouping                =  { "(" ~ expression ~ ")" }
-mutator                 =  { "|>" ~ block_stmt }
-arguments               =  { expression ~ ("," ~ expression)* }
-argument_body           =  { "(" ~ arguments? ~ ")" }
-get                     =  { get_keyword ~ "(" ~ identifier ~ ")" }
+ident_start     = _{ "_" | ASCII_ALPHA }
+ident_continue  = _{ "_" | ASCII_ALPHANUMERIC }
+ident_interior  = ${ ident_start ~ ident_continue* }
+raw_ident       = ${ "r#" ~ ident_interior }
+strict_ident    = ${ !keyword ~ ident_interior }
+identifier      = ${ raw_ident | strict_ident }
+path            = ${ identifier ~ ("::" ~ identifier)* }
+list_interior   =  { expression ~ ("," ~ expression)* }
+list            =  { "[" ~ list_interior? ~ "]" }
+object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
+object          =  { "{" ~ object_interior? ~ "}" }
+grouping        =  { "(" ~ expression ~ ")" }
+mutator         =  { "|>" ~ block_stmt }
+arguments       =  { expression ~ ("," ~ expression)* }
+argument_body   =  { "(" ~ arguments? ~ ")" }
+get             =  { get_keyword ~ "(" ~ identifier ~ ")" }
 
 // EXPRESSIONS
 primary_expr    = _{
@@ -71,7 +76,6 @@ primary_expr    = _{
   | boolean
   | grouping
   | none
-  | raw_identifier
   | identifier
   | object
   | list
@@ -99,11 +103,11 @@ part_decl      = { #id = id_decl ~ element_decl* }
 meta_decl      = { meta_keyword ~ object }
 mod_decl       = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" }
 
-// SEQUENCE STATEMENT
+// STATEMENT
 block_stmt = { "{" ~ statement* ~ "}" }
 set_stmt   = { set_keyword ~ identifier ~ "=" ~ expression ~ ";" }
 let_stmt   = { let_keyword ~ identifier ~ "=" ~ expression ~ ";" }
-goto_stmt  = { goto_keyword ~ identifier }
+goto_stmt  = { goto_keyword ~ path ~ ";" }
 else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
 if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
 statement  = { block_stmt | set_stmt | let_stmt | if_stmt | goto_stmt }
