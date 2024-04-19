@@ -4,6 +4,7 @@ use pest::{iterators::Pair, Parser};
 
 use crate::parser::{GrammarParser, Rule};
 
+pub mod decl;
 pub mod dfn;
 pub mod expr;
 pub mod stmt;

@@ -2,15 +2,15 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use super::{quote::QuoteElem, Error};
+use super::{quote::QuoteDecl, Error};
 
 #[derive(Debug)]
-pub struct DialogueElem {
+pub struct DialogueDecl {
     pub character: String,
-    pub quotes: Vec<QuoteElem>,
+    pub quotes: Vec<QuoteDecl>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for DialogueElem {
+impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_rule = value.as_rule();
@@ -26,10 +26,10 @@ impl TryFrom<Pair<'_, Rule>> for DialogueElem {
 
         let quotes = inner
             .filter(|pair| pair.as_rule() == Rule::quote_decl)
-            .map(|pair| QuoteElem::try_from(pair))
-            .collect::<Result<Vec<QuoteElem>, Error>>()?;
+            .map(|pair| QuoteDecl::try_from(pair))
+            .collect::<Result<Vec<QuoteDecl>, Error>>()?;
 
-        Ok(DialogueElem { character, quotes })
+        Ok(DialogueDecl { character, quotes })
     }
 }
 
@@ -42,7 +42,7 @@ mod dialogue_elem_tests {
     #[test]
     fn parses_dialogue_elem() {
         let test_helper =
-            ParserTestHelper::<DialogueElem>::new(Rule::dialogue_decl, "DialogueElem");
+            ParserTestHelper::<DialogueDecl>::new(Rule::dialogue_decl, "DialogueDecl");
         test_helper.assert_parse(r#"[char] > "I'm a dialogue" > "I'm another dialogue""#);
     }
 }

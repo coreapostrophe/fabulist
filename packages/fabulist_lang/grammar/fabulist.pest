@@ -95,20 +95,17 @@ narration_decl = { "*" ~ #text = string ~ ("=>" ~ object)? }
 quote_decl     = { ">" ~ #text = string ~ ("=>" ~ object)? }
 dialogue_decl  = { #character = character_decl ~ quote_decl+ }
 element_decl   = { dialogue_decl | choice_decl | narration_decl }
+part_decl      = { #id = id_decl ~ element_decl* }
+meta_decl      = { meta_keyword ~ object }
+mod_decl       = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" }
 
 // SEQUENCE STATEMENT
-block_stmt   = { "{" ~ mutator_stmt* ~ "}" }
-set_stmt     = { set_keyword ~ identifier ~ "=" ~ expression ~ ";" }
-let_stmt     = { let_keyword ~ identifier ~ "=" ~ expression ~ ";" }
-goto_stmt    = { goto_keyword ~ identifier }
-else_stmt    = { else_keyword ~ (if_stmt | block_stmt) }
-if_stmt      = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
-mutator_stmt = { block_stmt | set_stmt | let_stmt | if_stmt | goto_stmt }
+block_stmt = { "{" ~ statement* ~ "}" }
+set_stmt   = { set_keyword ~ identifier ~ "=" ~ expression ~ ";" }
+let_stmt   = { let_keyword ~ identifier ~ "=" ~ expression ~ ";" }
+goto_stmt  = { goto_keyword ~ identifier }
+else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
+if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
+statement  = { block_stmt | set_stmt | let_stmt | if_stmt | goto_stmt }
 
-// STATEMENTS
-mod_stmt  = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" }
-part_stmt = { #id = id_decl ~ element_decl* }
-meta_stmt = { meta_keyword ~ object }
-statement = { part_stmt }
-
-fabulist = { SOI ~ mod_stmt* ~ meta_stmt? ~ statement* ~ EOI }
+fabulist = { SOI ~ mod_decl* ~ meta_decl? ~ part_decl* ~ EOI }

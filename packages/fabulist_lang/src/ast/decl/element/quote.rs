@@ -5,12 +5,12 @@ use crate::{ast::dfn::object::Object, parser::Rule};
 use super::Error;
 
 #[derive(Debug)]
-pub struct QuoteElem {
+pub struct QuoteDecl {
     pub text: String,
     pub properties: Option<Object>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for QuoteElem {
+impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_rule = value.as_rule();
@@ -29,7 +29,7 @@ impl TryFrom<Pair<'_, Rule>> for QuoteElem {
             None => None,
         };
 
-        Ok(QuoteElem { text, properties })
+        Ok(QuoteDecl { text, properties })
     }
 }
 
@@ -41,13 +41,13 @@ mod quote_elem_tests {
 
     #[test]
     fn parses_quote_elem() {
-        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::quote_decl, "QuoteDecl");
+        let test_helper = ParserTestHelper::<QuoteDecl>::new(Rule::quote_decl, "QuoteDecl");
         test_helper.assert_parse(r#"> "I'm an example quote""#);
 
-        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::narration_decl, "QuoteDecl");
+        let test_helper = ParserTestHelper::<QuoteDecl>::new(Rule::narration_decl, "QuoteDecl");
         test_helper.assert_parse(r#"* "I'm an example narration""#);
 
-        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::choice_decl, "QuoteDecl");
+        let test_helper = ParserTestHelper::<QuoteDecl>::new(Rule::choice_decl, "QuoteDecl");
         test_helper.assert_parse(r#"- "I'm an example choice""#);
     }
 }

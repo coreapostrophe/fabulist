@@ -2,7 +2,7 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use self::{dialogue::DialogueElem, quote::QuoteElem};
+use self::{dialogue::DialogueDecl, quote::QuoteDecl};
 
 use super::Error;
 
@@ -10,36 +10,36 @@ pub mod dialogue;
 pub mod quote;
 
 #[derive(Debug)]
-pub enum ElementStmt {
-    Dialogue(DialogueElem),
-    Choice(QuoteElem),
-    Narration(QuoteElem),
+pub enum ElementDecl {
+    Dialogue(DialogueDecl),
+    Choice(QuoteDecl),
+    Narration(QuoteDecl),
 }
 
-impl From<DialogueElem> for ElementStmt {
-    fn from(value: DialogueElem) -> Self {
+impl From<DialogueDecl> for ElementDecl {
+    fn from(value: DialogueDecl) -> Self {
         Self::Dialogue(value)
     }
 }
 
-impl TryFrom<Pair<'_, Rule>> for ElementStmt {
+impl TryFrom<Pair<'_, Rule>> for ElementDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_rule = value.as_rule();
 
         match value_rule {
             Rule::element_decl => match value.into_inner().next() {
-                Some(inner) => Ok(ElementStmt::try_from(inner)?),
+                Some(inner) => Ok(ElementDecl::try_from(inner)?),
                 None => Err(Error::InvalidRule(value_rule)),
             },
-            Rule::dialogue_decl => Ok(DialogueElem::try_from(value)?.into()),
+            Rule::dialogue_decl => Ok(DialogueDecl::try_from(value)?.into()),
             Rule::choice_decl => {
-                let content = QuoteElem::try_from(value)?;
-                Ok(ElementStmt::Choice(content))
+                let content = QuoteDecl::try_from(value)?;
+                Ok(ElementDecl::Choice(content))
             }
             Rule::narration_decl => {
-                let content = QuoteElem::try_from(value)?;
-                Ok(ElementStmt::Narration(content))
+                let content = QuoteDecl::try_from(value)?;
+                Ok(ElementDecl::Narration(content))
             }
             _ => Err(Error::InvalidRule(value_rule)),
         }
@@ -54,7 +54,7 @@ mod element_stmt_tests {
 
     #[test]
     fn parses_element_stmt() {
-        let test_helper = ParserTestHelper::<ElementStmt>::new(Rule::element_decl, "ElementStmt");
+        let test_helper = ParserTestHelper::<ElementDecl>::new(Rule::element_decl, "ElementDecl");
         test_helper.assert_parse(r#"[char]> "I'm a dialogue""#);
         test_helper.assert_parse(r#"* "I'm a narration""#);
         test_helper.assert_parse(r#"- "I'm a choice""#);
