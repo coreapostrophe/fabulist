@@ -1,5 +1,5 @@
 // SILENT RULES
-WHITESPACE = _{ " " | "\n" }
+WHITESPACE = _{ " " | "\n" | "\t" }
 
 // KEYWORDS
 true_keyword  = _{ "true" }

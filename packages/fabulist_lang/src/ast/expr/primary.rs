@@ -1,6 +1,9 @@
 use pest::iterators::Pair;
 
-use crate::{ast::dfn::object::Object, parser::Rule};
+use crate::{
+    ast::dfn::{mutator::Mutator, object::Object},
+    parser::Rule,
+};
 
 use super::{Error, Expr};
 
@@ -13,6 +16,7 @@ pub enum PrimaryExpr {
     Grouping(Expr),
     RawString(String),
     Identifier(String),
+    Mutator(Mutator),
     None,
 }
 
@@ -55,6 +59,7 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 None => Err(Error::InvalidRule(value_rule)),
             },
             Rule::object => Ok(PrimaryExpr::Object(Object::try_from(value)?)),
+            Rule::mutator => Ok(PrimaryExpr::Mutator(Mutator::try_from(value)?)),
             Rule::boolean => match value.as_str() {
                 "true" => Ok(PrimaryExpr::Boolean(true)),
                 "false" => Ok(PrimaryExpr::Boolean(false)),

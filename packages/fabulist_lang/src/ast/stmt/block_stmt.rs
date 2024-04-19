@@ -30,6 +30,13 @@ mod block_stmt_tests {
     #[test]
     fn parses_block_stmt() {
         let test_helper = ParserTestHelper::<BlockStmt>::new(Rule::block_stmt, "BlockStmt");
-        test_helper.assert_parse("{}");
+        test_helper.assert_parse(
+            r#"{
+                let key = "value";
+                set key = "value";
+                goto module_1::part_1;
+                if true {} else if true {} else {}
+            }"#,
+        );
     }
 }

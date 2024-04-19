@@ -8,6 +8,7 @@ pub mod decl;
 pub mod dfn;
 pub mod expr;
 pub mod stmt;
+pub mod story;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -52,13 +53,13 @@ where
     {
         let mut result =
             GrammarParser::parse(self.rule_type, source).expect("Failed to parse string.");
-        let element = result.next().expect(&format!(
+        let pair = result.next().expect(&format!(
             "Failed to parse {} pair from string",
             self.struct_name
         ));
-        let element_ast = T::try_from(element);
-        assert!(element_ast.is_ok());
-        element_ast.expect(&format!(
+        let ast = T::try_from(pair);
+        assert!(ast.is_ok());
+        ast.expect(&format!(
             "Failed to turn pair to `{}` struct",
             self.struct_name
         ))
