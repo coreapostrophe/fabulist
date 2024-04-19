@@ -27,23 +27,14 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBody {
 
 #[cfg(test)]
 mod argument_body_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_argument_body(source: &str) -> ArgumentBody {
-        let mut result =
-            GrammarParser::parse(Rule::argument_body, source).expect("Failed to parse string.");
-        let argument_body = result.next().expect("Failed to parse argument body");
-        let argument_body_ast = ArgumentBody::try_from(argument_body);
-        assert!(argument_body_ast.is_ok());
-        argument_body_ast.expect("Failed to turn pair to `ArgumentBody` struct")
-    }
-
     #[test]
     pub fn parses_argument_body() {
-        parse_argument_body(r#"("string", 5, true)"#);
+        let test_helper =
+            ParserTestHelper::<ArgumentBody>::new(Rule::argument_body, "ArgumentBody");
+        test_helper.assert_parse(r#"("string", 5, true)"#);
     }
 }

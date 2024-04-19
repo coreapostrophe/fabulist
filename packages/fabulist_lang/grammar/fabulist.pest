@@ -49,17 +49,18 @@ equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
 
 // DEFINITIONS
-raw_identifier  = ${ "r#" ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
-identifier      = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
-list_interior   =  { expression ~ ("," ~ expression)* }
-list            =  { "[" ~ list_interior? ~ "]" }
-object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
-object          =  { "{" ~ object_interior? ~ "}" }
-grouping        =  { "(" ~ expression ~ ")" }
-mutator         =  { "|>" ~ block_stmt }
-arguments       =  { expression ~ ("," ~ expression)* }
-argument_body   =  { "(" ~ arguments? ~ ")" }
-get             =  { get_keyword ~ "(" ~ identifier ~ ")" }
+raw_identifier_interior = ${ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+raw_identifier          = ${ "r#" ~ raw_identifier_interior }
+identifier              = ${ !keyword ~ "_"? ~ ASCII_ALPHA+ ~ (ASCII_ALPHANUMERIC | "_")* }
+list_interior           =  { expression ~ ("," ~ expression)* }
+list                    =  { "[" ~ list_interior? ~ "]" }
+object_interior         =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
+object                  =  { "{" ~ object_interior? ~ "}" }
+grouping                =  { "(" ~ expression ~ ")" }
+mutator                 =  { "|>" ~ block_stmt }
+arguments               =  { expression ~ ("," ~ expression)* }
+argument_body           =  { "(" ~ arguments? ~ ")" }
+get                     =  { get_keyword ~ "(" ~ identifier ~ ")" }
 
 // EXPRESSIONS
 primary_expr    = _{

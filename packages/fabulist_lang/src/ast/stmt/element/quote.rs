@@ -35,24 +35,19 @@ impl TryFrom<Pair<'_, Rule>> for QuoteElem {
 
 #[cfg(test)]
 mod quote_elem_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_quote_elem(rule: Rule, source: &str) -> QuoteElem {
-        let mut result = GrammarParser::parse(rule, source).expect("Failed to parse string.");
-        let meta = result.next().expect("Failed to parse call expression");
-        let meta_ast = QuoteElem::try_from(meta);
-        assert!(meta_ast.is_ok());
-        meta_ast.expect("Failed to turn pair to `CallExpr` struct")
-    }
-
     #[test]
     fn parses_quote_elem() {
-        parse_quote_elem(Rule::quote_decl, r#"> "I'm an example quote""#);
-        parse_quote_elem(Rule::narration_decl, r#"* "I'm an example narration""#);
-        parse_quote_elem(Rule::choice_decl, r#"- "I'm an example choice""#);
+        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::quote_decl, "QuoteDecl");
+        test_helper.assert_parse(r#"> "I'm an example quote""#);
+
+        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::narration_decl, "QuoteDecl");
+        test_helper.assert_parse(r#"* "I'm an example narration""#);
+
+        let test_helper = ParserTestHelper::<QuoteElem>::new(Rule::choice_decl, "QuoteDecl");
+        test_helper.assert_parse(r#"- "I'm an example choice""#);
     }
 }

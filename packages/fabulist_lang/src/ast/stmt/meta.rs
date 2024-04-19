@@ -4,6 +4,7 @@ use crate::{ast::dfn::object::Object, parser::Rule};
 
 use super::Error;
 
+#[derive(Debug)]
 pub struct MetaStmt(pub Object);
 
 impl TryFrom<Pair<'_, Rule>> for MetaStmt {
@@ -24,23 +25,13 @@ impl TryFrom<Pair<'_, Rule>> for MetaStmt {
 
 #[cfg(test)]
 mod meta_stmt_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_meta_stmt(source: &str) -> MetaStmt {
-        let mut result =
-            GrammarParser::parse(Rule::meta_stmt, source).expect("Failed to parse string.");
-        let meta = result.next().expect("Failed to parse call expression");
-        let meta_ast = MetaStmt::try_from(meta);
-        assert!(meta_ast.is_ok());
-        meta_ast.expect("Failed to turn pair to `CallExpr` struct")
-    }
-
     #[test]
     fn parses_meta_stmt() {
-        parse_meta_stmt(r#"story { "start": "part-1" }"#);
+        let test_helper = ParserTestHelper::<MetaStmt>::new(Rule::meta_stmt, "MetaStmt");
+        test_helper.assert_parse(r#"story { "start": "part-1" }"#);
     }
 }

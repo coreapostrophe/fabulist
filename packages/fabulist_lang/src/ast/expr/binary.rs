@@ -77,26 +77,16 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
 
 #[cfg(test)]
 mod binary_expr_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_binary_expr(source: &str) -> BinaryExpr {
-        let mut result =
-            GrammarParser::parse(Rule::expression, source).expect("Failed to parse string.");
-        let binary = result.next().expect("Failed to parse binary expression");
-        let binary_ast = BinaryExpr::try_from(binary);
-        assert!(binary_ast.is_ok());
-        binary_ast.expect("Failed to turn pair to `BinaryExpr` struct")
-    }
-
     #[test]
     fn parses_binary_expr() {
-        parse_binary_expr("5 + 2");
-        parse_binary_expr("5/ 2");
-        parse_binary_expr("5 *2");
-        parse_binary_expr("5== 2");
+        let test_helper = ParserTestHelper::<BinaryExpr>::new(Rule::expression, "BinaryExpr");
+        test_helper.assert_parse("5 + 2");
+        test_helper.assert_parse("5/ 2");
+        test_helper.assert_parse("5 *2");
+        test_helper.assert_parse("5== 2");
     }
 }

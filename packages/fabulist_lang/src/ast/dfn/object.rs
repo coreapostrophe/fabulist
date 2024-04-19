@@ -33,23 +33,13 @@ impl TryFrom<Pair<'_, Rule>> for Object {
 
 #[cfg(test)]
 mod object_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_object(source: &str) -> Object {
-        let mut result =
-            GrammarParser::parse(Rule::object, source).expect("Failed to parse string.");
-        let object = result.next().expect("Failed to parse object");
-        let object_ast = Object::try_from(object);
-        assert!(object_ast.is_ok());
-        object_ast.expect("Failed to turn pair to `ArgumentBody` struct")
-    }
-
     #[test]
     fn parses_object() {
-        parse_object(r#"{"boolean": false, "number": 10}"#);
+        let test_helper = ParserTestHelper::<Object>::new(Rule::object, "Object");
+        test_helper.assert_parse(r#"{"boolean": false, "number": 10}"#);
     }
 }

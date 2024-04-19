@@ -34,26 +34,16 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
 
 #[cfg(test)]
 mod call_expr_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_call_expr(source: &str) -> CallExpr {
-        let mut result =
-            GrammarParser::parse(Rule::call_expr, source).expect("Failed to parse string.");
-        let call = result.next().expect("Failed to parse call expression");
-        let call_ast = CallExpr::try_from(call);
-        assert!(call_ast.is_ok());
-        call_ast.expect("Failed to turn pair to `CallExpr` struct")
-    }
-
     #[test]
     fn parses_call_expr() {
-        parse_call_expr("test()");
-        parse_call_expr("5()");
-        parse_call_expr("\"Yo\"()");
-        parse_call_expr("false()");
+        let test_helper = ParserTestHelper::<CallExpr>::new(Rule::call_expr, "CallExpr");
+        test_helper.assert_parse("test()");
+        test_helper.assert_parse("5()");
+        test_helper.assert_parse("\"Yo\"()");
+        test_helper.assert_parse("false()");
     }
 }

@@ -59,26 +59,16 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
 
 #[cfg(test)]
 mod unary_expr_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_unary_expr(source: &str) -> UnaryExpr {
-        let mut result =
-            GrammarParser::parse(Rule::unary_expr, source).expect("Failed to parse string.");
-        let unary = result.next().expect("Failed to parse unary expression");
-        let unary_ast = UnaryExpr::try_from(unary);
-        assert!(unary_ast.is_ok());
-        unary_ast.expect("Failed to turn pair to `UnaryExpr` struct")
-    }
-
     #[test]
     fn parses_unary_expr() {
-        parse_unary_expr("!5");
-        parse_unary_expr("!(true)");
-        parse_unary_expr("!!!ident");
-        parse_unary_expr("-\"num\"");
+        let test_helper = ParserTestHelper::<UnaryExpr>::new(Rule::unary_expr, "UnaryExpr");
+        test_helper.assert_parse("!5");
+        test_helper.assert_parse("!(true)");
+        test_helper.assert_parse("!!!ident");
+        test_helper.assert_parse("-\"num\"");
     }
 }

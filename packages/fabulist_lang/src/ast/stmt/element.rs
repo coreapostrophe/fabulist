@@ -48,25 +48,15 @@ impl TryFrom<Pair<'_, Rule>> for ElementStmt {
 
 #[cfg(test)]
 mod element_stmt_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_element_stmt(source: &str) -> ElementStmt {
-        let mut result =
-            GrammarParser::parse(Rule::element_decl, source).expect("Failed to parse string.");
-        let element = result.next().expect("Failed to parse element statement");
-        let element_ast = ElementStmt::try_from(element);
-        assert!(element_ast.is_ok());
-        element_ast.expect("Failed to turn pair to `ElementStmt` struct")
-    }
-
     #[test]
     fn parses_element_stmt() {
-        parse_element_stmt(r#"[char]> "I'm a dialogue""#);
-        parse_element_stmt(r#"* "I'm a narration""#);
-        parse_element_stmt(r#"- "I'm a choice""#);
+        let test_helper = ParserTestHelper::<ElementStmt>::new(Rule::element_decl, "ElementStmt");
+        test_helper.assert_parse(r#"[char]> "I'm a dialogue""#);
+        test_helper.assert_parse(r#"* "I'm a narration""#);
+        test_helper.assert_parse(r#"- "I'm a choice""#);
     }
 }

@@ -30,24 +30,14 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
 
 #[cfg(test)]
 mod member_expr_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_member_expr(source: &str) -> MemberExpr {
-        let mut result =
-            GrammarParser::parse(Rule::member_expr, source).expect("Failed to parse string.");
-        let member = result.next().expect("Failed to parse member expression");
-        let member_ast = MemberExpr::try_from(member);
-        assert!(member_ast.is_ok());
-        member_ast.expect("Failed to turn pair to `MemberExpr` struct")
-    }
-
     #[test]
     fn parses_member_expr() {
-        parse_member_expr("ident.fun().fun()");
-        parse_member_expr("ident.fun(arg1, arg2).fun(arg1, arg2)");
+        let test_helper = ParserTestHelper::<MemberExpr>::new(Rule::member_expr, "MemberExpr");
+        test_helper.assert_parse("ident.fun().fun()");
+        test_helper.assert_parse("ident.fun(arg1, arg2).fun(arg1, arg2)");
     }
 }

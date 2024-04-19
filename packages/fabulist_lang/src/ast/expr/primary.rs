@@ -46,6 +46,10 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
             },
             Rule::none => Ok(PrimaryExpr::None),
             Rule::identifier => Ok(PrimaryExpr::Identifier(value.as_str().to_string())),
+            Rule::raw_identifier => match value.into_inner().next() {
+                Some(interior) => Ok(PrimaryExpr::Identifier(interior.as_str().to_string())),
+                None => Err(Error::InvalidRule(value_rule)),
+            },
             Rule::object => Ok(PrimaryExpr::Object(Object::try_from(value)?)),
             Rule::boolean => match value.as_str() {
                 "true" => Ok(PrimaryExpr::Boolean(true)),
@@ -59,28 +63,19 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
 
 #[cfg(test)]
 mod primary_expr_tests {
-    use pest::Parser;
-
-    use crate::parser::GrammarParser;
+    use crate::ast::ParserTestHelper;
 
     use super::*;
 
-    fn parse_primary(source: &str) -> PrimaryExpr {
-        let mut result =
-            GrammarParser::parse(Rule::primary_expr, source).expect("Failed to parse string.");
-        let primary = result.next().expect("Failed to parse primary expression");
-        let primary_ast = PrimaryExpr::try_from(primary);
-        assert!(primary_ast.is_ok());
-        primary_ast.expect("Failed to turn pair to `Primary` struct")
-    }
-
     #[test]
     fn parses_primaries() {
-        parse_primary("\"string\"");
-        parse_primary(r##"r"raw string""##);
-        parse_primary("2");
-        parse_primary("none");
-        parse_primary("identifier");
-        parse_primary(r#"{"string": "string", "number": 5}"#);
+        let test_helper = ParserTestHelper::<PrimaryExpr>::new(Rule::primary_expr, "PrimaryExpr");
+        test_helper.assert_parse("\"string\"");
+        test_helper.assert_parse(r##"r"raw string""##);
+        test_helper.assert_parse("2");
+        test_helper.assert_parse("none");
+        test_helper.assert_parse("identifier");
+        test_helper.assert_parse("r#none");
+        test_helper.assert_parse(r#"{"string": "string", "number": 5}"#);
     }
 }
