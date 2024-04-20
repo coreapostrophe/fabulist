@@ -80,6 +80,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             Rule::raw_ident => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::string => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::raw_string => Ok(PrimaryExpr::try_from(value)?.into()),
+            Rule::path => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::object => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::mutator => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::grouping => Ok(PrimaryExpr::try_from(value)?.into()),

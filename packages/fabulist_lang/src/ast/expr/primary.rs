@@ -1,7 +1,7 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::dfn::{mutator::Mutator, object::Object},
+    ast::dfn::{mutator::Mutator, object::Object, path::Path},
     parser::Rule,
 };
 
@@ -17,6 +17,7 @@ pub enum PrimaryExpr {
     RawString(String),
     Identifier(String),
     Mutator(Mutator),
+    Path(Path),
     None,
 }
 
@@ -58,6 +59,7 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 Some(interior) => Ok(PrimaryExpr::Identifier(interior.as_str().to_string())),
                 None => Err(Error::InvalidRule(value_rule)),
             },
+            Rule::path => Ok(PrimaryExpr::Path(Path::try_from(value)?)),
             Rule::object => Ok(PrimaryExpr::Object(Object::try_from(value)?)),
             Rule::mutator => Ok(PrimaryExpr::Mutator(Mutator::try_from(value)?)),
             Rule::boolean => match value.as_str() {
@@ -85,6 +87,7 @@ mod primary_expr_tests {
         test_helper.assert_parse("none");
         test_helper.assert_parse("identifier");
         test_helper.assert_parse("r#none");
+        test_helper.assert_parse("path::path_2::path_3");
         test_helper.assert_parse(r#"{"string": "string", "number": 5}"#);
     }
 }

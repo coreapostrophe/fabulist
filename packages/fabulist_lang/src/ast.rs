@@ -7,8 +7,8 @@ use crate::parser::{GrammarParser, Rule};
 pub mod decl;
 pub mod dfn;
 pub mod expr;
+pub mod fab;
 pub mod stmt;
-pub mod story;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

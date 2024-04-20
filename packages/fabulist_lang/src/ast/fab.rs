@@ -7,13 +7,13 @@ use super::decl::{meta::MetaDecl, module::ModDecl, part::PartDecl};
 use super::Error;
 
 #[derive(Debug)]
-pub struct Story {
+pub struct Fab {
     pub module: Vec<ModDecl>,
     pub meta: Option<MetaDecl>,
     pub parts: Vec<PartDecl>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for Story {
+impl TryFrom<Pair<'_, Rule>> for Fab {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let mut module: Vec<ModDecl> = Vec::new();
@@ -29,7 +29,7 @@ impl TryFrom<Pair<'_, Rule>> for Story {
             }
         }
 
-        Ok(Story {
+        Ok(Fab {
             module,
             meta,
             parts,
@@ -45,7 +45,7 @@ mod story_tests {
 
     #[test]
     fn parses_story() {
-        let test_helper = ParserTestHelper::<Story>::new(Rule::fabulist, "Story");
+        let test_helper = ParserTestHelper::<Fab>::new(Rule::fabulist, "Story");
         test_helper.assert_parse(
             r#"
 			story {}

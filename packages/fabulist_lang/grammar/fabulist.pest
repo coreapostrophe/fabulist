@@ -80,6 +80,7 @@ primary_expr    = _{
   | object
   | list
   | mutator
+  | path
 }
 call_expr       =  { #callee = primary_expr ~ argument_body* }
 member_expr     =  { #left = call_expr ~ ("." ~ member_expr)* }
