@@ -10,17 +10,6 @@ pub enum UnaryOperator {
     Not,
 }
 
-impl TryFrom<String> for UnaryOperator {
-    type Error = Error;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str() {
-            "-" => Ok(UnaryOperator::Negation),
-            "!" => Ok(UnaryOperator::Not),
-            _ => Err(Error::InvalidUnaryOperator),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum UnaryExpr {
     Unary {
@@ -33,7 +22,7 @@ pub enum UnaryExpr {
 impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let inner = value.into_inner();
 
         let member = inner
@@ -44,12 +33,19 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
             Ok(UnaryExpr::Expr(Expr::try_from(member)?))
         } else {
             let operator = match inner.find_first_tagged("operator") {
-                Some(operator) => Ok(UnaryOperator::try_from(operator.as_str().to_string())?),
-                None => Err(Error::InvalidRule(value_rule)),
+                Some(operator) => {
+                    let operator_span = operator.as_span();
+                    match operator.as_str() {
+                        "-" => Ok(UnaryOperator::Negation),
+                        "!" => Ok(UnaryOperator::Not),
+                        _ => Err(Error::map_span(operator_span, "Invalid unary operator")),
+                    }
+                }
+                None => Err(Error::map_span(value_span, "Expected unary operator")),
             }?;
             let right = match inner.find_first_tagged("right") {
                 Some(right) => Ok(Expr::try_from(right)?),
-                None => Err(Error::InvalidRule(value_rule)),
+                None => Err(Error::map_span(value_span, "Expected value expression")),
             }?;
 
             Ok(UnaryExpr::Unary { operator, right })

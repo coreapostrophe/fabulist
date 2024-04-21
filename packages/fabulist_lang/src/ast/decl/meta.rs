@@ -10,6 +10,7 @@ pub struct MetaDecl(pub Object);
 impl TryFrom<Pair<'_, Rule>> for MetaDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let value_span = value.as_span();
         if let Some(object) = value
             .clone()
             .into_inner()
@@ -17,7 +18,7 @@ impl TryFrom<Pair<'_, Rule>> for MetaDecl {
         {
             Ok(MetaDecl(Object::try_from(object)?))
         } else {
-            Err(Error::InvalidRule(value.as_rule()))
+            Err(Error::map_span(value_span, "Expected object definition"))
         }
     }
 }

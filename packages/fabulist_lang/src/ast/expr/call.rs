@@ -13,12 +13,12 @@ pub struct CallExpr {
 impl TryFrom<Pair<'_, Rule>> for CallExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let mut inner = value.into_inner();
 
         let callee = match inner.find_first_tagged("callee") {
             Some(callee) => Ok(Expr::try_from(callee)?),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected a callee expression")),
         }?;
         let argument_body = match inner.find(|pair| pair.as_rule() == Rule::argument_body) {
             Some(argument_body) => Some(ArgumentBody::try_from(argument_body)?),

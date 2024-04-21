@@ -13,7 +13,7 @@ pub enum ElseStmt {
 impl TryFrom<Pair<'_, Rule>> for ElseStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let mut inner = value.into_inner();
 
         if let Some(if_stmt) = inner.clone().find(|pair| pair.as_rule() == Rule::if_stmt) {
@@ -21,7 +21,10 @@ impl TryFrom<Pair<'_, Rule>> for ElseStmt {
         } else if let Some(block_stmt) = inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Ok(ElseStmt::Block(BlockStmt::try_from(block_stmt)?))
         } else {
-            Err(Error::InvalidRule(value_rule))
+            Err(Error::map_span(
+                value_span,
+                "Expected an `if` or `block` statement",
+            ))
         }
     }
 }

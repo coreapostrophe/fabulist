@@ -14,7 +14,7 @@ pub struct IfStmt {
 impl TryFrom<Pair<'_, Rule>> for IfStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let mut inner = value.into_inner();
 
         let condition = match inner
@@ -22,14 +22,14 @@ impl TryFrom<Pair<'_, Rule>> for IfStmt {
             .find(|pair| pair.as_node_tag() == Some("condition"))
         {
             Some(condition) => Expr::try_from(condition),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected condition expression")),
         }?;
         let block_stmt = match inner
             .clone()
             .find(|pair| pair.as_rule() == Rule::block_stmt)
         {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected block statement")),
         }?;
         let else_stmt = match inner.find(|pair| pair.as_rule() == Rule::else_stmt) {
             Some(else_stmt) => Some(Box::new(ElseStmt::try_from(else_stmt)?)),

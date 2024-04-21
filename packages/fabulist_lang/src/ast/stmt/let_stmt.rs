@@ -16,7 +16,7 @@ pub struct LetStmt {
 impl TryFrom<Pair<'_, Rule>> for LetStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let mut inner = value.into_inner();
 
         let identifier = match inner
@@ -24,11 +24,11 @@ impl TryFrom<Pair<'_, Rule>> for LetStmt {
             .find(|pair| pair.as_rule() == Rule::identifier)
         {
             Some(identifier) => PrimaryExpr::try_from(identifier),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected identifier")),
         }?;
         let value = match inner.find(|pair| pair.as_rule() == Rule::expression) {
             Some(expression) => Expr::try_from(expression),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected value expression")),
         }?;
 
         Ok(LetStmt { identifier, value })

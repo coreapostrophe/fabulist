@@ -2,33 +2,16 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use pest::{iterators::Pair, Parser};
 
-use crate::parser::{GrammarParser, Rule};
+use crate::{
+    error::Error,
+    parser::{GrammarParser, Rule},
+};
 
 pub mod decl;
 pub mod dfn;
 pub mod expr;
 pub mod fab;
 pub mod stmt;
-
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error(
-        "Binary expressions can only have the following operators: 
-        [ /,*,+,-,>,>=,<,<=,==,!=,&&,|| ]"
-    )]
-    InvalidBinaryOperator,
-    #[error(
-        "Unary expressions can only have the following operators: 
-        [ +,- ]"
-    )]
-    InvalidUnaryOperator,
-    #[error("`start` can only be of type `String`")]
-    InvalidStart,
-    #[error("Unable to parse `{0}` to number.")]
-    InvalidNumber(String),
-    #[error("Token pair does not match rule `{0:?}`")]
-    InvalidRule(Rule),
-}
 
 pub struct ParserTestHelper<T> {
     rule_type: Rule,

@@ -13,15 +13,15 @@ pub struct QuoteDecl {
 impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let mut inner = value.into_inner();
 
         let text = match inner.find_first_tagged("text") {
             Some(text) => Ok(match text.into_inner().next() {
                 Some(text) => Ok(text.as_str().to_string()),
-                None => Err(Error::InvalidRule(value_rule)),
+                None => Err(Error::map_span(value_span, "Expected string value")),
             }?),
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected text expression")),
         }?;
 
         let properties = match inner.find(|pair| pair.as_rule() == Rule::object) {

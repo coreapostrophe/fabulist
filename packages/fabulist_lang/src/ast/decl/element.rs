@@ -25,12 +25,16 @@ impl From<DialogueDecl> for ElementDecl {
 impl TryFrom<Pair<'_, Rule>> for ElementDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let value_span = value.as_span();
         let value_rule = value.as_rule();
 
         match value_rule {
             Rule::element_decl => match value.into_inner().next() {
                 Some(inner) => Ok(ElementDecl::try_from(inner)?),
-                None => Err(Error::InvalidRule(value_rule)),
+                None => Err(Error::map_span(
+                    value_span,
+                    "Element declaration does not have a nested rule",
+                )),
             },
             Rule::dialogue_decl => Ok(DialogueDecl::try_from(value)?.into()),
             Rule::choice_decl => {
@@ -41,7 +45,7 @@ impl TryFrom<Pair<'_, Rule>> for ElementDecl {
                 let content = QuoteDecl::try_from(value)?;
                 Ok(ElementDecl::Narration(content))
             }
-            _ => Err(Error::InvalidRule(value_rule)),
+            _ => Err(Error::map_span(value_span, "Invalid declaration")),
         }
     }
 }

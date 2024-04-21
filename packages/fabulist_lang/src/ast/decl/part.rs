@@ -13,15 +13,15 @@ pub struct PartDecl {
 impl TryFrom<Pair<'_, Rule>> for PartDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_rule = value.as_rule();
+        let value_span = value.as_span();
         let inner = value.into_inner();
 
         let id = match inner.find_first_tagged("id") {
             Some(id) => match id.into_inner().find_first_tagged("name") {
                 Some(identifier) => Ok(identifier.as_str().to_string()),
-                None => Err(Error::InvalidRule(value_rule)),
+                None => Err(Error::map_span(value_span, "Expected identifier")),
             },
-            None => Err(Error::InvalidRule(value_rule)),
+            None => Err(Error::map_span(value_span, "Expected id declaration")),
         }?;
         let elements = inner
             .filter(|pair| pair.as_rule() == Rule::element_decl)
