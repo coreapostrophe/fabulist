@@ -18,30 +18,26 @@ impl Error {
     {
         let message = error.variant.message();
         let line_col = error.line_col;
-        let (line, col) = match line_col {
-            LineColLocation::Pos(line_col) => line_col,
-            _ => (0, 0),
-        };
-        Error::ParsingError {
-            line,
-            col,
-            line_col,
-            message: message.into(),
-        }
+        Self::map_line_col(line_col, message)
     }
-
     pub fn map_span(span: Span, message: impl Into<String>) -> Error {
         let line_col = LineColLocation::from(span);
-        let (start, _) = match line_col {
-            LineColLocation::Span(start, end) => (start, end),
-            _ => ((0, 0), (0, 0)),
-        };
-        let (line, col) = start;
-        Error::ParsingError {
-            line,
-            col,
-            line_col,
-            message: message.into(),
+        Self::map_line_col(line_col, message)
+    }
+    pub fn map_line_col(line_col: LineColLocation, message: impl Into<String>) -> Error {
+        match line_col {
+            LineColLocation::Span((line, col), _) => Error::ParsingError {
+                line,
+                col,
+                line_col,
+                message: message.into(),
+            },
+            LineColLocation::Pos((line, col)) => Error::ParsingError {
+                line,
+                col,
+                line_col,
+                message: message.into(),
+            },
         }
     }
 }
