@@ -31,6 +31,15 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
     }
 }
 
+impl From<MemberExpr> for Expr {
+    fn from(value: MemberExpr) -> Self {
+        if value.members.is_empty() {
+            return value.left;
+        }
+        Expr::Member(Box::new(value))
+    }
+}
+
 #[cfg(test)]
 mod member_expr_tests {
     use crate::ast::ParserTestHelper;

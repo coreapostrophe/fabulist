@@ -17,7 +17,7 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
         let mut inner = value.into_inner();
 
         let callee = match inner.find(|pair| pair.as_node_tag() == Some("callee")) {
-            Some(callee) => Ok(Expr::try_from(callee)?),
+            Some(callee) => Expr::try_from(callee),
             None => Err(Error::map_span(
                 call_expr_span,
                 "Expected a callee expression",
@@ -32,6 +32,15 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
             callee,
             argument_body,
         })
+    }
+}
+
+impl From<CallExpr> for Expr {
+    fn from(value: CallExpr) -> Self {
+        if value.argument_body.is_none() {
+            return value.callee;
+        }
+        Expr::Call(Box::new(value))
     }
 }
 

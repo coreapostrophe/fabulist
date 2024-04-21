@@ -69,7 +69,7 @@ impl TryFrom<Pair<'_, Rule>> for Stmt {
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
             Rule::set_stmt => Ok(SetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
-            _ => Err(Error::map_span(stmt_span, "Statement is invalid")),
+            _ => Err(Error::map_span(stmt_span, "Invalid statement")),
         }
     }
 }

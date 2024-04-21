@@ -55,6 +55,15 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
     }
 }
 
+impl From<UnaryExpr> for Expr {
+    fn from(value: UnaryExpr) -> Self {
+        if let UnaryExpr::Expr(expr) = value {
+            return expr;
+        }
+        Expr::Unary(Box::new(value))
+    }
+}
+
 #[cfg(test)]
 mod unary_expr_tests {
     use crate::ast::ParserTestHelper;

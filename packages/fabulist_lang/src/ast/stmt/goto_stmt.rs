@@ -12,11 +12,11 @@ pub struct GotoStmt {
 impl TryFrom<Pair<'_, Rule>> for GotoStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let goto_stmt_span = value.as_span();
 
         let path = match value.into_inner().find(|pair| pair.as_rule() == Rule::path) {
             Some(path) => Path::try_from(path),
-            None => Err(Error::map_span(value_span, "Expected path expression")),
+            None => Err(Error::map_span(goto_stmt_span, "Expected path expression")),
         }?;
 
         Ok(GotoStmt { path })

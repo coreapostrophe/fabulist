@@ -23,36 +23,6 @@ pub enum Expr {
     Binary(Box<BinaryExpr>),
 }
 
-impl From<PrimaryExpr> for Expr {
-    fn from(value: PrimaryExpr) -> Self {
-        Expr::Primary(Box::new(value))
-    }
-}
-
-impl From<BinaryExpr> for Expr {
-    fn from(value: BinaryExpr) -> Self {
-        Expr::Binary(Box::new(value))
-    }
-}
-
-impl From<UnaryExpr> for Expr {
-    fn from(value: UnaryExpr) -> Self {
-        Expr::Unary(Box::new(value))
-    }
-}
-
-impl From<CallExpr> for Expr {
-    fn from(value: CallExpr) -> Self {
-        Expr::Call(Box::new(value))
-    }
-}
-
-impl From<MemberExpr> for Expr {
-    fn from(value: MemberExpr) -> Self {
-        Expr::Member(Box::new(value))
-    }
-}
-
 impl TryFrom<Pair<'_, Rule>> for Expr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {

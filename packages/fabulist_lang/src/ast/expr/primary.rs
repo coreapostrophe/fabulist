@@ -77,6 +77,12 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
     }
 }
 
+impl From<PrimaryExpr> for Expr {
+    fn from(value: PrimaryExpr) -> Self {
+        Expr::Primary(Box::new(value))
+    }
+}
+
 #[cfg(test)]
 mod primary_expr_tests {
     use crate::ast::ParserTestHelper;

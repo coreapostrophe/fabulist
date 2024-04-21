@@ -34,7 +34,7 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
         let mut inner = value.into_inner();
 
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
-            Some(left) => Ok(Expr::try_from(left)?),
+            Some(left) => Expr::try_from(left),
             None => Err(Error::map_span(value_span, "Expected a value expression")),
         }?;
         let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
@@ -68,6 +68,15 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
             operator,
             right,
         })
+    }
+}
+
+impl From<BinaryExpr> for Expr {
+    fn from(value: BinaryExpr) -> Self {
+        if value.operator.is_none() && value.right.is_none() {
+            return value.left;
+        }
+        Expr::Binary(Box::new(value))
     }
 }
 
