@@ -31,13 +31,13 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let inner = value.into_inner();
+        let mut inner = value.into_inner();
 
-        let left = match inner.find_first_tagged("left") {
+        let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
             Some(left) => Ok(Expr::try_from(left)?),
             None => Err(Error::map_span(value_span, "Expected a value expression")),
         }?;
-        let operator = match inner.find_first_tagged("operator") {
+        let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
             Some(operator) => {
                 let operator_span = operator.as_span();
                 Some(match operator.as_str() {
@@ -58,7 +58,7 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
             }
             None => None,
         };
-        let right = match inner.find_first_tagged("right") {
+        let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
             Some(right) => Some(Expr::try_from(right)?),
             None => None,
         };
@@ -79,7 +79,7 @@ mod binary_expr_tests {
 
     #[test]
     fn parses_binary_expr() {
-        let test_helper = ParserTestHelper::<BinaryExpr>::new(Rule::expression, "BinaryExpr");
+        let test_helper = ParserTestHelper::<BinaryExpr>::new(Rule::logical_expr, "BinaryExpr");
         test_helper.assert_parse("5 + 2");
         test_helper.assert_parse("5/ 2");
         test_helper.assert_parse("5 *2");

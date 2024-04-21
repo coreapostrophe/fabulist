@@ -24,41 +24,28 @@ pub enum PrimaryExpr {
 impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-        let value_rule = value.as_rule();
-        match value_rule {
+        let unary_expr_span = value.as_span();
+        match value.as_rule() {
             Rule::primary_expr => match value.into_inner().next() {
                 Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Expression does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::identifier => match value.into_inner().next() {
                 Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Identifier does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::string => match value.into_inner().next() {
                 Some(interior) => Ok(PrimaryExpr::String(interior.as_str().to_string())),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Strign does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::raw_string => match value.into_inner().next() {
                 Some(interior) => Ok(PrimaryExpr::String(interior.as_str().to_string())),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Raw string does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::number => {
                 let parsed_num = value.as_str().parse::<u32>().map_err(|_err| {
                     Error::map_span(
-                        value_span,
+                        unary_expr_span,
                         format!("Unable to parse `{}` to number", value.as_str()),
                     )
                 })?;
@@ -66,19 +53,13 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
             }
             Rule::grouping => match value.into_inner().next() {
                 Some(expr) => Ok(PrimaryExpr::Grouping(Expr::try_from(expr)?)),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Grouping does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::none => Ok(PrimaryExpr::None),
             Rule::strict_ident => Ok(PrimaryExpr::Identifier(value.as_str().to_string())),
             Rule::raw_ident => match value.into_inner().next() {
                 Some(interior) => Ok(PrimaryExpr::Identifier(interior.as_str().to_string())),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Raw identifier does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::path => Ok(PrimaryExpr::Path(Path::try_from(value)?)),
             Rule::object => Ok(PrimaryExpr::Object(Object::try_from(value)?)),
@@ -86,9 +67,12 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
             Rule::boolean => match value.as_str() {
                 "true" => Ok(PrimaryExpr::Boolean(true)),
                 "false" => Ok(PrimaryExpr::Boolean(false)),
-                _ => Err(Error::map_span(value_span, "Invalid boolean value")),
+                _ => Err(Error::map_span(unary_expr_span, "Invalid boolean value")),
             },
-            _ => Err(Error::map_span(value_span, "Invalid primary expression")),
+            _ => Err(Error::map_span(
+                unary_expr_span,
+                "Invalid primary expression",
+            )),
         }
     }
 }

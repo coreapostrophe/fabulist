@@ -13,11 +13,10 @@ impl TryFrom<Pair<'_, Rule>> for Path {
         let identifiers = value
             .into_inner()
             .map(|pair| {
-                let pair_span = pair.as_span();
                 let primary = PrimaryExpr::try_from(pair)?;
                 match primary {
                     PrimaryExpr::Identifier(_) => Ok(primary),
-                    _ => Err(Error::map_span(pair_span, "Expected an identifier")),
+                    _ => unreachable!(),
                 }
             })
             .collect::<Result<Vec<PrimaryExpr>, Error>>()?;

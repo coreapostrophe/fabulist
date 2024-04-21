@@ -13,12 +13,15 @@ pub struct MemberExpr {
 impl TryFrom<Pair<'_, Rule>> for MemberExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let member_expr_span = value.as_span();
         let mut inner = value.into_inner();
 
         let left = match inner.next() {
             Some(left) => Expr::try_from(left),
-            None => Err(Error::map_span(value_span, "Expected a value expression")),
+            None => Err(Error::map_span(
+                member_expr_span,
+                "Expected a value expression",
+            )),
         }?;
         let members = inner
             .map(|pair| Expr::try_from(pair))

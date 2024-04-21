@@ -58,22 +58,18 @@ impl From<GotoStmt> for Stmt {
 impl TryFrom<Pair<'_, Rule>> for Stmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-        let value_rule = value.as_rule();
-        match value_rule {
+        let stmt_span = value.as_span();
+        match value.as_rule() {
             Rule::statement => match value.into_inner().next() {
                 Some(inner) => Ok(Stmt::try_from(inner)?),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Statement does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
             Rule::block_stmt => Ok(BlockStmt::try_from(value)?.into()),
             Rule::if_stmt => Ok(IfStmt::try_from(value)?.into()),
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
             Rule::set_stmt => Ok(SetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
-            _ => Err(Error::map_span(value_span, "Statement is invalid")),
+            _ => Err(Error::map_span(stmt_span, "Statement is invalid")),
         }
     }
 }

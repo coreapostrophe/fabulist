@@ -14,13 +14,20 @@ impl TryFrom<Pair<'_, Rule>> for Object {
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let mut object = HashMap::<String, Expr>::new();
         if let Some(object_interior) = value.into_inner().next() {
-            let interior = object_interior.into_inner();
-            let vec_pair = interior.collect::<Vec<Pair<'_, Rule>>>();
+            let obj_interior = object_interior.into_inner();
+            let vec_pair = obj_interior.collect::<Vec<Pair<'_, Rule>>>();
             let mut chunked_pairs = vec_pair.chunks_exact(2);
             while let Some(key_value_pairs) = chunked_pairs.next() {
                 let key = &key_value_pairs[0];
+                let string_interior = match key.clone().into_inner().next() {
+                    Some(interior) => interior,
+                    None => unreachable!(),
+                };
                 let value = &key_value_pairs[1];
-                object.insert(key.to_string(), Expr::try_from(value.to_owned())?);
+                object.insert(
+                    string_interior.as_str().to_string(),
+                    Expr::try_from(value.to_owned())?,
+                );
             }
         }
         Ok(Object(object))

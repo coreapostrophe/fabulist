@@ -56,15 +56,11 @@ impl From<MemberExpr> for Expr {
 impl TryFrom<Pair<'_, Rule>> for Expr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-        let value_rule = value.as_rule();
-        match value_rule {
+        let expr_span = value.as_span();
+        match value.as_rule() {
             Rule::expression => match value.into_inner().next() {
                 Some(inner) => Ok(Expr::try_from(inner)?),
-                None => Err(Error::map_span(
-                    value_span,
-                    "Expression does not have a nested rule",
-                )),
+                None => unreachable!(),
             },
 
             Rule::unary_expr => Ok(UnaryExpr::try_from(value)?.into()),
@@ -90,7 +86,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             Rule::grouping => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::boolean => Ok(PrimaryExpr::try_from(value)?.into()),
             Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
-            _ => Err(Error::map_span(value_span, "Expression is invalid")),
+            _ => Err(Error::map_span(expr_span, "Invalid expression")),
         }
     }
 }

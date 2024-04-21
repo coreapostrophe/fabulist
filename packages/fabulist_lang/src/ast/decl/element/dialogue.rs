@@ -13,16 +13,16 @@ pub struct DialogueDecl {
 impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let dialogue_decl_span = value.as_span();
         let inner = value.into_inner();
 
         let character = match inner.find_first_tagged("character") {
             Some(char) => Ok(match char.into_inner().next() {
                 Some(char) => Ok(char.as_str().to_string()),
-                None => Err(Error::map_span(value_span, "Expected string value")),
+                None => Err(Error::map_span(dialogue_decl_span, "Expected string value")),
             }?),
             None => Err(Error::map_span(
-                value_span,
+                dialogue_decl_span,
                 "Expected character declaration",
             )),
         }?;

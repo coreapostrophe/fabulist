@@ -14,22 +14,19 @@ pub struct IfStmt {
 impl TryFrom<Pair<'_, Rule>> for IfStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let if_stmt_span = value.as_span();
         let mut inner = value.into_inner();
 
-        let condition = match inner
-            .clone()
-            .find(|pair| pair.as_node_tag() == Some("condition"))
-        {
+        let condition = match inner.find(|pair| pair.as_node_tag() == Some("condition")) {
             Some(condition) => Expr::try_from(condition),
-            None => Err(Error::map_span(value_span, "Expected condition expression")),
+            None => Err(Error::map_span(
+                if_stmt_span,
+                "Expected condition expression",
+            )),
         }?;
-        let block_stmt = match inner
-            .clone()
-            .find(|pair| pair.as_rule() == Rule::block_stmt)
-        {
+        let block_stmt = match inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
-            None => Err(Error::map_span(value_span, "Expected block statement")),
+            None => Err(Error::map_span(if_stmt_span, "Expected block statement")),
         }?;
         let else_stmt = match inner.find(|pair| pair.as_rule() == Rule::else_stmt) {
             Some(else_stmt) => Some(Box::new(ElseStmt::try_from(else_stmt)?)),
@@ -54,5 +51,6 @@ mod if_stmt_tests {
     fn parses_if_stmt() {
         let test_helper = ParserTestHelper::<IfStmt>::new(Rule::if_stmt, "IfStmt");
         test_helper.assert_parse("if true {}");
+        test_helper.assert_parse("if true {} else {}");
     }
 }

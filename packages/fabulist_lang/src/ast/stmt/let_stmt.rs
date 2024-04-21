@@ -16,19 +16,16 @@ pub struct LetStmt {
 impl TryFrom<Pair<'_, Rule>> for LetStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let let_stmt_span = value.as_span();
         let mut inner = value.into_inner();
 
-        let identifier = match inner
-            .clone()
-            .find(|pair| pair.as_rule() == Rule::identifier)
-        {
+        let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => PrimaryExpr::try_from(identifier),
-            None => Err(Error::map_span(value_span, "Expected identifier")),
+            None => Err(Error::map_span(let_stmt_span, "Expected an identifier")),
         }?;
-        let value = match inner.find(|pair| pair.as_rule() == Rule::expression) {
+        let value = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
             Some(expression) => Expr::try_from(expression),
-            None => Err(Error::map_span(value_span, "Expected value expression")),
+            None => Err(Error::map_span(let_stmt_span, "Expected value expression")),
         }?;
 
         Ok(LetStmt { identifier, value })

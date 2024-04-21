@@ -10,15 +10,16 @@ pub struct MetaDecl(pub Object);
 impl TryFrom<Pair<'_, Rule>> for MetaDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-        if let Some(object) = value
-            .clone()
+        let meta_decl_span = value.as_span();
+        match value
             .into_inner()
             .find(|pair| pair.as_rule() == Rule::object)
         {
-            Ok(MetaDecl(Object::try_from(object)?))
-        } else {
-            Err(Error::map_span(value_span, "Expected object definition"))
+            Some(object) => Ok(MetaDecl(Object::try_from(object)?)),
+            None => Err(Error::map_span(
+                meta_decl_span,
+                "Expected object definition",
+            )),
         }
     }
 }

@@ -106,8 +106,8 @@ mod_decl       = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" 
 
 // STATEMENT
 block_stmt = { "{" ~ statement* ~ "}" }
-set_stmt   = { set_keyword ~ identifier ~ "=" ~ expression ~ ";" }
-let_stmt   = { let_keyword ~ identifier ~ "=" ~ expression ~ ";" }
+set_stmt   = { set_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
+let_stmt   = { let_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
 goto_stmt  = { goto_keyword ~ path ~ ";" }
 else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
 if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }

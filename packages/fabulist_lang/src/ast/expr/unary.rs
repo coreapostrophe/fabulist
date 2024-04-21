@@ -22,17 +22,16 @@ pub enum UnaryExpr {
 impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-        let inner = value.into_inner();
+        let unary_expr_span = value.as_span();
+        let mut inner = value.into_inner();
 
-        let member = inner
+        if let Some(member) = inner
             .clone()
-            .find(|pair| pair.as_rule() == Rule::member_expr);
-
-        if let Some(member) = member {
+            .find(|pair| pair.as_rule() == Rule::member_expr)
+        {
             Ok(UnaryExpr::Expr(Expr::try_from(member)?))
         } else {
-            let operator = match inner.find_first_tagged("operator") {
+            let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
                 Some(operator) => {
                     let operator_span = operator.as_span();
                     match operator.as_str() {
@@ -41,11 +40,14 @@ impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
                         _ => Err(Error::map_span(operator_span, "Invalid unary operator")),
                     }
                 }
-                None => Err(Error::map_span(value_span, "Expected unary operator")),
+                None => Err(Error::map_span(unary_expr_span, "Expected unary operator")),
             }?;
-            let right = match inner.find_first_tagged("right") {
+            let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
                 Some(right) => Ok(Expr::try_from(right)?),
-                None => Err(Error::map_span(value_span, "Expected value expression")),
+                None => Err(Error::map_span(
+                    unary_expr_span,
+                    "Expected value expression",
+                )),
             }?;
 
             Ok(UnaryExpr::Unary { operator, right })

@@ -13,7 +13,7 @@ pub struct ModDecl {
 impl TryFrom<Pair<'_, Rule>> for ModDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let mod_decl_span = value.as_span();
         let mut inner = value.into_inner();
 
         let path = match inner
@@ -22,14 +22,14 @@ impl TryFrom<Pair<'_, Rule>> for ModDecl {
         {
             Some(path) => match PrimaryExpr::try_from(path)? {
                 PrimaryExpr::String(string) => Ok(string),
-                _ => Err(Error::map_span(value_span, "Expected string")),
+                _ => Err(Error::map_span(mod_decl_span, "Expected string")),
             },
-            None => Err(Error::map_span(value_span, "Expected string file path")),
+            None => Err(Error::map_span(mod_decl_span, "Expected string file path")),
         }?;
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => PrimaryExpr::try_from(identifier),
-            None => Err(Error::map_span(value_span, "Expected identifier")),
+            None => Err(Error::map_span(mod_decl_span, "Expected identifier")),
         }?;
 
         Ok(ModDecl { path, identifier })
