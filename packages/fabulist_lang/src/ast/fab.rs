@@ -1,3 +1,4 @@
+use pest::error::LineColLocation;
 use pest::iterators::Pair;
 
 use crate::parser::Rule;
@@ -8,6 +9,7 @@ use super::Error;
 
 #[derive(Debug)]
 pub struct Fab {
+    pub lcol: LineColLocation,
     pub module: Vec<ModDecl>,
     pub meta: Option<MetaDecl>,
     pub parts: Vec<PartDecl>,
@@ -16,6 +18,8 @@ pub struct Fab {
 impl TryFrom<Pair<'_, Rule>> for Fab {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let fab_lcol = LineColLocation::from(value.as_span());
+
         let mut module: Vec<ModDecl> = Vec::new();
         let mut meta: Option<MetaDecl> = None;
         let mut parts: Vec<PartDecl> = Vec::new();
@@ -33,6 +37,7 @@ impl TryFrom<Pair<'_, Rule>> for Fab {
             module,
             meta,
             parts,
+            lcol: fab_lcol,
         })
     }
 }

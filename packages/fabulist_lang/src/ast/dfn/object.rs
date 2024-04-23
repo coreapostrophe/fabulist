@@ -1,18 +1,23 @@
 use std::collections::HashMap;
 
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::expr::Expr, parser::Rule};
 
 use super::Error;
 
 #[derive(Debug)]
-pub struct Object(pub HashMap<String, Expr>);
+pub struct Object {
+    pub lcol: LineColLocation,
+    pub map: HashMap<String, Expr>,
+}
 
 impl TryFrom<Pair<'_, Rule>> for Object {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let mut object = HashMap::<String, Expr>::new();
+        let object_lcol = LineColLocation::from(value.as_span());
+        let mut map = HashMap::<String, Expr>::new();
+
         if let Some(object_interior) = value.into_inner().next() {
             let obj_interior = object_interior.into_inner();
             let vec_pair = obj_interior.collect::<Vec<Pair<'_, Rule>>>();
@@ -24,13 +29,17 @@ impl TryFrom<Pair<'_, Rule>> for Object {
                     None => unreachable!(),
                 };
                 let value = &key_value_pairs[1];
-                object.insert(
+                map.insert(
                     string_interior.as_str().to_string(),
                     Expr::try_from(value.to_owned())?,
                 );
             }
         }
-        Ok(Object(object))
+
+        Ok(Object {
+            map,
+            lcol: object_lcol,
+        })
     }
 }
 

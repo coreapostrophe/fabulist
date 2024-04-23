@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::parser::Rule;
 
@@ -6,6 +6,7 @@ use super::{quote::QuoteDecl, Error};
 
 #[derive(Debug)]
 pub struct DialogueDecl {
+    pub lcol: LineColLocation,
     pub character: String,
     pub quotes: Vec<QuoteDecl>,
 }
@@ -14,6 +15,7 @@ impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let dialogue_decl_span = value.as_span();
+        let dialogue_decl_lcol = LineColLocation::from(dialogue_decl_span);
         let inner = value.into_inner();
 
         let character = match inner.find_first_tagged("character") {
@@ -32,7 +34,11 @@ impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
             .map(|pair| QuoteDecl::try_from(pair))
             .collect::<Result<Vec<QuoteDecl>, Error>>()?;
 
-        Ok(DialogueDecl { character, quotes })
+        Ok(DialogueDecl {
+            character,
+            quotes,
+            lcol: dialogue_decl_lcol,
+        })
     }
 }
 

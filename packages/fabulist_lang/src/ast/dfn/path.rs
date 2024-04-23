@@ -1,15 +1,19 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::expr::primary::PrimaryExpr, parser::Rule};
 
 use super::Error;
 
 #[derive(Debug)]
-pub struct Path(pub Vec<PrimaryExpr>);
+pub struct Path {
+    pub lcol: LineColLocation,
+    pub identifiers: Vec<PrimaryExpr>,
+}
 
 impl TryFrom<Pair<'_, Rule>> for Path {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let pair_lcol = LineColLocation::from(value.as_span());
         let identifiers = value
             .into_inner()
             .map(|pair| {
@@ -21,6 +25,9 @@ impl TryFrom<Pair<'_, Rule>> for Path {
             })
             .collect::<Result<Vec<PrimaryExpr>, Error>>()?;
 
-        Ok(Path(identifiers))
+        Ok(Path {
+            identifiers,
+            lcol: pair_lcol,
+        })
     }
 }

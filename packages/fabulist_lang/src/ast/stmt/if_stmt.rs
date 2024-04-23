@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::expr::Expr, parser::Rule};
 
@@ -6,6 +6,7 @@ use super::{block_stmt::BlockStmt, else_stmt::ElseStmt, Error};
 
 #[derive(Debug)]
 pub struct IfStmt {
+    pub lcol: LineColLocation,
     pub condition: Expr,
     pub block_stmt: BlockStmt,
     pub else_stmt: Option<Box<ElseStmt>>,
@@ -15,6 +16,7 @@ impl TryFrom<Pair<'_, Rule>> for IfStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let if_stmt_span = value.as_span();
+        let if_stmt_lcol = LineColLocation::from(if_stmt_span);
         let mut inner = value.into_inner();
 
         let condition = match inner.find(|pair| pair.as_node_tag() == Some("condition")) {
@@ -37,6 +39,7 @@ impl TryFrom<Pair<'_, Rule>> for IfStmt {
             condition,
             block_stmt,
             else_stmt,
+            lcol: if_stmt_lcol,
         })
     }
 }

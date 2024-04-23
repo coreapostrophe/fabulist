@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
     ast::expr::{primary::PrimaryExpr, Expr},
@@ -9,6 +9,7 @@ use super::Error;
 
 #[derive(Debug)]
 pub struct SetStmt {
+    pub lcol: LineColLocation,
     pub identifier: PrimaryExpr,
     pub value: Expr,
 }
@@ -17,6 +18,7 @@ impl TryFrom<Pair<'_, Rule>> for SetStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let set_stmt_span = value.as_span();
+        let set_stmt_lcol = LineColLocation::from(value.as_span());
         let mut inner = value.into_inner();
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
@@ -28,7 +30,11 @@ impl TryFrom<Pair<'_, Rule>> for SetStmt {
             None => Err(Error::map_span(set_stmt_span, "Expected value expression")),
         }?;
 
-        Ok(SetStmt { identifier, value })
+        Ok(SetStmt {
+            value,
+            identifier,
+            lcol: set_stmt_lcol,
+        })
     }
 }
 

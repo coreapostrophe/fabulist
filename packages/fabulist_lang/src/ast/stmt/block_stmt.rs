@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::parser::Rule;
 
@@ -6,18 +6,23 @@ use super::{Error, Stmt};
 
 #[derive(Debug)]
 pub struct BlockStmt {
+    pub lcol: LineColLocation,
     pub statements: Vec<Stmt>,
 }
 
 impl TryFrom<Pair<'_, Rule>> for BlockStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let block_stmt_lcol = LineColLocation::from(value.as_span());
         let statements = value
             .into_inner()
             .map(|pair| Stmt::try_from(pair))
             .collect::<Result<Vec<Stmt>, Error>>()?;
 
-        Ok(BlockStmt { statements })
+        Ok(BlockStmt {
+            statements,
+            lcol: block_stmt_lcol,
+        })
     }
 }
 

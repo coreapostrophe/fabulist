@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::parser::Rule;
 
@@ -6,6 +6,7 @@ use super::{element::ElementDecl, Error};
 
 #[derive(Debug)]
 pub struct PartDecl {
+    pub lcol: LineColLocation,
     pub id: String,
     pub elements: Vec<ElementDecl>,
 }
@@ -14,6 +15,7 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let part_decl_span = value.as_span();
+        let part_decl_lcol = LineColLocation::from(part_decl_span);
         let mut inner = value.into_inner();
 
         let id = match inner.find(|pair| pair.as_node_tag() == Some("id")) {
@@ -31,7 +33,11 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
             .map(|pair| ElementDecl::try_from(pair))
             .collect::<Result<Vec<ElementDecl>, Error>>()?;
 
-        Ok(PartDecl { id, elements })
+        Ok(PartDecl {
+            id,
+            elements,
+            lcol: part_decl_lcol,
+        })
     }
 }
 

@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::dfn::path::Path, parser::Rule};
 
@@ -6,6 +6,7 @@ use super::Error;
 
 #[derive(Debug)]
 pub struct GotoStmt {
+    pub lcol: LineColLocation,
     pub path: Path,
 }
 
@@ -13,13 +14,17 @@ impl TryFrom<Pair<'_, Rule>> for GotoStmt {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let goto_stmt_span = value.as_span();
+        let goto_stmt_lcol = LineColLocation::from(goto_stmt_span);
 
         let path = match value.into_inner().find(|pair| pair.as_rule() == Rule::path) {
             Some(path) => Path::try_from(path),
             None => Err(Error::map_span(goto_stmt_span, "Expected path expression")),
         }?;
 
-        Ok(GotoStmt { path })
+        Ok(GotoStmt {
+            path,
+            lcol: goto_stmt_lcol,
+        })
     }
 }
 

@@ -1,4 +1,4 @@
-use pest::iterators::Pair;
+use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::expr::primary::PrimaryExpr, parser::Rule};
 
@@ -6,6 +6,7 @@ use super::Error;
 
 #[derive(Debug)]
 pub struct ModDecl {
+    pub lcol: LineColLocation,
     pub path: String,
     pub identifier: PrimaryExpr,
 }
@@ -14,6 +15,7 @@ impl TryFrom<Pair<'_, Rule>> for ModDecl {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let mod_decl_span = value.as_span();
+        let mod_decl_lcol = LineColLocation::from(mod_decl_span);
         let mut inner = value.into_inner();
 
         let path = match inner
@@ -32,7 +34,11 @@ impl TryFrom<Pair<'_, Rule>> for ModDecl {
             None => Err(Error::map_span(mod_decl_span, "Expected identifier")),
         }?;
 
-        Ok(ModDecl { path, identifier })
+        Ok(ModDecl {
+            path,
+            identifier,
+            lcol: mod_decl_lcol,
+        })
     }
 }
 
