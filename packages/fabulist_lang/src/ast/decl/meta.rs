@@ -1,13 +1,13 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::dfn::object::Object, parser::Rule};
+use crate::{ast::dfn::object::ObjectDfn, parser::Rule};
 
 use super::Error;
 
 #[derive(Debug)]
 pub struct MetaDecl {
     pub lcol: LineColLocation,
-    pub object: Object,
+    pub object: ObjectDfn,
 }
 
 impl TryFrom<Pair<'_, Rule>> for MetaDecl {
@@ -20,7 +20,7 @@ impl TryFrom<Pair<'_, Rule>> for MetaDecl {
             .find(|pair| pair.as_rule() == Rule::object)
         {
             Some(object) => Ok(MetaDecl {
-                object: Object::try_from(object)?,
+                object: ObjectDfn::try_from(object)?,
                 lcol: meta_decl_lcol,
             }),
             None => Err(Error::map_span(

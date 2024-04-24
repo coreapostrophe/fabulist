@@ -1,7 +1,7 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::dfn::{mutator::Mutator, object::Object, path::Path},
+    ast::dfn::{mutator::MutatorDfn, object::ObjectDfn, path::PathDfn},
     parser::Rule,
 };
 
@@ -11,13 +11,13 @@ use super::{Error, Expr};
 pub enum PrimaryExpr {
     Number(u32),
     Boolean(bool),
-    Object(Object),
+    Object(ObjectDfn),
     String(String),
     Grouping(Expr),
     RawString(String),
     Identifier(String),
-    Mutator(Mutator),
-    Path(Path),
+    Mutator(MutatorDfn),
+    Path(PathDfn),
     None,
 }
 
@@ -61,9 +61,9 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 Some(interior) => Ok(PrimaryExpr::Identifier(interior.as_str().to_string())),
                 None => unreachable!(),
             },
-            Rule::path => Ok(PrimaryExpr::Path(Path::try_from(value)?)),
-            Rule::object => Ok(PrimaryExpr::Object(Object::try_from(value)?)),
-            Rule::mutator => Ok(PrimaryExpr::Mutator(Mutator::try_from(value)?)),
+            Rule::path => Ok(PrimaryExpr::Path(PathDfn::try_from(value)?)),
+            Rule::object => Ok(PrimaryExpr::Object(ObjectDfn::try_from(value)?)),
+            Rule::mutator => Ok(PrimaryExpr::Mutator(MutatorDfn::try_from(value)?)),
             Rule::boolean => match value.as_str() {
                 "true" => Ok(PrimaryExpr::Boolean(true)),
                 "false" => Ok(PrimaryExpr::Boolean(false)),

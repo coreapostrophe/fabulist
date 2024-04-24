@@ -7,15 +7,15 @@ use crate::{ast::expr::Expr, parser::Rule};
 use super::Error;
 
 #[derive(Debug)]
-pub struct Object {
+pub struct ObjectDfn {
     pub lcol: LineColLocation,
     pub map: HashMap<String, Expr>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for Object {
+impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let object_lcol = LineColLocation::from(value.as_span());
+        let object_dfn_lcol = LineColLocation::from(value.as_span());
         let mut map = HashMap::<String, Expr>::new();
 
         if let Some(object_interior) = value.into_inner().next() {
@@ -36,9 +36,9 @@ impl TryFrom<Pair<'_, Rule>> for Object {
             }
         }
 
-        Ok(Object {
+        Ok(ObjectDfn {
             map,
-            lcol: object_lcol,
+            lcol: object_dfn_lcol,
         })
     }
 }
@@ -51,7 +51,7 @@ mod object_tests {
 
     #[test]
     fn parses_object() {
-        let test_helper = ParserTestHelper::<Object>::new(Rule::object, "Object");
+        let test_helper = ParserTestHelper::<ObjectDfn>::new(Rule::object, "ObjectDfn");
         test_helper.assert_parse(r#"{"boolean": false, "number": 10}"#);
     }
 }

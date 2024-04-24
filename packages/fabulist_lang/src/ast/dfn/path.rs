@@ -5,15 +5,15 @@ use crate::{ast::expr::primary::PrimaryExpr, parser::Rule};
 use super::Error;
 
 #[derive(Debug)]
-pub struct Path {
+pub struct PathDfn {
     pub lcol: LineColLocation,
     pub identifiers: Vec<PrimaryExpr>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for Path {
+impl TryFrom<Pair<'_, Rule>> for PathDfn {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let pair_lcol = LineColLocation::from(value.as_span());
+        let pair_dfn_lcol = LineColLocation::from(value.as_span());
         let identifiers = value
             .into_inner()
             .map(|pair| {
@@ -25,9 +25,9 @@ impl TryFrom<Pair<'_, Rule>> for Path {
             })
             .collect::<Result<Vec<PrimaryExpr>, Error>>()?;
 
-        Ok(Path {
+        Ok(PathDfn {
             identifiers,
-            lcol: pair_lcol,
+            lcol: pair_dfn_lcol,
         })
     }
 }

@@ -1,6 +1,6 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::dfn::argument_body::ArgumentBody, parser::Rule};
+use crate::{ast::dfn::argument_body::ArgumentBodyDfn, parser::Rule};
 
 use super::{Error, Expr};
 
@@ -8,7 +8,7 @@ use super::{Error, Expr};
 pub struct CallExpr {
     pub lcol: LineColLocation,
     pub callee: Expr,
-    pub argument_body: Option<ArgumentBody>,
+    pub argument_body: Option<ArgumentBodyDfn>,
 }
 
 impl TryFrom<Pair<'_, Rule>> for CallExpr {
@@ -26,7 +26,7 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
             )),
         }?;
         let argument_body = match inner.find(|pair| pair.as_rule() == Rule::argument_body) {
-            Some(argument_body) => Some(ArgumentBody::try_from(argument_body)?),
+            Some(argument_body) => Some(ArgumentBodyDfn::try_from(argument_body)?),
             None => None,
         };
 

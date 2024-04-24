@@ -8,14 +8,14 @@ use super::decl::{meta::MetaDecl, module::ModDecl, part::PartDecl};
 use super::Error;
 
 #[derive(Debug)]
-pub struct Fab {
+pub struct StoryAst {
     pub lcol: LineColLocation,
     pub module: Vec<ModDecl>,
     pub meta: Option<MetaDecl>,
     pub parts: Vec<PartDecl>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for Fab {
+impl TryFrom<Pair<'_, Rule>> for StoryAst {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let fab_lcol = LineColLocation::from(value.as_span());
@@ -33,7 +33,7 @@ impl TryFrom<Pair<'_, Rule>> for Fab {
             }
         }
 
-        Ok(Fab {
+        Ok(StoryAst {
             module,
             meta,
             parts,
@@ -50,7 +50,7 @@ mod story_tests {
 
     #[test]
     fn parses_story() {
-        let test_helper = ParserTestHelper::<Fab>::new(Rule::fabulist, "Story");
+        let test_helper = ParserTestHelper::<StoryAst>::new(Rule::fabulist, "Story");
         test_helper.assert_parse(
             r#"
 			story {}

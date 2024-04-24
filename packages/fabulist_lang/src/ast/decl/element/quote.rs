@@ -1,6 +1,6 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::dfn::object::Object, parser::Rule};
+use crate::{ast::dfn::object::ObjectDfn, parser::Rule};
 
 use super::Error;
 
@@ -8,7 +8,7 @@ use super::Error;
 pub struct QuoteDecl {
     pub lcol: LineColLocation,
     pub text: String,
-    pub properties: Option<Object>,
+    pub properties: Option<ObjectDfn>,
 }
 
 impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
@@ -27,7 +27,7 @@ impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
         }?;
 
         let properties = match inner.find(|pair| pair.as_rule() == Rule::object) {
-            Some(object) => Some(Object::try_from(object)?),
+            Some(object) => Some(ObjectDfn::try_from(object)?),
             None => None,
         };
 

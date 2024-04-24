@@ -5,15 +5,15 @@ use crate::{ast::expr::Expr, parser::Rule};
 use super::Error;
 
 #[derive(Debug)]
-pub struct ArgumentBody {
+pub struct ArgumentBodyDfn {
     pub lcol: LineColLocation,
     pub arguments: Option<Vec<Expr>>,
 }
 
-impl TryFrom<Pair<'_, Rule>> for ArgumentBody {
+impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let argument_body_lcol = LineColLocation::from(value.as_span());
+        let argument_body_dfn_lcol = LineColLocation::from(value.as_span());
 
         if let Some(arguments) = value
             .into_inner()
@@ -23,14 +23,14 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBody {
                 .into_inner()
                 .map(|pair| Expr::try_from(pair))
                 .collect::<Result<Vec<Expr>, Error>>()?;
-            Ok(ArgumentBody {
+            Ok(ArgumentBodyDfn {
                 arguments: Some(arg_expr),
-                lcol: argument_body_lcol,
+                lcol: argument_body_dfn_lcol,
             })
         } else {
-            Ok(ArgumentBody {
+            Ok(ArgumentBodyDfn {
                 arguments: None,
-                lcol: argument_body_lcol,
+                lcol: argument_body_dfn_lcol,
             })
         }
     }
@@ -45,7 +45,7 @@ mod argument_body_tests {
     #[test]
     pub fn parses_argument_body() {
         let test_helper =
-            ParserTestHelper::<ArgumentBody>::new(Rule::argument_body, "ArgumentBody");
+            ParserTestHelper::<ArgumentBodyDfn>::new(Rule::argument_body, "ArgumentBodyDfn");
         test_helper.assert_parse(r#"("string", 5, true)"#);
     }
 }

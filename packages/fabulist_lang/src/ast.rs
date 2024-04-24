@@ -10,8 +10,8 @@ use crate::{
 pub mod decl;
 pub mod dfn;
 pub mod expr;
-pub mod fab;
 pub mod stmt;
+pub mod story;
 
 pub struct ParserTestHelper<T> {
     rule_type: Rule,
