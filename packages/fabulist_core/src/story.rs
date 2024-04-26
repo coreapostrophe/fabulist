@@ -89,7 +89,7 @@ impl Story {
     pub fn mut_resources(&mut self) -> &mut Resources {
         &mut self.resources
     }
-    pub fn element(&self, index: DialogueIndex) -> Result<&Box<PartElement>> {
+    pub fn element(&self, index: DialogueIndex) -> Result<&PartElement> {
         let part_key = &index.part_key;
         let part = self.part(part_key)?;
         let dialogue_index = &index.dialogue_index;

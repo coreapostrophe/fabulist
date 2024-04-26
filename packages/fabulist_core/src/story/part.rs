@@ -36,26 +36,22 @@ impl Part {
     pub fn mut_elements(&mut self) -> &mut Vec<Box<PartElement>> {
         &mut self.elements
     }
-    pub fn element(&self, index: usize) -> Result<&Box<PartElement>> {
+    pub fn element(&self, index: usize) -> Result<&PartElement> {
         match self.elements.get(index) {
-            Some(element) => Ok(element),
-            None => {
-                Err(Error::ElementDoesNotExist {
-                    dialogue_index: index,
-                    part_key: self.id.clone(),
-                })
-            }
+            Some(element) => Ok(element.as_ref()),
+            None => Err(Error::ElementDoesNotExist {
+                dialogue_index: index,
+                part_key: self.id.clone(),
+            }),
         }
     }
     pub fn mut_element(&mut self, index: usize) -> Result<&mut Box<PartElement>> {
         match self.elements.get_mut(index) {
             Some(element) => Ok(element),
-            None => {
-                Err(Error::ElementDoesNotExist {
-                    dialogue_index: index,
-                    part_key: self.id.clone(),
-                })
-            }
+            None => Err(Error::ElementDoesNotExist {
+                dialogue_index: index,
+                part_key: self.id.clone(),
+            }),
         }
     }
 }

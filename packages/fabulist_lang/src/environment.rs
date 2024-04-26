@@ -103,11 +103,9 @@ mod environment_tests {
         let child = Environment::new();
         Environment::nest_child(&environment, &child);
 
-        if let Some(expr) = Environment::get_value(&child, "number") {
-            if let Expr::Primary(primary) = expr {
-                if let PrimaryExpr::Number(num) = *primary {
-                    assert_eq!(num, 5);
-                }
+        if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
+            if let PrimaryExpr::Number(num) = *primary {
+                assert_eq!(num, 5);
             }
         }
     }

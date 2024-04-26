@@ -38,7 +38,7 @@ pub fn generate_element(fab_ident: &str, input: DeriveInput) -> Result<TokenStre
     })
 }
 
-fn build_inset_getter_setters(data_ident: &Ident, fields: &Vec<&Field>) -> Result<TokenStream> {
+fn build_inset_getter_setters(data_ident: &Ident, fields: &[&Field]) -> Result<TokenStream> {
     let getters_setters: Vec<TokenStream> = fields
         .iter()
         .enumerate()
@@ -49,7 +49,7 @@ fn build_inset_getter_setters(data_ident: &Ident, fields: &Vec<&Field>) -> Resul
             };
 
             let field_ty = &field.ty;
-            let setter_ident: Ident = parse_str(&format!("set_{}", quote! {#ident}.to_string()))
+            let setter_ident: Ident = parse_str(&format!("set_{}", quote! {#ident}))
                 .expect("Failed to create setter identifier.");
 
             Some(quote_spanned! { field.span() =>
@@ -70,7 +70,7 @@ fn build_inset_getter_setters(data_ident: &Ident, fields: &Vec<&Field>) -> Resul
     }
 }
 
-fn build_inset_interp_assignments(fields: &Vec<&Field>) -> Result<TokenStream> {
+fn build_inset_interp_assignments(fields: &[&Field]) -> Result<TokenStream> {
     let assignments: Vec<TokenStream> = fields
         .iter()
         .enumerate()

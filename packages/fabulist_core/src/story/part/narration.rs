@@ -95,13 +95,12 @@ impl From<NarrationBuilder> for Box<PartElement> {
 impl Progressive for Narration {
     type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
-        match self.change_context {
-            Some(change_context_closure) => {
-                change_context_closure(state.mut_context());
-            }
-            None => (),
+        if let Some(change_context_closure) = self.change_context {
+            change_context_closure(state.mut_context());
         }
-        let next_part_key = self.query_next.map(|next_closure| next_closure(state.context()));
+        let next_part_key = self
+            .query_next
+            .map(|next_closure| next_closure(state.context()));
         Ok(next_part_key)
     }
 }
