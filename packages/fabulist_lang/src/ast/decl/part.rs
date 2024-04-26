@@ -30,7 +30,7 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
         }?;
         let elements = inner
             .filter(|pair| pair.as_rule() == Rule::element_decl)
-            .map(|pair| ElementDecl::try_from(pair))
+            .map(ElementDecl::try_from)
             .collect::<Result<Vec<ElementDecl>, Error>>()?;
 
         Ok(PartDecl {

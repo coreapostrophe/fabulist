@@ -10,6 +10,6 @@ pub struct FabulistParser;
 
 impl FabulistParser {
     pub fn parse(source: &str) -> Result<Pairs<'_, Rule>, Error> {
-        GrammarParser::parse(Rule::fabulist, source).map_err(|error| Error::map_parser_error(error))
+        GrammarParser::parse(Rule::fabulist, source).map_err(Error::map_parser_error)
     }
 }

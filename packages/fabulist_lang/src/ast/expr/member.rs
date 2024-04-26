@@ -26,7 +26,7 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
             )),
         }?;
         let members = inner
-            .map(|pair| Expr::try_from(pair))
+            .map(Expr::try_from)
             .collect::<Result<Vec<Expr>, Error>>()?;
 
         Ok(MemberExpr {

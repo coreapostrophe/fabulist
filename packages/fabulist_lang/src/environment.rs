@@ -56,10 +56,10 @@ impl Environment {
             .set_parent(Rc::downgrade(parent));
         parent.deref().borrow_mut().child = Some(environment.clone());
     }
-    pub fn unwrap<'a>(environment: &'a Rc<RefCell<Environment>>) -> Ref<'a, Environment> {
+    pub fn unwrap(environment: &Rc<RefCell<Environment>>) -> Ref<'_, Environment> {
         environment.deref().borrow()
     }
-    pub fn unwrap_mut<'a>(environment: &'a Rc<RefCell<Environment>>) -> RefMut<'a, Environment> {
+    pub fn unwrap_mut(environment: &Rc<RefCell<Environment>>) -> RefMut<'_, Environment> {
         environment.deref().borrow_mut()
     }
     pub fn insert(environment: &Rc<RefCell<Environment>>, key: impl Into<String>, value: Expr) {

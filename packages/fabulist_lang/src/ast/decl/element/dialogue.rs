@@ -31,7 +31,7 @@ impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
 
         let quotes = inner
             .filter(|pair| pair.as_rule() == Rule::quote_decl)
-            .map(|pair| QuoteDecl::try_from(pair))
+            .map(QuoteDecl::try_from)
             .collect::<Result<Vec<QuoteDecl>, Error>>()?;
 
         Ok(DialogueDecl {

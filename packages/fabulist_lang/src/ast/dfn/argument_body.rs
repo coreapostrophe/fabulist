@@ -21,7 +21,7 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
         {
             let arg_expr = arguments
                 .into_inner()
-                .map(|pair| Expr::try_from(pair))
+                .map(Expr::try_from)
                 .collect::<Result<Vec<Expr>, Error>>()?;
             Ok(ArgumentBodyDfn {
                 arguments: Some(arg_expr),

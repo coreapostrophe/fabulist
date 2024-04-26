@@ -25,6 +25,12 @@ pub struct Story {
     resources: Resources,
 }
 
+impl Default for Story {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Story {
     pub fn new() -> Self {
         Self {
@@ -62,7 +68,7 @@ impl Story {
         &mut self.parts
     }
     pub fn part(&self, key: &ListKey<String>) -> Result<&Part> {
-        match self.parts.get(&key) {
+        match self.parts.get(key) {
             Some(part) => Ok(part),
             None => Err(Error::PartDoesNotExist {
                 key: key.to_owned(),
@@ -102,6 +108,12 @@ pub struct StoryBuilder {
     start: Option<ListKey<String>>,
     parts: HashMap<ListKey<String>, Part>,
     resources: Resources,
+}
+
+impl Default for StoryBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StoryBuilder {

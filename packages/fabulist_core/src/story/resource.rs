@@ -12,6 +12,12 @@ pub trait Keyed {
 #[derive(Debug)]
 pub struct Resources(HashMap<TypeId, HashMap<String, Rc<dyn Any>>>);
 
+impl Default for Resources {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Resources {
     pub fn new() -> Self {
         Self(HashMap::new())
@@ -30,10 +36,8 @@ impl Resources {
         match resource {
             Some(resource) => {
                 let resource = resource.clone();
-                let downcasted_resource = resource.downcast::<T>().expect(&format!(
-                    "Resource map value to match type `{}`.",
-                    std::any::type_name::<T>()
-                ));
+                let downcasted_resource = resource.downcast::<T>().unwrap_or_else(|_| panic!("Resource map value to match type `{}`.",
+                    std::any::type_name::<T>()));
                 Some(downcasted_resource)
             }
             None => None,

@@ -105,10 +105,7 @@ impl Progressive for Choice {
             }
             None => (),
         }
-        let next_part_key = match self.query_next {
-            Some(next_closure) => Some(next_closure(state.context())),
-            None => None,
-        };
+        let next_part_key = self.query_next.map(|next_closure| next_closure(state.context()));
         Ok(next_part_key)
     }
 }

@@ -108,7 +108,7 @@ fn filtered_fields(fields: &Fields) -> Result<Vec<&Field>> {
             .path
             .segments
             .iter()
-            .find(|segment| segment.ident.to_string() == "Inset");
+            .find(|segment| segment.ident == "Inset");
         valid_segment.is_some()
     };
 
@@ -125,7 +125,7 @@ fn filtered_fields(fields: &Fields) -> Result<Vec<&Field>> {
     }
 }
 
-fn type_generic<'a>(span: Span, ty: &'a Type) -> Result<&'a GenericArgument> {
+fn type_generic(span: Span, ty: &Type) -> Result<&GenericArgument> {
     if let Type::Path(type_path) = ty {
         if let Some(path_segement) = type_path.path.segments.last() {
             if let PathArguments::AngleBracketed(angle_bracketed_path) = &path_segement.arguments {
@@ -139,7 +139,7 @@ fn type_generic<'a>(span: Span, ty: &'a Type) -> Result<&'a GenericArgument> {
         span,
         format!(
             "Failed to parse generic arguments of type `{}`.",
-            ty.to_token_stream().to_string()
+            ty.to_token_stream()
         ),
     ))
 }

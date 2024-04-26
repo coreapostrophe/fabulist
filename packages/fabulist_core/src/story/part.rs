@@ -40,7 +40,7 @@ impl Part {
         match self.elements.get(index) {
             Some(element) => Ok(element),
             None => {
-                return Err(Error::ElementDoesNotExist {
+                Err(Error::ElementDoesNotExist {
                     dialogue_index: index,
                     part_key: self.id.clone(),
                 })
@@ -51,7 +51,7 @@ impl Part {
         match self.elements.get_mut(index) {
             Some(element) => Ok(element),
             None => {
-                return Err(Error::ElementDoesNotExist {
+                Err(Error::ElementDoesNotExist {
                     dialogue_index: index,
                     part_key: self.id.clone(),
                 })
@@ -114,31 +114,29 @@ impl Progressive for Part {
                     dialogue_index: 0,
                 });
             }
-        } else {
-            if let Some(dialogue_index) = state.current_element() {
-                let dialogue = self.element(dialogue_index)?;
-                let next_result = dialogue.next(state, choice_index)?;
+        } else if let Some(dialogue_index) = state.current_element() {
+            let dialogue = self.element(dialogue_index)?;
+            let next_result = dialogue.next(state, choice_index)?;
 
-                match next_result {
-                    Some(next_part) => {
-                        state.set_current_part(Some(next_part.clone().into()));
-                        state.set_current_element(Some(0));
+            match next_result {
+                Some(next_part) => {
+                    state.set_current_part(Some(next_part.clone()));
+                    state.set_current_element(Some(0));
+
+                    return Ok(DialogueIndex {
+                        part_key: next_part.clone(),
+                        dialogue_index: 0,
+                    });
+                }
+                None => {
+                    let next_dialogue_index = dialogue_index + 1;
+                    if self.elements.get(next_dialogue_index).is_some() {
+                        state.set_current_element(Some(next_dialogue_index));
 
                         return Ok(DialogueIndex {
-                            part_key: next_part.clone().into(),
-                            dialogue_index: 0,
+                            part_key: self.id().clone().into(),
+                            dialogue_index: next_dialogue_index,
                         });
-                    }
-                    None => {
-                        let next_dialogue_index = dialogue_index + 1;
-                        if self.elements.get(next_dialogue_index).is_some() {
-                            state.set_current_element(Some(next_dialogue_index));
-
-                            return Ok(DialogueIndex {
-                                part_key: self.id().clone().into(),
-                                dialogue_index: next_dialogue_index,
-                            });
-                        }
                     }
                 }
             }

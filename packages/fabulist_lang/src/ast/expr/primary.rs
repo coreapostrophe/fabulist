@@ -49,7 +49,7 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                         format!("Unable to parse `{}` to number", value.as_str()),
                     )
                 })?;
-                return Ok(PrimaryExpr::Number(parsed_num));
+                Ok(PrimaryExpr::Number(parsed_num))
             }
             Rule::grouping => match value.into_inner().next() {
                 Some(expr) => Ok(PrimaryExpr::Grouping(Expr::try_from(expr)?)),

@@ -34,6 +34,12 @@ impl From<bool> for ContextValue {
 #[derive(Debug)]
 pub struct Context(HashMap<String, ContextValue>);
 
+impl Default for Context {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Context {
     pub fn new() -> Self {
         Self(HashMap::new())

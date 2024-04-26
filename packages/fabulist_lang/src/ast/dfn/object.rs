@@ -21,8 +21,8 @@ impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
         if let Some(object_interior) = value.into_inner().next() {
             let obj_interior = object_interior.into_inner();
             let vec_pair = obj_interior.collect::<Vec<Pair<'_, Rule>>>();
-            let mut chunked_pairs = vec_pair.chunks_exact(2);
-            while let Some(key_value_pairs) = chunked_pairs.next() {
+            let chunked_pairs = vec_pair.chunks_exact(2);
+            for key_value_pairs in chunked_pairs {
                 let key = &key_value_pairs[0];
                 let string_interior = match key.clone().into_inner().next() {
                     Some(interior) => interior,

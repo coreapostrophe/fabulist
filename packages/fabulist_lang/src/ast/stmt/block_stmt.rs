@@ -16,7 +16,7 @@ impl TryFrom<Pair<'_, Rule>> for BlockStmt {
         let block_stmt_lcol = LineColLocation::from(value.as_span());
         let statements = value
             .into_inner()
-            .map(|pair| Stmt::try_from(pair))
+            .map(Stmt::try_from)
             .collect::<Result<Vec<Stmt>, Error>>()?;
 
         Ok(BlockStmt {

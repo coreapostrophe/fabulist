@@ -22,6 +22,12 @@ impl Selection {
 #[derive(Debug)]
 pub struct SelectionBuilder(Vec<Choice>);
 
+impl Default for SelectionBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SelectionBuilder {
     pub fn new() -> Self {
         Self(Vec::new())

@@ -13,6 +13,12 @@ pub struct State {
     decisions: HashMap<DialogueIndex, usize>,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl State {
     pub fn new() -> Self {
         Self {
@@ -41,10 +47,7 @@ impl State {
         self.current_part = part_key;
     }
     pub fn current_element(&self) -> Option<usize> {
-        match self.current_element {
-            Some(element_index) => Some(element_index),
-            None => None,
-        }
+        self.current_element
     }
     pub fn set_current_element(&mut self, element_index: Option<usize>) {
         self.current_element = element_index;
