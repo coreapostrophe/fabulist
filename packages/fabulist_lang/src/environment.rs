@@ -56,6 +56,11 @@ impl Environment {
             .set_parent(Rc::downgrade(parent));
         parent.deref().borrow_mut().child = Some(environment.clone());
     }
+    pub fn add_empty_child(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        let child = Environment::new();
+        Environment::nest_child(&environment, &child);
+        child
+    }
     pub fn unwrap(environment: &Rc<RefCell<Environment>>) -> Ref<'_, Environment> {
         environment.deref().borrow()
     }
@@ -100,8 +105,7 @@ mod environment_tests {
         let environment = Environment::new();
         Environment::insert(&environment, "number", PrimaryExpr::Number(5).into());
 
-        let child = Environment::new();
-        Environment::nest_child(&environment, &child);
+        let child = Environment::add_empty_child(&environment);
 
         if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
             if let PrimaryExpr::Number(num) = *primary {
