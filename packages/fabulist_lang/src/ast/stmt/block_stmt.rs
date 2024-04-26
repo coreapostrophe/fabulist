@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{Error, Stmt};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BlockStmt {
     pub lcol: LineColLocation,
     pub statements: Vec<Stmt>,

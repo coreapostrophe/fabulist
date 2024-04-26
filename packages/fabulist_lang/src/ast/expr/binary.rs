@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{Error, Expr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BinaryOperator {
     Divide,
     Multiply,
@@ -20,7 +20,7 @@ pub enum BinaryOperator {
     Or,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BinaryExpr {
     pub lcol: LineColLocation,
     pub left: Expr,

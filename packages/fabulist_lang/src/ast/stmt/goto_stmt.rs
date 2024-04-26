@@ -4,7 +4,7 @@ use crate::{ast::dfn::path::PathDfn, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GotoStmt {
     pub lcol: LineColLocation,
     pub path: PathDfn,

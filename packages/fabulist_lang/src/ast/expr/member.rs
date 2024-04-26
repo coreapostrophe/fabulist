@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{Error, Expr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemberExpr {
     pub lcol: LineColLocation,
     pub left: Expr,

@@ -4,7 +4,7 @@ use crate::{ast::expr::Expr, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArgumentBodyDfn {
     pub lcol: LineColLocation,
     pub arguments: Option<Vec<Expr>>,

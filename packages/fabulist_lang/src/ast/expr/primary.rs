@@ -7,7 +7,7 @@ use crate::{
 
 use super::{Error, Expr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PrimaryExpr {
     Number(u32),
     Boolean(bool),

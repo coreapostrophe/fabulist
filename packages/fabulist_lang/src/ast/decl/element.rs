@@ -9,7 +9,7 @@ use super::Error;
 pub mod dialogue;
 pub mod quote;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ElementDecl {
     Dialogue(DialogueDecl),
     Choice(QuoteDecl),

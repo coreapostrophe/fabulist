@@ -4,7 +4,7 @@ use crate::{ast::stmt::block_stmt::BlockStmt, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MutatorDfn {
     pub lcol: LineColLocation,
     pub block_stmt: BlockStmt,

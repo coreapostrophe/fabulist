@@ -14,7 +14,7 @@ pub mod member;
 pub mod primary;
 pub mod unary;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Primary(Box<PrimaryExpr>),
     Unary(Box<UnaryExpr>),

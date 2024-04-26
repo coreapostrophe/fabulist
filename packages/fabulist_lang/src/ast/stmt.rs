@@ -16,7 +16,7 @@ pub mod if_stmt;
 pub mod let_stmt;
 pub mod set_stmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stmt {
     Block(Box<BlockStmt>),
     If(Box<IfStmt>),

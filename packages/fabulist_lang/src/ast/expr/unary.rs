@@ -4,13 +4,13 @@ use crate::parser::Rule;
 
 use super::{Error, Expr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnaryOperator {
     Negation,
     Not,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnaryExpr {
     Unary {
         lcol: LineColLocation,

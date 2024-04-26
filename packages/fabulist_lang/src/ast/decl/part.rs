@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{element::ElementDecl, Error};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PartDecl {
     pub lcol: LineColLocation,
     pub id: String,

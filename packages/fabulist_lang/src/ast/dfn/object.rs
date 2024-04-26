@@ -6,7 +6,7 @@ use crate::{ast::expr::Expr, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ObjectDfn {
     pub lcol: LineColLocation,
     pub map: HashMap<String, Expr>,

@@ -4,7 +4,7 @@ use crate::{ast::expr::primary::PrimaryExpr, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PathDfn {
     pub lcol: LineColLocation,
     pub identifiers: Vec<PrimaryExpr>,

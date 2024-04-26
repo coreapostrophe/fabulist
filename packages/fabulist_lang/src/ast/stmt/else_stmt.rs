@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{block_stmt::BlockStmt, if_stmt::IfStmt, Error};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ElseStmt {
     If(IfStmt),
     Block(BlockStmt),

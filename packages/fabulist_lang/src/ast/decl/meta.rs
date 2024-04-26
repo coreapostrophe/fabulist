@@ -4,7 +4,7 @@ use crate::{ast::dfn::object::ObjectDfn, parser::Rule};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MetaDecl {
     pub lcol: LineColLocation,
     pub object: ObjectDfn,

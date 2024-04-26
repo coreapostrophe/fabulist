@@ -4,7 +4,7 @@ use crate::{ast::expr::Expr, parser::Rule};
 
 use super::{block_stmt::BlockStmt, else_stmt::ElseStmt, Error};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IfStmt {
     pub lcol: LineColLocation,
     pub condition: Expr,

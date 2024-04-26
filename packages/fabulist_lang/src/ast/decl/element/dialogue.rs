@@ -4,7 +4,7 @@ use crate::parser::Rule;
 
 use super::{quote::QuoteDecl, Error};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DialogueDecl {
     pub lcol: LineColLocation,
     pub character: String,

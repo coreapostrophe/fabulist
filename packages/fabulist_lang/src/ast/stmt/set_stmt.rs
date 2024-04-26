@@ -7,7 +7,7 @@ use crate::{
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SetStmt {
     pub lcol: LineColLocation,
     pub identifier: PrimaryExpr,

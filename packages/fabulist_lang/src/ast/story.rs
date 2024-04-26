@@ -7,7 +7,7 @@ use super::decl::{meta::MetaDecl, module::ModDecl, part::PartDecl};
 
 use super::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StoryAst {
     pub lcol: LineColLocation,
     pub module: Vec<ModDecl>,

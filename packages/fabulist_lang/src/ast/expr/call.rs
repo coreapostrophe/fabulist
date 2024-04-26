@@ -4,7 +4,7 @@ use crate::{ast::dfn::argument_body::ArgumentBodyDfn, parser::Rule};
 
 use super::{Error, Expr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CallExpr {
     pub lcol: LineColLocation,
     pub callee: Expr,
