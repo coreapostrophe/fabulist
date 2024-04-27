@@ -19,7 +19,7 @@ impl TryFrom<Pair<'_, Rule>> for PathDfn {
             .map(|pair| {
                 let primary = PrimaryExpr::try_from(pair)?;
                 match primary {
-                    PrimaryExpr::Identifier(_) => Ok(primary),
+                    PrimaryExpr::Identifier { .. } => Ok(primary),
                     _ => unreachable!(),
                 }
             })

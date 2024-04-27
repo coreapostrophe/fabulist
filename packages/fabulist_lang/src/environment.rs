@@ -58,7 +58,7 @@ impl Environment {
     }
     pub fn add_empty_child(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         let child = Environment::new();
-        Environment::nest_child(&environment, &child);
+        Environment::nest_child(environment, &child);
         child
     }
     pub fn unwrap(environment: &Rc<RefCell<Environment>>) -> Ref<'_, Environment> {
@@ -82,6 +82,8 @@ impl Environment {
 
 #[cfg(test)]
 mod environment_tests {
+    use pest::error::LineColLocation;
+
     use crate::ast::expr::primary::PrimaryExpr;
 
     use super::*;
@@ -103,13 +105,21 @@ mod environment_tests {
     #[test]
     fn propagates_value() {
         let environment = Environment::new();
-        Environment::insert(&environment, "number", PrimaryExpr::Number(5).into());
+        Environment::insert(
+            &environment,
+            "number",
+            PrimaryExpr::Number {
+                value: 5,
+                lcol: LineColLocation::Pos((0, 0)),
+            }
+            .into(),
+        );
 
         let child = Environment::add_empty_child(&environment);
 
         if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
-            if let PrimaryExpr::Number(num) = *primary {
-                assert_eq!(num, 5);
+            if let PrimaryExpr::Number { value, .. } = *primary {
+                assert_eq!(value, 5);
             }
         }
     }

@@ -23,7 +23,7 @@ impl TryFrom<Pair<'_, Rule>> for ModDecl {
             .find(|pair| pair.as_node_tag() == Some("path"))
         {
             Some(path) => match PrimaryExpr::try_from(path)? {
-                PrimaryExpr::String(string) => Ok(string),
+                PrimaryExpr::String { value, .. } => Ok(value),
                 _ => Err(Error::map_span(mod_decl_span, "Expected string")),
             },
             None => Err(Error::map_span(mod_decl_span, "Expected string file path")),
