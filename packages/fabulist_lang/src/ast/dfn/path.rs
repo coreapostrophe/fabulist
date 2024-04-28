@@ -1,13 +1,13 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::expr::primary::PrimaryExpr, parser::Rule};
+use crate::{ast::expr::primitive::PrimitiveExpr, parser::Rule};
 
 use super::Error;
 
 #[derive(Debug, Clone)]
 pub struct PathDfn {
     pub lcol: LineColLocation,
-    pub identifiers: Vec<PrimaryExpr>,
+    pub identifiers: Vec<PrimitiveExpr>,
 }
 
 impl TryFrom<Pair<'_, Rule>> for PathDfn {
@@ -17,13 +17,13 @@ impl TryFrom<Pair<'_, Rule>> for PathDfn {
         let identifiers = value
             .into_inner()
             .map(|pair| {
-                let primary = PrimaryExpr::try_from(pair)?;
+                let primary = PrimitiveExpr::try_from(pair)?;
                 match primary {
-                    PrimaryExpr::Identifier { .. } => Ok(primary),
+                    PrimitiveExpr::Identifier { .. } => Ok(primary),
                     _ => unreachable!(),
                 }
             })
-            .collect::<Result<Vec<PrimaryExpr>, Error>>()?;
+            .collect::<Result<Vec<PrimitiveExpr>, Error>>()?;
 
         Ok(PathDfn {
             identifiers,

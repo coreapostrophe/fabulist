@@ -2,10 +2,7 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use self::{
-    block_stmt::BlockStmt, goto_stmt::GotoStmt, if_stmt::IfStmt, let_stmt::LetStmt,
-    set_stmt::SetStmt,
-};
+use self::{block_stmt::BlockStmt, goto_stmt::GotoStmt, if_stmt::IfStmt, let_stmt::LetStmt};
 
 use super::Error;
 
@@ -14,14 +11,12 @@ pub mod else_stmt;
 pub mod goto_stmt;
 pub mod if_stmt;
 pub mod let_stmt;
-pub mod set_stmt;
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Block(Box<BlockStmt>),
     If(Box<IfStmt>),
     Let(Box<LetStmt>),
-    Set(Box<SetStmt>),
     Goto(Box<GotoStmt>),
 }
 
@@ -43,12 +38,6 @@ impl From<LetStmt> for Stmt {
     }
 }
 
-impl From<SetStmt> for Stmt {
-    fn from(value: SetStmt) -> Self {
-        Self::Set(Box::new(value))
-    }
-}
-
 impl From<GotoStmt> for Stmt {
     fn from(value: GotoStmt) -> Self {
         Self::Goto(Box::new(value))
@@ -67,7 +56,6 @@ impl TryFrom<Pair<'_, Rule>> for Stmt {
             Rule::block_stmt => Ok(BlockStmt::try_from(value)?.into()),
             Rule::if_stmt => Ok(IfStmt::try_from(value)?.into()),
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
-            Rule::set_stmt => Ok(SetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
             _ => Err(Error::map_span(stmt_span, "Invalid statement")),
         }

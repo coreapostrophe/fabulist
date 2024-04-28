@@ -36,11 +36,11 @@ where
     {
         let mut result =
             GrammarParser::parse(self.rule_type, source).expect("Failed to parse string.");
-        let pair = result.next().unwrap_or_else(|| panic!("Failed to parse {} pair from string",
-            self.struct_name));
+        let pair = result
+            .next()
+            .unwrap_or_else(|| panic!("Failed to parse {} pair from string", self.struct_name));
         let ast = T::try_from(pair);
         assert!(ast.is_ok());
-        ast.unwrap_or_else(|_| panic!("Failed to turn pair to `{}` struct",
-            self.struct_name))
+        ast.unwrap_or_else(|_| panic!("Failed to turn pair to `{}` struct", self.struct_name))
     }
 }

@@ -2,26 +2,26 @@
 WHITESPACE = _{ " " | "\n" | "\t" }
 
 // KEYWORDS
-true_keyword  = _{ "true" }
-false_keyword = _{ "false" }
-none_keyword  = _{ "none" }
-meta_keyword  = _{ "story" }
-from_keyword  = _{ "from" }
-set_keyword   = _{ "set" }
-let_keyword   = _{ "let" }
-get_keyword   = _{ "get" }
-if_keyword    = _{ "if" }
-else_keyword  = _{ "else" }
-mod_keyword   = _{ "module" }
-as_keyword    = _{ "as" }
-goto_keyword  = _{ "goto" }
-raw_keyword   = _{
+true_keyword    = _{ "true" }
+false_keyword   = _{ "false" }
+none_keyword    = _{ "none" }
+meta_keyword    = _{ "story" }
+from_keyword    = _{ "from" }
+let_keyword     = _{ "let" }
+get_keyword     = _{ "get" }
+if_keyword      = _{ "if" }
+else_keyword    = _{ "else" }
+mod_keyword     = _{ "module" }
+as_keyword      = _{ "as" }
+goto_keyword    = _{ "goto" }
+context_keyword = _{ "context" }
+raw_keyword     = _{
     true_keyword
   | false_keyword
   | none_keyword
   | meta_keyword
   | from_keyword
-  | set_keyword
+  | context_keyword
   | let_keyword
   | get_keyword
   | if_keyword
@@ -30,9 +30,9 @@ raw_keyword   = _{
   | as_keyword
   | goto_keyword
 }
-keyword       = _{ raw_keyword ~ !ident_continue }
+keyword         = _{ raw_keyword ~ !ident_continue }
 
-// PRIMITIVE VALUE
+// LITERALS
 string_interior     = ${ (!("\"") ~ ANY)* }
 string              = ${ "\"" ~ string_interior ~ "\"" }
 raw_string_interior = ${ (!("\"" ~ PEEK) ~ ANY)* }
@@ -41,15 +41,7 @@ number              = ${ ASCII_DIGIT+ }
 boolean             = ${ true_keyword | false_keyword }
 none                = ${ none_keyword }
 
-// OPERATORS
-unary_operator      = { "!" | "-" }
-factor_operator     = { "/" | "*" }
-term_operator       = { "-" | "+" }
-comparison_operator = { ">=" | "<=" | ">" | "<" }
-equality_operator   = { "!=" | "==" }
-logical_operator    = { "&&" | "||" }
-
-// DEFINITIONS
+// PRIMITIVES
 ident_start     = _{ "_" | ASCII_ALPHA }
 ident_continue  = _{ "_" | ASCII_ALPHANUMERIC }
 ident_interior  = ${ ident_start ~ ident_continue* }
@@ -61,36 +53,35 @@ list_interior   =  { expression ~ ("," ~ expression)* }
 list            =  { "[" ~ list_interior? ~ "]" }
 object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expression)* }
 object          =  { "{" ~ object_interior? ~ "}" }
+context         =  { context_keyword }
 grouping        =  { "(" ~ expression ~ ")" }
 mutator         =  { "|>" ~ block_stmt }
-arguments       =  { expression ~ ("," ~ expression)* }
-argument_body   =  { "(" ~ arguments? ~ ")" }
-get             =  { get_keyword ~ "(" ~ identifier ~ ")" }
+
+// OPERATORS
+unary_operator      = { "!" | "-" }
+factor_operator     = { "/" | "*" }
+term_operator       = { "-" | "+" }
+comparison_operator = { ">=" | "<=" | ">" | "<" }
+equality_operator   = { "!=" | "==" }
+logical_operator    = { "&&" | "||" }
+
+// DEFINITIONS
+arguments     = { expression ~ ("," ~ expression)* }
+argument_body = { "(" ~ arguments? ~ ")" }
 
 // EXPRESSIONS
-primary_expr    = _{
-    raw_string
-  | get
-  | string
-  | number
-  | boolean
-  | grouping
-  | none
-  | identifier
-  | object
-  | list
-  | mutator
-  | path
-}
-call_expr       =  { #callee = primary_expr ~ argument_body* }
-member_expr     =  { #left = call_expr ~ ("." ~ member_expr)* }
-unary_expr      =  { (#operator = unary_operator ~ #right = unary_expr) | member_expr }
-factor_expr     =  { #left = unary_expr ~ (#operator = factor_operator ~ #right = unary_expr)* }
-term_expr       =  { #left = factor_expr ~ (#operator = term_operator ~ #right = factor_expr)* }
-comparison_expr =  { #left = term_expr ~ (#operator = comparison_operator ~ #right = term_expr)* }
-equality_expr   =  { #left = comparison_expr ~ (#operator = equality_operator ~ #right = comparison_expr)* }
-logical_expr    =  { #left = equality_expr ~ (#operator = logical_operator ~ #right = equality_expr)* }
-expression      =  { logical_expr }
+literal_expr    = { string | raw_string | number | boolean | none }
+primitive_expr  = { list | object | identifier | path | context | grouping | mutator }
+primary_expr    = { literal_expr | primitive_expr }
+call_expr       = { #callee = primary_expr ~ argument_body* }
+member_expr     = { #left = call_expr ~ ("." ~ member_expr)* }
+unary_expr      = { (#operator = unary_operator ~ #right = unary_expr) | member_expr }
+factor_expr     = { #left = unary_expr ~ (#operator = factor_operator ~ #right = unary_expr)* }
+term_expr       = { #left = factor_expr ~ (#operator = term_operator ~ #right = factor_expr)* }
+comparison_expr = { #left = term_expr ~ (#operator = comparison_operator ~ #right = term_expr)* }
+equality_expr   = { #left = comparison_expr ~ (#operator = equality_operator ~ #right = comparison_expr)* }
+logical_expr    = { #left = equality_expr ~ (#operator = logical_operator ~ #right = equality_expr)* }
+expression      = { logical_expr }
 
 // DECLARATIONS
 character_decl = { "[" ~ #name = identifier ~ "]" }
@@ -106,11 +97,10 @@ mod_decl       = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" 
 
 // STATEMENT
 block_stmt = { "{" ~ statement* ~ "}" }
-set_stmt   = { set_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
 let_stmt   = { let_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
 goto_stmt  = { goto_keyword ~ path ~ ";" }
 else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
 if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
-statement  = { block_stmt | set_stmt | let_stmt | if_stmt | goto_stmt }
+statement  = { block_stmt | let_stmt | if_stmt | goto_stmt }
 
 fabulist = { SOI ~ mod_decl* ~ meta_decl? ~ part_decl* ~ EOI }

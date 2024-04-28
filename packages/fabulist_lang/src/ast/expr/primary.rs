@@ -1,47 +1,17 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{
-    ast::dfn::{mutator::MutatorDfn, object::ObjectDfn, path::PathDfn},
-    parser::Rule,
-};
+use crate::parser::Rule;
 
-use super::{Error, Expr};
+use super::{literal::LiteralExpr, primitive::PrimitiveExpr, Error, Expr};
 
 #[derive(Debug, Clone)]
 pub enum PrimaryExpr {
-    Number {
-        value: u32,
+    Literal {
+        value: LiteralExpr,
         lcol: LineColLocation,
     },
-    Boolean {
-        value: bool,
-        lcol: LineColLocation,
-    },
-    Object {
-        value: ObjectDfn,
-        lcol: LineColLocation,
-    },
-    String {
-        value: String,
-        lcol: LineColLocation,
-    },
-    Grouping {
-        value: Expr,
-        lcol: LineColLocation,
-    },
-    Identifier {
-        value: String,
-        lcol: LineColLocation,
-    },
-    Mutator {
-        value: MutatorDfn,
-        lcol: LineColLocation,
-    },
-    Path {
-        value: PathDfn,
-        lcol: LineColLocation,
-    },
-    None {
+    Primitive {
+        value: PrimitiveExpr,
         lcol: LineColLocation,
     },
 }
@@ -57,79 +27,31 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
                 Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
                 None => unreachable!(),
             },
-            Rule::identifier => match value.into_inner().next() {
-                Some(inner) => Ok(PrimaryExpr::try_from(inner)?),
-                None => unreachable!(),
-            },
-            Rule::string => match value.into_inner().next() {
-                Some(interior) => Ok(PrimaryExpr::String {
-                    value: interior.as_str().to_string(),
+            Rule::primitive_expr
+            | Rule::identifier
+            | Rule::strict_ident
+            | Rule::raw_ident
+            | Rule::path
+            | Rule::object
+            | Rule::mutator
+            | Rule::grouping => match value.into_inner().next() {
+                Some(inner) => Ok(PrimaryExpr::Primitive {
+                    value: PrimitiveExpr::try_from(inner)?,
                     lcol: primary_expr_lcol,
                 }),
                 None => unreachable!(),
             },
-            Rule::raw_string => match value.into_inner().next() {
-                Some(interior) => Ok(PrimaryExpr::String {
-                    value: interior.as_str().to_string(),
+            Rule::literal_expr
+            | Rule::string
+            | Rule::raw_string
+            | Rule::number
+            | Rule::none
+            | Rule::boolean => match value.into_inner().next() {
+                Some(inner) => Ok(PrimaryExpr::Literal {
+                    value: LiteralExpr::try_from(inner)?,
                     lcol: primary_expr_lcol,
                 }),
                 None => unreachable!(),
-            },
-            Rule::number => {
-                let parsed_number = value.as_str().parse::<u32>().map_err(|_| {
-                    Error::map_span(
-                        primary_expr_span,
-                        format!("Unable to parse `{}` to number", value.as_str()),
-                    )
-                })?;
-                Ok(PrimaryExpr::Number {
-                    value: parsed_number,
-                    lcol: primary_expr_lcol,
-                })
-            }
-            Rule::grouping => match value.into_inner().next() {
-                Some(expr) => Ok(PrimaryExpr::Grouping {
-                    value: Expr::try_from(expr)?,
-                    lcol: primary_expr_lcol,
-                }),
-                None => unreachable!(),
-            },
-            Rule::none => Ok(PrimaryExpr::None {
-                lcol: primary_expr_lcol,
-            }),
-            Rule::strict_ident => Ok(PrimaryExpr::Identifier {
-                value: value.as_str().to_string(),
-                lcol: primary_expr_lcol,
-            }),
-            Rule::raw_ident => match value.into_inner().next() {
-                Some(interior) => Ok(PrimaryExpr::Identifier {
-                    value: interior.as_str().to_string(),
-                    lcol: primary_expr_lcol,
-                }),
-                None => unreachable!(),
-            },
-            Rule::path => Ok(PrimaryExpr::Path {
-                value: PathDfn::try_from(value)?,
-                lcol: primary_expr_lcol,
-            }),
-            Rule::object => Ok(PrimaryExpr::Object {
-                value: ObjectDfn::try_from(value)?,
-                lcol: primary_expr_lcol,
-            }),
-            Rule::mutator => Ok(PrimaryExpr::Mutator {
-                value: MutatorDfn::try_from(value)?,
-                lcol: primary_expr_lcol,
-            }),
-            Rule::boolean => match value.as_str() {
-                "true" => Ok(PrimaryExpr::Boolean {
-                    value: true,
-                    lcol: primary_expr_lcol,
-                }),
-                "false" => Ok(PrimaryExpr::Boolean {
-                    value: false,
-                    lcol: primary_expr_lcol,
-                }),
-                _ => unreachable!(),
             },
             _ => Err(Error::map_span(
                 primary_expr_span,

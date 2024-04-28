@@ -10,8 +10,10 @@ use super::Error;
 
 pub mod binary;
 pub mod call;
+pub mod literal;
 pub mod member;
 pub mod primary;
+pub mod primitive;
 pub mod unary;
 
 #[derive(Debug, Clone)]
@@ -37,25 +39,25 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             Rule::call_expr => Ok(CallExpr::try_from(value)?.into()),
             Rule::member_expr => Ok(MemberExpr::try_from(value)?.into()),
 
-            Rule::logical_expr => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::equality_expr => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::comparison_expr => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::term_expr => Ok(BinaryExpr::try_from(value)?.into()),
-            Rule::factor_expr => Ok(BinaryExpr::try_from(value)?.into()),
+            Rule::logical_expr
+            | Rule::equality_expr
+            | Rule::comparison_expr
+            | Rule::term_expr
+            | Rule::factor_expr => Ok(BinaryExpr::try_from(value)?.into()),
 
-            Rule::primary_expr => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::number => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::identifier => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::strict_ident => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::raw_ident => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::string => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::raw_string => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::path => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::object => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::mutator => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::grouping => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::boolean => Ok(PrimaryExpr::try_from(value)?.into()),
-            Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
+            Rule::primary_expr
+            | Rule::number
+            | Rule::identifier
+            | Rule::strict_ident
+            | Rule::raw_ident
+            | Rule::string
+            | Rule::raw_string
+            | Rule::path
+            | Rule::object
+            | Rule::mutator
+            | Rule::grouping
+            | Rule::boolean
+            | Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
             _ => Err(Error::map_span(expr_span, "Invalid expression")),
         }
     }

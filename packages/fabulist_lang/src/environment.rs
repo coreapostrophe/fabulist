@@ -84,7 +84,7 @@ impl Environment {
 mod environment_tests {
     use pest::error::LineColLocation;
 
-    use crate::ast::expr::primary::PrimaryExpr;
+    use crate::ast::expr::{literal::LiteralExpr, primary::PrimaryExpr};
 
     use super::*;
 
@@ -104,13 +104,18 @@ mod environment_tests {
 
     #[test]
     fn propagates_value() {
+        let lcol = LineColLocation::Pos((0, 0));
+
         let environment = Environment::new();
         Environment::insert(
             &environment,
             "number",
-            PrimaryExpr::Number {
-                value: 5,
-                lcol: LineColLocation::Pos((0, 0)),
+            PrimaryExpr::Literal {
+                value: LiteralExpr::Number {
+                    value: 5,
+                    lcol: lcol.clone(),
+                },
+                lcol,
             }
             .into(),
         );
@@ -118,8 +123,10 @@ mod environment_tests {
         let child = Environment::add_empty_child(&environment);
 
         if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
-            if let PrimaryExpr::Number { value, .. } = *primary {
-                assert_eq!(value, 5);
+            if let PrimaryExpr::Literal { value, .. } = *primary {
+                if let LiteralExpr::Number { value, .. } = value {
+                    assert_eq!(value, 5);
+                }
             }
         }
     }

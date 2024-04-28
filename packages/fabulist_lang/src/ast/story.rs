@@ -59,7 +59,7 @@ mod story_tests {
 			[Jose]
 			> "When are you getting a car?" => {
 				"next": |>{
-					set hello = "world";
+					let hello = "world";
 				}
 			}
 			[Dave]
