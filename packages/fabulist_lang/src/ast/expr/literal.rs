@@ -81,3 +81,22 @@ impl TryFrom<Pair<'_, Rule>> for LiteralExpr {
         }
     }
 }
+
+#[cfg(test)]
+mod literal_expr_tests {
+    use crate::ast::ParserTestHelper;
+
+    use super::*;
+
+    #[test]
+    fn parses_literal_expr() {
+        let test_helper = ParserTestHelper::<LiteralExpr>::new(Rule::literal_expr, "LiteralExpr");
+        test_helper.assert_parse("\"string\"");
+        test_helper.assert_parse("r#\"raw string\"#");
+        test_helper.assert_parse("5");
+        test_helper.assert_parse("5.52252");
+        test_helper.assert_parse("none");
+        test_helper.assert_parse("true");
+        test_helper.assert_parse("false");
+    }
+}

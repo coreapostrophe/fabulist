@@ -29,6 +29,9 @@ pub enum PrimitiveExpr {
         value: PathDfn,
         lcol: LineColLocation,
     },
+    Context {
+        lcol: LineColLocation,
+    },
 }
 
 impl TryFrom<Pair<'_, Rule>> for PrimitiveExpr {
@@ -76,10 +79,33 @@ impl TryFrom<Pair<'_, Rule>> for PrimitiveExpr {
                 value: MutatorDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
+            Rule::context => Ok(PrimitiveExpr::Context {
+                lcol: primitive_expr_lcol,
+            }),
             _ => Err(Error::map_span(
                 primitive_expr_span,
                 "Invalid primitive expression",
             )),
         }
+    }
+}
+
+#[cfg(test)]
+mod primitive_expr_tests {
+    use crate::ast::ParserTestHelper;
+
+    use super::*;
+
+    #[test]
+    fn parses_primitive_expr() {
+        let test_helper =
+            ParserTestHelper::<PrimitiveExpr>::new(Rule::primitive_expr, "PrimitiveExpr");
+        test_helper.assert_parse("ident");
+        test_helper.assert_parse("r#module");
+        test_helper.assert_parse("(ident)");
+        test_helper.assert_parse("path::path2::path3");
+        test_helper.assert_parse("{ \"key\": 5 }");
+        test_helper.assert_parse("|>{ goto module_1::part_1; }");
+        test_helper.assert_parse("context");
     }
 }
