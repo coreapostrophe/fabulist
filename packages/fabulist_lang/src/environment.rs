@@ -112,7 +112,7 @@ mod environment_tests {
             "number",
             PrimaryExpr::Literal {
                 value: LiteralExpr::Number {
-                    value: 5,
+                    value: 5.0,
                     lcol: lcol.clone(),
                 },
                 lcol,
@@ -125,7 +125,7 @@ mod environment_tests {
         if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
             if let PrimaryExpr::Literal { value, .. } = *primary {
                 if let LiteralExpr::Number { value, .. } = value {
-                    assert_eq!(value, 5);
+                    assert_eq!(value, 5.0);
                 }
             }
         }

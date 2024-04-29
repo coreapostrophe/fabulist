@@ -7,7 +7,7 @@ use super::Error;
 #[derive(Debug, Clone)]
 pub enum LiteralExpr {
     Number {
-        value: u32,
+        value: f32,
         lcol: LineColLocation,
     },
     Boolean {
@@ -49,7 +49,7 @@ impl TryFrom<Pair<'_, Rule>> for LiteralExpr {
                 None => unreachable!(),
             },
             Rule::number => {
-                let parsed_number = value.as_str().parse::<u32>().map_err(|_| {
+                let parsed_number = value.as_str().parse::<f32>().map_err(|_| {
                     Error::map_span(
                         literal_expr_span,
                         format!("Unable to parse `{}` to number", value.as_str()),

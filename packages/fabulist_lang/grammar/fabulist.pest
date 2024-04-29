@@ -37,7 +37,7 @@ string_interior     = ${ (!("\"") ~ ANY)* }
 string              = ${ "\"" ~ string_interior ~ "\"" }
 raw_string_interior = ${ (!("\"" ~ PEEK) ~ ANY)* }
 raw_string          = ${ "r" ~ PUSH("#"*) ~ "\"" ~ raw_string_interior ~ "\"" ~ POP }
-number              = ${ ASCII_DIGIT+ }
+number              = ${ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT)? }
 boolean             = ${ true_keyword | false_keyword }
 none                = ${ none_keyword }
 
@@ -74,7 +74,7 @@ literal_expr    = { string | raw_string | number | boolean | none }
 primitive_expr  = { list | object | identifier | path | context | grouping | mutator }
 primary_expr    = { literal_expr | primitive_expr }
 call_expr       = { #callee = primary_expr ~ argument_body* }
-member_expr     = { #left = call_expr ~ ("." ~ member_expr)* }
+member_expr     = { #left = call_expr ~ ("." ~ call_expr)* }
 unary_expr      = { (#operator = unary_operator ~ #right = unary_expr) | member_expr }
 factor_expr     = { #left = unary_expr ~ (#operator = factor_operator ~ #right = unary_expr)* }
 term_expr       = { #left = factor_expr ~ (#operator = term_operator ~ #right = factor_expr)* }

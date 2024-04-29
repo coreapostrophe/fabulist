@@ -79,6 +79,7 @@ mod primary_expr_tests {
         test_helper.assert_parse("\"string\"");
         test_helper.assert_parse(r##"r"raw string""##);
         test_helper.assert_parse("2");
+        test_helper.assert_parse("2.5");
         test_helper.assert_parse("none");
         test_helper.assert_parse("identifier");
         test_helper.assert_parse("r#none");
