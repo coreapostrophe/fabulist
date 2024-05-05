@@ -22,9 +22,9 @@ impl Resources {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
-    pub fn get<T: Debug>(&self, key: impl Into<String>) -> Option<Rc<T>>
+    pub fn get<T>(&self, key: impl Into<String>) -> Option<Rc<T>>
     where
-        T: 'static,
+        T: Debug + 'static,
     {
         let key = key.into();
         let type_name = TypeId::of::<T>();
@@ -36,8 +36,12 @@ impl Resources {
         match resource {
             Some(resource) => {
                 let resource = resource.clone();
-                let downcasted_resource = resource.downcast::<T>().unwrap_or_else(|_| panic!("Resource map value to match type `{}`.",
-                    std::any::type_name::<T>()));
+                let downcasted_resource = resource.downcast::<T>().unwrap_or_else(|_| {
+                    panic!(
+                        "Resource map value to match type `{}`.",
+                        std::any::type_name::<T>()
+                    )
+                });
                 Some(downcasted_resource)
             }
             None => None,
