@@ -33,7 +33,7 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
             | Rule::raw_ident
             | Rule::path
             | Rule::object
-            | Rule::mutator
+            | Rule::lambda
             | Rule::grouping => match value.into_inner().next() {
                 Some(inner) => Ok(PrimaryExpr::Primitive {
                     value: PrimitiveExpr::try_from(inner)?,

@@ -55,7 +55,7 @@ object_interior =  { string ~ ":" ~ expression ~ ("," ~ string ~ ":" ~ expressio
 object          =  { "{" ~ object_interior? ~ "}" }
 context         =  { context_keyword }
 grouping        =  { "(" ~ expression ~ ")" }
-mutator         =  { "|>" ~ block_stmt }
+lambda          =  { parameter_body ~ "=>" ~ block_stmt }
 
 // OPERATORS
 unary_operator      = { "!" | "-" }
@@ -66,12 +66,14 @@ equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
 
 // DEFINITIONS
-arguments     = { expression ~ ("," ~ expression)* }
-argument_body = { "(" ~ arguments? ~ ")" }
+arguments      = { expression ~ ("," ~ expression)* }
+parameters     = { identifier ~ ("," ~ identifier)* }
+parameter_body = { "(" ~ parameters? ~ ")" }
+argument_body  = { "(" ~ arguments? ~ ")" }
 
 // EXPRESSIONS
 literal_expr    = { string | raw_string | number | boolean | none }
-primitive_expr  = { list | object | identifier | path | context | grouping | mutator }
+primitive_expr  = { list | object | identifier | path | context | grouping | lambda }
 primary_expr    = { literal_expr | primitive_expr }
 call_expr       = { #callee = primary_expr ~ argument_body* }
 member_expr     = { #left = call_expr ~ ("." ~ call_expr)* }

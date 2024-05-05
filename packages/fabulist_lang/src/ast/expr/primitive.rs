@@ -1,7 +1,7 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
-    ast::dfn::{mutator::MutatorDfn, object::ObjectDfn, path::PathDfn},
+    ast::dfn::{lambda::LambdaDfn, object::ObjectDfn, path::PathDfn},
     parser::Rule,
 };
 
@@ -21,8 +21,8 @@ pub enum PrimitiveExpr {
         value: String,
         lcol: LineColLocation,
     },
-    Mutator {
-        value: MutatorDfn,
+    Lambda {
+        value: LambdaDfn,
         lcol: LineColLocation,
     },
     Path {
@@ -75,8 +75,8 @@ impl TryFrom<Pair<'_, Rule>> for PrimitiveExpr {
                 value: ObjectDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
-            Rule::mutator => Ok(PrimitiveExpr::Mutator {
-                value: MutatorDfn::try_from(value)?,
+            Rule::lambda => Ok(PrimitiveExpr::Lambda {
+                value: LambdaDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
             Rule::context => Ok(PrimitiveExpr::Context {
@@ -105,7 +105,7 @@ mod primitive_expr_tests {
         test_helper.assert_parse("(ident)");
         test_helper.assert_parse("path::path2::path3");
         test_helper.assert_parse("{ \"key\": 5 }");
-        test_helper.assert_parse("|>{ goto module_1::part_1; }");
+        test_helper.assert_parse("() => { goto module_1::part_1; }");
         test_helper.assert_parse("context");
     }
 }

@@ -54,7 +54,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             | Rule::raw_string
             | Rule::path
             | Rule::object
-            | Rule::mutator
+            | Rule::lambda
             | Rule::grouping
             | Rule::boolean
             | Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),

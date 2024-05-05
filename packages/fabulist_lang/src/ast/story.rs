@@ -58,7 +58,7 @@ mod story_tests {
 			# part_1
 			[Jose]
 			> "When are you getting a car?" => {
-				"next": |>{
+				"next": () => {
 					let hello = "world";
 				}
 			}
