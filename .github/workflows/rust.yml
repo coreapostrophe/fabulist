@@ -12,6 +12,7 @@ jobs:
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.78.0
           components: clippy
       - name: Rust Cache Action
         uses: Swatinem/rust-cache@v2
@@ -31,6 +32,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.78.0
       - name: Rust Cache Action
         uses: Swatinem/rust-cache@v2
         with:
@@ -49,6 +52,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.78.0
       - name: Rust Cache Action
         uses: Swatinem/rust-cache@v2
         with:
