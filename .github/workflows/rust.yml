@@ -18,9 +18,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core
-            packages/fabulist_derive
-            packages/fabulist_lang
+            packages/fabulist_core -> ../../target
+            packages/fabulist_derive -> ../../target
+            packages/fabulist_lang -> ../../target
       - name: Run linter
         run: cargo clippy -- -D warnings
   test:
@@ -38,9 +38,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core
-            packages/fabulist_derive
-            packages/fabulist_lang
+            packages/fabulist_core -> ../../target
+            packages/fabulist_derive -> ../../target
+            packages/fabulist_lang -> ../../target
       - name: Run tests
         run: cargo test --verbose
   coverage:
@@ -58,9 +58,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core
-            packages/fabulist_derive
-            packages/fabulist_lang
+            packages/fabulist_core -> ../../target
+            packages/fabulist_derive -> ../../target
+            packages/fabulist_lang -> ../../target
       - name: Generate code coverage
         run: |
           cargo install cargo-tarpaulin 
