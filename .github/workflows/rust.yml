@@ -18,11 +18,18 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core -> ../../target
-            packages/fabulist_derive -> ../../target
-            packages/fabulist_lang -> ../../target
-      - name: Run linter
+            packages/fabulist_core
+            packages/fabulist_derive
+            packages/fabulist_lang
+      - name: Lint `fabulist_core`
         run: cargo clippy -- -D warnings
+        working-directory: packages/fabulist_core
+      - name: Lint `fabulist_derive`
+        run: cargo clippy -- -D warnings
+        working-directory: packages/fabulist_derive
+      - name: Lint `fabulist_lang`
+        run: cargo clippy -- -D warnings
+        working-directory: packages/fabulist_lang
   test:
     needs: clippy
     name: Test
@@ -38,11 +45,18 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core -> ../../target
-            packages/fabulist_derive -> ../../target
-            packages/fabulist_lang -> ../../target
-      - name: Run tests
+            packages/fabulist_core
+            packages/fabulist_derive
+            packages/fabulist_lang
+      - name: Test `fabulist_core`
         run: cargo test --verbose
+        working-directory: packages/fabulist_core
+      - name: Test `fabulist_derive`
+        run: cargo test --verbose
+        working-directory: packages/fabulist_derive
+      - name: Test `fabulist_lang`
+        run: cargo test --verbose
+        working-directory: packages/fabulist_lang
   coverage:
     needs: test
     name: Code Coverage
@@ -58,10 +72,21 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            packages/fabulist_core -> ../../target
-            packages/fabulist_derive -> ../../target
-            packages/fabulist_lang -> ../../target
-      - name: Generate code coverage
+            packages/fabulist_core
+            packages/fabulist_derive
+            packages/fabulist_lang
+      - name: Generate code coverage for `fabulist_core`
         run: |
           cargo install cargo-tarpaulin 
           cargo tarpaulin --verbose --workspace
+        working-directory: packages/fabulist_core
+      - name: Generate code coverage for `fabulist_derive`
+        run: |
+          cargo install cargo-tarpaulin 
+          cargo tarpaulin --verbose --workspace
+        working-directory: packages/fabulist_derive
+      - name: Generate code coverage for `fabulist_lang`
+        run: |
+          cargo install cargo-tarpaulin 
+          cargo tarpaulin --verbose --workspace
+        working-directory: packages/fabulist_lang
