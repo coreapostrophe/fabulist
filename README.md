@@ -7,7 +7,7 @@
     A branching narrative utility for interactive novels.
 </p>
 <p align="center">
-    <img src="https://github.com/coreapostrophe/makinilya/actions/workflows/build.yml/badge.svg">
+    <img src="https://github.com/coreapostrophe/fabulist/actions/workflows/rust.yml/badge.svg">
 </p>
 
 ## About
@@ -29,8 +29,8 @@ timeline
         February: Fabulist Core
         October: Refactored Fabulist Core
     section 2024
-        January: Fabulist language
-        February: Fabulist Cli
+        June: Fabulist language
+        July: Fabulist Cli
 ```
 
 ## Design
