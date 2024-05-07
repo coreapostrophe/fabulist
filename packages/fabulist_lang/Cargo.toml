@@ -9,3 +9,4 @@ pest_derive = { version = "2.7.9", features = ["grammar-extras"] }
 thiserror = "1.0.58"
 
 fabulist_core = { path = "../fabulist_core" }
+fabulist_derive = { path = "../fabulist_derive" }
