@@ -70,13 +70,13 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
     let meta_tokens = &list_meta.tokens;
     let tokens_vec: Vec<TokenTree> = meta_tokens.clone().into_iter().collect();
 
-    let mut token_pairs = tokens_vec
+    let token_pairs = tokens_vec
         .split(|token_tree| token_tree.to_string().as_str() == ",")
         .peekable();
 
     let mut token_tuples: Vec<(Ident, TypePath)> = Vec::new();
 
-    while let Some(token_pair) = token_pairs.next() {
+    for token_pair in token_pairs {
         let mut pair_iter = token_pair.split(|token| token.to_string().as_str() == ":");
         let Some(ident_token_slice) = pair_iter.next() else {
             return Err(Error::new(
