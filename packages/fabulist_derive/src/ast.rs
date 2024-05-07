@@ -1,8 +1,8 @@
 use proc_macro2::{TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
 use syn::{
-    parse::Parse, parse2, parse_str, spanned::Spanned, Attribute, Data, DataEnum, DeriveInput,
-    Error, Ident, Meta, Result, TypePath, Variant, Visibility,
+    parse2, parse_str, spanned::Spanned, Attribute, Data, DataEnum, DeriveInput, Error, Ident,
+    Meta, Result, TypePath, Variant, Visibility,
 };
 
 pub fn generate_syn_tree(input: DeriveInput) -> Result<TokenStream> {
@@ -37,7 +37,6 @@ fn build_struct(
     input_vis: &Visibility,
     variant: &Variant,
 ) -> Result<TokenStream> {
-    let variant_span = &variant.span();
     let variant_ident = &variant.ident;
     let attrs = variant.attrs.first();
 
@@ -48,13 +47,10 @@ fn build_struct(
     ))?;
     let fields = match attrs {
         Some(attr) => build_fields(attr),
-        None => Err(Error::new(
-            variant_span.to_owned(),
-            "Unable to find `production` attribute",
-        )),
+        None => Ok(TokenStream::new()),
     }?;
     Ok(quote! {
-        #[derive(std::fmt::Debug)]
+        #[derive(std::fmt::Debug, core::clone::Clone)]
         #input_vis struct #formatted_ident {
             #fields
         }
@@ -72,27 +68,38 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
     };
     let attr_ident = &list_meta.path;
     let meta_tokens = &list_meta.tokens;
-    let mut tokens_iter = meta_tokens.clone().into_iter().peekable();
+    let tokens_vec: Vec<TokenTree> = meta_tokens.clone().into_iter().collect();
+
+    let mut token_pairs = tokens_vec
+        .split(|token_tree| token_tree.to_string().as_str() == ",")
+        .peekable();
+
     let mut token_tuples: Vec<(Ident, TypePath)> = Vec::new();
 
-    while tokens_iter.peek().is_some() {
-        let ident = parse_token_tree::<Ident>(&mut tokens_iter)
-            .map_err(|_| Error::new(attr_ident.span(), "Expected an identifier"))?;
-
-        match_token_tree(&mut tokens_iter, ":").map_err(|_| {
-            Error::new(
+    while let Some(token_pair) = token_pairs.next() {
+        let mut pair_iter = token_pair.split(|token| token.to_string().as_str() == ":");
+        let Some(ident_token_slice) = pair_iter.next() else {
+            return Err(Error::new(
                 attr_ident.span(),
-                "Expected a `:` after the property identifier",
-            )
-        })?;
+                "Expected a syntax property definition. (i.e. #[production(left: Expr)] )",
+            ));
+        };
+        let Some(type_token_slice) = pair_iter.next() else {
+            return Err(Error::new(
+                attr_ident.span(),
+                "Expected a syntax property definition. (i.e. #[production(left: Expr)] )",
+            ));
+        };
+        let ident_token_stream = TokenStream::from_iter(ident_token_slice.to_vec());
+        let type_token_stream = TokenStream::from_iter(type_token_slice.to_vec());
 
-        let type_path = parse_token_tree::<TypePath>(&mut tokens_iter)
-            .map_err(|_| Error::new(attr_ident.span(), "Expected a type path after `:`"))?;
+        let ident =
+            parse2::<Ident>(quote_spanned! { ident_token_stream.span() => #ident_token_stream })
+                .map_err(|_| Error::new(ident_token_stream.span(), "Expected an identifier"))?;
 
-        if tokens_iter.peek().is_some() {
-            match_token_tree(&mut tokens_iter, ",")
-                .map_err(|_| Error::new(attr_ident.span(), "Expected a `,`"))?;
-        }
+        let type_path =
+            parse2::<TypePath>(quote_spanned! { type_token_stream.span() => #type_token_stream })
+                .map_err(|_| Error::new(type_token_stream.span(), "Expected a type path"))?;
 
         token_tuples.push((ident, type_path));
     }
@@ -108,27 +115,4 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
         .collect::<Vec<TokenStream>>();
 
     Ok(quote! { #(#field)* })
-}
-
-fn match_token_tree(
-    iterator: &mut impl Iterator<Item = TokenTree>,
-    str_compare: &str,
-) -> std::result::Result<(), ()> {
-    if let Some(comma_token) = iterator.next() {
-        if comma_token.to_string().as_str() != str_compare {
-            return Err(());
-        };
-    }
-    Ok(())
-}
-
-fn parse_token_tree<T: Parse>(
-    iterator: &mut impl Iterator<Item = TokenTree>,
-) -> std::result::Result<T, ()> {
-    if let Some(token) = iterator.next() {
-        if let Ok(parsed_syntax) = parse2::<T>(quote_spanned! { token.span() => #token }) {
-            return Ok(parsed_syntax);
-        }
-    };
-    Err(())
 }
