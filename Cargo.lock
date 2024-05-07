@@ -65,6 +65,7 @@ name = "fabulist_derive"
 version = "0.1.0"
 dependencies = [
  "fabulist_core",
+ "pest",
  "prettyplease",
  "proc-macro2",
  "quote",

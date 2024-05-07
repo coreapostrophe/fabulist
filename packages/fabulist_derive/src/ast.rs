@@ -1,8 +1,12 @@
-use proc_macro2::{TokenStream, TokenTree};
-use quote::{quote, quote_spanned};
+use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{
-    parse2, parse_str, spanned::Spanned, Attribute, Data, DataEnum, DeriveInput, Error, Ident,
-    Meta, Result, TypePath, Variant, Visibility,
+    parse::{Parse, Parser},
+    parse_str,
+    punctuated::Punctuated,
+    spanned::Spanned,
+    Attribute, Data, DataEnum, DeriveInput, Error, Field, Ident, Meta, Result, Token, Variant,
+    Visibility,
 };
 
 pub fn generate_syn_tree(input: DeriveInput) -> Result<TokenStream> {
@@ -57,6 +61,17 @@ fn build_struct(
     })
 }
 
+struct ParsableField {
+    pub value: Field,
+}
+
+impl Parse for ParsableField {
+    fn parse(input: syn::parse::ParseStream) -> Result<Self> {
+        let field = Field::parse_named(input)?;
+        Ok(Self { value: field })
+    }
+}
+
 fn build_fields(attr: &Attribute) -> Result<TokenStream> {
     let attr_span = &attr.span();
     let meta = &attr.meta;
@@ -66,51 +81,16 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
             "Only list meta type is supported.",
         ));
     };
-    let attr_ident = &list_meta.path;
     let meta_tokens = &list_meta.tokens;
-    let tokens_vec: Vec<TokenTree> = meta_tokens.clone().into_iter().collect();
 
-    let token_pairs = tokens_vec
-        .split(|token_tree| token_tree.to_string().as_str() == ",")
-        .peekable();
+    let field_parser = Punctuated::<ParsableField, Token![,]>::parse_separated_nonempty;
+    let tokens_vec = field_parser.parse2(meta_tokens.clone())?;
 
-    let mut token_tuples: Vec<(Ident, TypePath)> = Vec::new();
-
-    for token_pair in token_pairs {
-        let mut pair_iter = token_pair.split(|token| token.to_string().as_str() == ":");
-        let Some(ident_token_slice) = pair_iter.next() else {
-            return Err(Error::new(
-                attr_ident.span(),
-                "Expected a syntax property definition. (i.e. #[production(left: Expr)] )",
-            ));
-        };
-        let Some(type_token_slice) = pair_iter.next() else {
-            return Err(Error::new(
-                attr_ident.span(),
-                "Expected a syntax property definition. (i.e. #[production(left: Expr)] )",
-            ));
-        };
-        let ident_token_stream = TokenStream::from_iter(ident_token_slice.to_vec());
-        let type_token_stream = TokenStream::from_iter(type_token_slice.to_vec());
-
-        let ident =
-            parse2::<Ident>(quote_spanned! { ident_token_stream.span() => #ident_token_stream })
-                .map_err(|_| Error::new(ident_token_stream.span(), "Expected an identifier"))?;
-
-        let type_path =
-            parse2::<TypePath>(quote_spanned! { type_token_stream.span() => #type_token_stream })
-                .map_err(|_| Error::new(type_token_stream.span(), "Expected a type path"))?;
-
-        token_tuples.push((ident, type_path));
-    }
-
-    let field = token_tuples
+    let field = tokens_vec
         .iter()
-        .map(|tuple| {
-            let (field_ident, field_type) = tuple;
-            quote! {
-                pub #field_ident : #field_type,
-            }
+        .map(|field| {
+            let field_value = &field.value;
+            quote! { pub #field_value, }
         })
         .collect::<Vec<TokenStream>>();
 

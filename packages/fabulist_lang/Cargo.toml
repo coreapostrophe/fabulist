@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pest = "2.7.9"
-pest_derive = { version = "2.7.9", features = ["grammar-extras"] }
-thiserror = "1.0.58"
+pest.workspace = true
+thiserror.workspace = true
+pest_derive = { workspace = true, features = ["grammar-extras"] }
 
 fabulist_core = { path = "../fabulist_core" }
 fabulist_derive = { path = "../fabulist_derive" }
