@@ -42,24 +42,27 @@ fn build_struct(
     variant: &Variant,
 ) -> Result<TokenStream> {
     let variant_ident = &variant.ident;
-    let attrs = variant.attrs.first();
+    let first_attr = variant.attrs.first();
 
     let formatted_ident: Ident = parse_str(&format!(
         "{}{}",
         quote! {#variant_ident},
         quote! {#input_ident}
     ))?;
-    let fields = match attrs {
-        Some(attr) => build_fields(attr),
-        None => Ok(TokenStream::new()),
-    }?;
-    Ok(quote! {
-        #[derive(std::fmt::Debug, core::clone::Clone)]
-        #input_vis struct #formatted_ident {
-            pub lcol: pest::error::LineColLocation,
-            #fields
+
+    match first_attr {
+        Some(attr) => {
+            let fields = build_fields(attr)?;
+            Ok(quote! {
+                #[derive(std::fmt::Debug, core::clone::Clone)]
+                #input_vis struct #formatted_ident {
+                    pub lcol: pest::error::LineColLocation,
+                    #fields
+                }
+            })
         }
-    })
+        None => Ok(TokenStream::new()),
+    }
 }
 
 struct ParsableField {
