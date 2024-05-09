@@ -1,6 +1,6 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::dfn::argument_body::ArgumentBodyDfn, parser::Rule};
+use crate::{ast::dfn::ArgumentBodyDfn, parser::Rule};
 
 use super::{Error, Expr};
 

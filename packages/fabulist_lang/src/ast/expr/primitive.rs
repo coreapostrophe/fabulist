@@ -1,7 +1,7 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
-    ast::dfn::{lambda::LambdaDfn, object::ObjectDfn, path::PathDfn},
+    ast::dfn::{lambda::LambdaDfn, path::PathDfn, ObjectDfn},
     parser::Rule,
 };
 

@@ -2,7 +2,7 @@ use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{ast::stmt::block_stmt::BlockStmt, parser::Rule};
 
-use super::{parameter_body::ParameterBodyDfn, Error};
+use super::{Error, ParameterBodyDfn};
 
 #[derive(Debug, Clone)]
 pub struct LambdaDfn {
