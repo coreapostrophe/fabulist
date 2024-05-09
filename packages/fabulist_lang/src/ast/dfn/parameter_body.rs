@@ -1,13 +1,13 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::expr::primitive::PrimitiveExpr, parser::Rule};
+use crate::{ast::expr::primitive::Primitive, parser::Rule};
 
 use super::Error;
 
 #[derive(Debug, Clone)]
 pub struct ParameterBodyDfn {
     pub lcol: LineColLocation,
-    pub parameters: Option<Vec<PrimitiveExpr>>,
+    pub parameters: Option<Vec<Primitive>>,
 }
 
 impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
@@ -23,15 +23,15 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
                 .into_inner()
                 .map(|pair| {
                     let pair_span = pair.as_span();
-                    let primitive_expr = PrimitiveExpr::try_from(pair);
+                    let primitive_expr = Primitive::try_from(pair);
                     if let Ok(primitive_expr) = primitive_expr {
-                        if let PrimitiveExpr::Identifier { .. } = primitive_expr {
+                        if let Primitive::Identifier { .. } = primitive_expr {
                             return Ok(primitive_expr);
                         }
                     }
                     Err(Error::map_span(pair_span, "Expected identifier"))
                 })
-                .collect::<Result<Vec<PrimitiveExpr>, Error>>()?;
+                .collect::<Result<Vec<Primitive>, Error>>()?;
             Ok(ParameterBodyDfn {
                 parameters: Some(param_expr),
                 lcol: argument_body_dfn_lcol,

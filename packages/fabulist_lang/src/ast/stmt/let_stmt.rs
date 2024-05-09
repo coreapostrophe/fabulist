@@ -1,7 +1,7 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
-    ast::expr::{primary::PrimaryExpr, Expr},
+    ast::expr::{primary::Primary, Expr},
     parser::Rule,
 };
 
@@ -10,7 +10,7 @@ use super::Error;
 #[derive(Debug, Clone)]
 pub struct LetStmt {
     pub lcol: LineColLocation,
-    pub identifier: PrimaryExpr,
+    pub identifier: Primary,
     pub value: Expr,
 }
 
@@ -22,7 +22,7 @@ impl TryFrom<Pair<'_, Rule>> for LetStmt {
         let mut inner = value.into_inner();
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
-            Some(identifier) => PrimaryExpr::try_from(identifier),
+            Some(identifier) => Primary::try_from(identifier),
             None => Err(Error::map_span(let_stmt_span, "Expected an identifier")),
         }?;
         let value = match inner.find(|pair| pair.as_node_tag() == Some("value")) {

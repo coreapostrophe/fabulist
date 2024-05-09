@@ -1,7 +1,10 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
-    ast::expr::{literal::LiteralExpr, primary::PrimaryExpr},
+    ast::expr::{
+        literal::{Literal, StringLiteral},
+        primary::Primary,
+    },
     parser::Rule,
 };
 
@@ -11,7 +14,7 @@ use super::Error;
 pub struct ModDecl {
     pub lcol: LineColLocation,
     pub path: String,
-    pub identifier: PrimaryExpr,
+    pub identifier: Primary,
 }
 
 impl TryFrom<Pair<'_, Rule>> for ModDecl {
@@ -25,15 +28,15 @@ impl TryFrom<Pair<'_, Rule>> for ModDecl {
             .clone()
             .find(|pair| pair.as_node_tag() == Some("path"))
         {
-            Some(path) => match LiteralExpr::try_from(path)? {
-                LiteralExpr::String { value, .. } => Ok(value),
+            Some(path) => match Literal::try_from(path)? {
+                Literal::String(StringLiteral { value, .. }) => Ok(value),
                 _ => Err(Error::map_span(mod_decl_span, "Expected string")),
             },
             None => Err(Error::map_span(mod_decl_span, "Expected string file path")),
         }?;
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
-            Some(identifier) => PrimaryExpr::try_from(identifier),
+            Some(identifier) => Primary::try_from(identifier),
             None => Err(Error::map_span(mod_decl_span, "Expected identifier")),
         }?;
 

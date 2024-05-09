@@ -8,7 +8,7 @@ use crate::{
 use super::{Error, Expr};
 
 #[derive(Debug, Clone)]
-pub enum PrimitiveExpr {
+pub enum Primitive {
     Object {
         value: ObjectDfn,
         lcol: LineColLocation,
@@ -34,7 +34,7 @@ pub enum PrimitiveExpr {
     },
 }
 
-impl TryFrom<Pair<'_, Rule>> for PrimitiveExpr {
+impl TryFrom<Pair<'_, Rule>> for Primitive {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let primitive_expr_span = value.as_span();
@@ -42,44 +42,44 @@ impl TryFrom<Pair<'_, Rule>> for PrimitiveExpr {
 
         match value.as_rule() {
             Rule::primitive_expr => match value.into_inner().next() {
-                Some(inner) => Ok(PrimitiveExpr::try_from(inner)?),
+                Some(inner) => Ok(Primitive::try_from(inner)?),
                 None => unreachable!(),
             },
             Rule::identifier => match value.into_inner().next() {
-                Some(inner) => Ok(PrimitiveExpr::try_from(inner)?),
+                Some(inner) => Ok(Primitive::try_from(inner)?),
                 None => unreachable!(),
             },
             Rule::grouping => match value.into_inner().next() {
-                Some(expr) => Ok(PrimitiveExpr::Grouping {
+                Some(expr) => Ok(Primitive::Grouping {
                     value: Expr::try_from(expr)?,
                     lcol: primitive_expr_lcol,
                 }),
                 None => unreachable!(),
             },
-            Rule::strict_ident => Ok(PrimitiveExpr::Identifier {
+            Rule::strict_ident => Ok(Primitive::Identifier {
                 value: value.as_str().to_string(),
                 lcol: primitive_expr_lcol,
             }),
             Rule::raw_ident => match value.into_inner().next() {
-                Some(interior) => Ok(PrimitiveExpr::Identifier {
+                Some(interior) => Ok(Primitive::Identifier {
                     value: interior.as_str().to_string(),
                     lcol: primitive_expr_lcol,
                 }),
                 None => unreachable!(),
             },
-            Rule::path => Ok(PrimitiveExpr::Path {
+            Rule::path => Ok(Primitive::Path {
                 value: PathDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
-            Rule::object => Ok(PrimitiveExpr::Object {
+            Rule::object => Ok(Primitive::Object {
                 value: ObjectDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
-            Rule::lambda => Ok(PrimitiveExpr::Lambda {
+            Rule::lambda => Ok(Primitive::Lambda {
                 value: LambdaDfn::try_from(value)?,
                 lcol: primitive_expr_lcol,
             }),
-            Rule::context => Ok(PrimitiveExpr::Context {
+            Rule::context => Ok(Primitive::Context {
                 lcol: primitive_expr_lcol,
             }),
             _ => Err(Error::map_span(
@@ -98,8 +98,7 @@ mod primitive_expr_tests {
 
     #[test]
     fn parses_primitive_expr() {
-        let test_helper =
-            ParserTestHelper::<PrimitiveExpr>::new(Rule::primitive_expr, "PrimitiveExpr");
+        let test_helper = ParserTestHelper::<Primitive>::new(Rule::primitive_expr, "PrimitiveExpr");
         test_helper.assert_parse("ident");
         test_helper.assert_parse("r#module");
         test_helper.assert_parse("(ident)");
