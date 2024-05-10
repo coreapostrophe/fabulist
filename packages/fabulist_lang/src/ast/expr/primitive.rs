@@ -111,7 +111,7 @@ impl TryFrom<Pair<'_, Rule>> for PathPrimitive {
         let value_lcol = LineColLocation::from(value.as_span());
         let identifiers = value
             .into_inner()
-            .map(|pair| IdentifierPrimitive::try_from(pair))
+            .map(IdentifierPrimitive::try_from)
             .collect::<Result<Vec<IdentifierPrimitive>, Error>>()?;
 
         Ok(PathPrimitive {
