@@ -9,10 +9,13 @@ use super::Error;
 pub enum Literal {
     #[production(value: f32)]
     Number(NumberLiteral),
+
     #[production(value: bool)]
     Boolean(BooleanLiteral),
+
     #[production(value: String)]
     String(StringLiteral),
+
     #[production]
     None(NoneLiteral),
 }

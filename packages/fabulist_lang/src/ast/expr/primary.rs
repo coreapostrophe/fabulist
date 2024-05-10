@@ -9,6 +9,7 @@ use super::{literal::Literal, primitive::Primitive};
 pub enum Primary {
     #[production(literal: Literal)]
     Literal(LiteralPrimary),
+
     #[production(primitive: Primitive)]
     Primitive(PrimitivePrimary),
 }

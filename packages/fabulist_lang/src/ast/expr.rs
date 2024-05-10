@@ -19,6 +19,7 @@ pub mod unary;
 pub enum Expr {
     #[production(primary: Primary)]
     Primary(Box<PrimaryExpr>),
+
     Unary(Box<UnaryExpr>),
     Call(Box<CallExpr>),
     Member(Box<MemberExpr>),

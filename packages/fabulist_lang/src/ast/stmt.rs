@@ -34,10 +34,13 @@ impl TryFrom<Pair<'_, Rule>> for ElseClause {
 pub enum Stmt {
     #[production(statements: Vec<Stmt>)]
     Block(Box<BlockStmt>),
+
     #[production(condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
     If(Box<IfStmt>),
+
     #[production(identifier: Primitive, value: Expr)]
     Let(Box<LetStmt>),
+
     #[production(path: Primitive)]
     Goto(Box<GotoStmt>),
 }

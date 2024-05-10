@@ -4,9 +4,6 @@ use fabulist_derive::SyntaxTree;
 use pest::{error::LineColLocation, iterators::Pair};
 use std::collections::HashMap;
 
-pub mod lambda;
-pub mod path;
-
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Dfn {
     #[production(arguments: Option<Vec<Expr>>)]
