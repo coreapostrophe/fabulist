@@ -3,7 +3,10 @@ use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{error::Error, parser::Rule};
 
-use super::expr::{primitive::Primitive, Expr};
+use super::expr::{
+    primitive::{IdentifierPrimitive, PathPrimitive},
+    Expr,
+};
 
 #[derive(Debug, Clone)]
 pub enum ElseClause {
@@ -38,10 +41,10 @@ pub enum Stmt {
     #[production(condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
     If(Box<IfStmt>),
 
-    #[production(identifier: Primitive, value: Expr)]
+    #[production(identifier: IdentifierPrimitive, value: Expr)]
     Let(Box<LetStmt>),
 
-    #[production(path: Primitive)]
+    #[production(path: PathPrimitive)]
     Goto(Box<GotoStmt>),
 }
 
@@ -140,7 +143,7 @@ impl TryFrom<Pair<'_, Rule>> for LetStmt {
         let mut inner = value.into_inner();
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
-            Some(identifier) => Primitive::try_from(identifier),
+            Some(identifier) => IdentifierPrimitive::try_from(identifier),
             None => Err(Error::map_span(value_span, "Expected an identifier")),
         }?;
         let value = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
@@ -163,7 +166,7 @@ impl TryFrom<Pair<'_, Rule>> for GotoStmt {
         let value_lcol = LineColLocation::from(value_span);
 
         let path = match value.into_inner().find(|pair| pair.as_rule() == Rule::path) {
-            Some(path) => Primitive::try_from(path),
+            Some(path) => PathPrimitive::try_from(path),
             None => Err(Error::map_span(value_span, "Expected path expression")),
         }?;
 
