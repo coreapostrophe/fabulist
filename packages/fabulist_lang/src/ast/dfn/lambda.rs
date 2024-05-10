@@ -1,6 +1,6 @@
 use pest::{error::LineColLocation, iterators::Pair};
 
-use crate::{ast::stmt::block_stmt::BlockStmt, parser::Rule};
+use crate::{ast::stmt::BlockStmt, parser::Rule};
 
 use super::{Error, ParameterBodyDfn};
 
