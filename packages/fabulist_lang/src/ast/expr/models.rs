@@ -1,5 +1,5 @@
 use crate::ast::{
-    dfn::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
+    dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
     stmt::BlockStmt,
 };
 use fabulist_derive::SyntaxTree;

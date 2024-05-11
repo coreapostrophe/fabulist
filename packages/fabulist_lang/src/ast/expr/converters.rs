@@ -2,7 +2,7 @@ use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
     ast::{
-        dfn::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
+        dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         stmt::BlockStmt,
     },
     error::Error,

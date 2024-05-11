@@ -2,7 +2,7 @@ use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{
     ast::{
-        dfn::ObjectDfn,
+        dfn::models::ObjectDfn,
         expr::models::{IdentifierPrimitive, Literal, StringLiteral},
     },
     error::Error,
