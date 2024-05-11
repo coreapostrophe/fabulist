@@ -3,14 +3,13 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use super::decl::{meta::MetaDecl, module::ModDecl, part::PartDecl};
-
+use super::decl::{MetaDecl, ModuleDecl, PartDecl};
 use super::Error;
 
 #[derive(Debug, Clone)]
 pub struct StoryAst {
     pub lcol: LineColLocation,
-    pub module: Vec<ModDecl>,
+    pub module: Vec<ModuleDecl>,
     pub meta: Option<MetaDecl>,
     pub parts: Vec<PartDecl>,
 }
@@ -20,13 +19,13 @@ impl TryFrom<Pair<'_, Rule>> for StoryAst {
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let fab_lcol = LineColLocation::from(value.as_span());
 
-        let mut module: Vec<ModDecl> = Vec::new();
+        let mut module: Vec<ModuleDecl> = Vec::new();
         let mut meta: Option<MetaDecl> = None;
         let mut parts: Vec<PartDecl> = Vec::new();
 
         for pair in value.into_inner() {
             match pair.as_rule() {
-                Rule::mod_decl => module.push(ModDecl::try_from(pair)?),
+                Rule::mod_decl => module.push(ModuleDecl::try_from(pair)?),
                 Rule::part_decl => parts.push(PartDecl::try_from(pair)?),
                 Rule::meta_decl => meta = Some(MetaDecl::try_from(pair)?),
                 _ => (),

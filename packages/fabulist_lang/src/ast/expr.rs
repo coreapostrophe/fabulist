@@ -212,16 +212,13 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
 impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
     type Error = Error;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let binary_expr_span = value.as_span();
-        let binary_expr_lcol = LineColLocation::from(binary_expr_span);
+        let value_span = value.as_span();
+        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
             Some(left) => Expr::try_from(left),
-            None => Err(Error::map_span(
-                binary_expr_span,
-                "Expected a value expression",
-            )),
+            None => Err(Error::map_span(value_span, "Expected a value expression")),
         }?;
         let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
             Some(operator) => {
@@ -253,7 +250,7 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
             left,
             operator,
             right,
-            lcol: binary_expr_lcol,
+            lcol: value_lcol,
         })
     }
 }

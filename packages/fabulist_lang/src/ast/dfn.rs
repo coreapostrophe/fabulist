@@ -8,8 +8,10 @@ use std::collections::HashMap;
 pub enum Dfn {
     #[production(arguments: Option<Vec<Expr>>)]
     ArgumentBody(ArgumentBodyDfn),
+
     #[production(parameters: Option<Vec<Primitive>>)]
     ParameterBody(ParameterBodyDfn),
+
     #[production(object: HashMap<String, Expr>)]
     Object(ObjectDfn),
 }
