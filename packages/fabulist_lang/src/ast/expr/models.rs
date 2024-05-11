@@ -1,6 +1,6 @@
 use crate::ast::{
     dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
-    stmt::BlockStmt,
+    stmt::models::BlockStmt,
 };
 use fabulist_derive::SyntaxTree;
 
