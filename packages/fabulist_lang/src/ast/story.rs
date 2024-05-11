@@ -3,7 +3,7 @@ use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
-use super::decl::{MetaDecl, ModuleDecl, PartDecl};
+use super::decl::models::{MetaDecl, ModuleDecl, PartDecl};
 use super::Error;
 
 #[derive(Debug, Clone)]
