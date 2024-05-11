@@ -16,27 +16,27 @@ pub enum Dfn {
 
 #[cfg(test)]
 mod dfn_tests {
-    use crate::{ast::ParserTestHelper, parser::Rule};
+    use crate::{ast::AstTestHelper, parser::Rule};
 
     use super::*;
 
     #[test]
     pub fn parses_parameter_body() {
         let test_helper =
-            ParserTestHelper::<ParameterBodyDfn>::new(Rule::parameter_body, "ParameterBodyDfn");
+            AstTestHelper::<ParameterBodyDfn>::new(Rule::parameter_body, "ParameterBodyDfn");
         test_helper.assert_parse(r#"(param1, param2, param3)"#);
     }
 
     #[test]
     pub fn parses_argument_body() {
         let test_helper =
-            ParserTestHelper::<ArgumentBodyDfn>::new(Rule::argument_body, "ArgumentBodyDfn");
+            AstTestHelper::<ArgumentBodyDfn>::new(Rule::argument_body, "ArgumentBodyDfn");
         test_helper.assert_parse(r#"("string", 5, true)"#);
     }
 
     #[test]
     fn parses_object() {
-        let test_helper = ParserTestHelper::<ObjectDfn>::new(Rule::object, "ObjectDfn");
+        let test_helper = AstTestHelper::<ObjectDfn>::new(Rule::object, "ObjectDfn");
         test_helper.assert_parse(r#"{"boolean": false, "number": 10}"#);
     }
 }

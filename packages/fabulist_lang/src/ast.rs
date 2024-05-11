@@ -13,13 +13,13 @@ pub mod expr;
 pub mod stmt;
 pub mod story;
 
-pub struct ParserTestHelper<T> {
+pub struct AstTestHelper<T> {
     rule_type: Rule,
     struct_name: String,
     phantom: PhantomData<T>,
 }
 
-impl<'a, T> ParserTestHelper<T>
+impl<'a, T> AstTestHelper<T>
 where
     T: TryFrom<Pair<'a, Rule>> + Debug,
 {

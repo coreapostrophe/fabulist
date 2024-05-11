@@ -99,13 +99,13 @@ pub enum Primitive {
 
 #[cfg(test)]
 mod expr_tests {
-    use crate::{ast::ParserTestHelper, parser::Rule};
+    use crate::{ast::AstTestHelper, parser::Rule};
 
     use super::*;
 
     #[test]
     fn parses_unary_expr() {
-        let test_helper = ParserTestHelper::<UnaryExpr>::new(Rule::unary_expr, "UnaryExpr");
+        let test_helper = AstTestHelper::<UnaryExpr>::new(Rule::unary_expr, "UnaryExpr");
         test_helper.assert_parse("!5");
         test_helper.assert_parse("!(true)");
         test_helper.assert_parse("!!!ident");
@@ -114,7 +114,7 @@ mod expr_tests {
 
     #[test]
     fn parses_call_expr() {
-        let test_helper = ParserTestHelper::<CallExpr>::new(Rule::call_expr, "CallExpr");
+        let test_helper = AstTestHelper::<CallExpr>::new(Rule::call_expr, "CallExpr");
         test_helper.assert_parse("test()");
         test_helper.assert_parse("5()");
         test_helper.assert_parse("\"Yo\"()");
@@ -123,14 +123,14 @@ mod expr_tests {
 
     #[test]
     fn parses_member_expr() {
-        let test_helper = ParserTestHelper::<MemberExpr>::new(Rule::member_expr, "MemberExpr");
+        let test_helper = AstTestHelper::<MemberExpr>::new(Rule::member_expr, "MemberExpr");
         test_helper.assert_parse("ident.fun().fun()");
         test_helper.assert_parse("ident.fun(arg1, arg2).fun(arg1, arg2)");
     }
 
     #[test]
     fn parses_binary_expr() {
-        let test_helper = ParserTestHelper::<BinaryExpr>::new(Rule::logical_expr, "BinaryExpr");
+        let test_helper = AstTestHelper::<BinaryExpr>::new(Rule::logical_expr, "BinaryExpr");
         test_helper.assert_parse("5 + 2");
         test_helper.assert_parse("5/ 2");
         test_helper.assert_parse("5 *2");
@@ -139,7 +139,7 @@ mod expr_tests {
 
     #[test]
     fn parses_primaries() {
-        let test_helper = ParserTestHelper::<Primary>::new(Rule::primary_expr, "PrimaryExpr");
+        let test_helper = AstTestHelper::<Primary>::new(Rule::primary_expr, "PrimaryExpr");
         test_helper.assert_parse("\"string\"");
         test_helper.assert_parse(r##"r"raw string""##);
         test_helper.assert_parse("2");
@@ -153,7 +153,7 @@ mod expr_tests {
 
     #[test]
     fn parses_literal_expr() {
-        let test_helper = ParserTestHelper::<Literal>::new(Rule::literal_expr, "LiteralExpr");
+        let test_helper = AstTestHelper::<Literal>::new(Rule::literal_expr, "LiteralExpr");
         test_helper.assert_parse("\"string\"");
         test_helper.assert_parse("r#\"raw string\"#");
         test_helper.assert_parse("5");
@@ -165,7 +165,7 @@ mod expr_tests {
 
     #[test]
     fn parses_primitive_expr() {
-        let test_helper = ParserTestHelper::<Primitive>::new(Rule::primitive_expr, "PrimitiveExpr");
+        let test_helper = AstTestHelper::<Primitive>::new(Rule::primitive_expr, "PrimitiveExpr");
         test_helper.assert_parse("ident");
         test_helper.assert_parse("r#module");
         test_helper.assert_parse("(ident)");

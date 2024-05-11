@@ -43,13 +43,13 @@ impl TryFrom<Pair<'_, Rule>> for StoryAst {
 
 #[cfg(test)]
 mod story_tests {
-    use crate::ast::ParserTestHelper;
+    use crate::ast::AstTestHelper;
 
     use super::*;
 
     #[test]
     fn parses_story() {
-        let test_helper = ParserTestHelper::<StoryAst>::new(Rule::story, "Story");
+        let test_helper = AstTestHelper::<StoryAst>::new(Rule::story, "Story");
         test_helper.assert_parse(
             r#"
 			story {}

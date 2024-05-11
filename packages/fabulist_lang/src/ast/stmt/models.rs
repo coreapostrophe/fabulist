@@ -24,13 +24,13 @@ pub enum Stmt {
 
 #[cfg(test)]
 mod stmt_tests {
-    use crate::{ast::ParserTestHelper, parser::Rule};
+    use crate::{ast::AstTestHelper, parser::Rule};
 
     use super::*;
 
     #[test]
     fn parses_block_stmt() {
-        let test_helper = ParserTestHelper::<BlockStmt>::new(Rule::block_stmt, "BlockStmt");
+        let test_helper = AstTestHelper::<BlockStmt>::new(Rule::block_stmt, "BlockStmt");
         test_helper.assert_parse(
             r#"{
                 let key = "value";
@@ -42,20 +42,20 @@ mod stmt_tests {
 
     #[test]
     fn parses_if_stmt() {
-        let test_helper = ParserTestHelper::<IfStmt>::new(Rule::if_stmt, "IfStmt");
+        let test_helper = AstTestHelper::<IfStmt>::new(Rule::if_stmt, "IfStmt");
         test_helper.assert_parse("if true {}");
         test_helper.assert_parse("if true {} else {}");
     }
 
     #[test]
     fn parses_let_stmt() {
-        let test_helper = ParserTestHelper::<LetStmt>::new(Rule::let_stmt, "LetStmt");
+        let test_helper = AstTestHelper::<LetStmt>::new(Rule::let_stmt, "LetStmt");
         test_helper.assert_parse("let key = \"value\";");
     }
 
     #[test]
     fn parses_goto_stmt() {
-        let test_helper = ParserTestHelper::<GotoStmt>::new(Rule::goto_stmt, "GotoStmt");
+        let test_helper = AstTestHelper::<GotoStmt>::new(Rule::goto_stmt, "GotoStmt");
         test_helper.assert_parse("goto module_1::part_1;");
     }
 }
