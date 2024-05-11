@@ -3,10 +3,7 @@ use pest::{error::LineColLocation, iterators::Pair};
 
 use crate::{error::Error, parser::Rule};
 
-use super::expr::{
-    primitive::{IdentifierPrimitive, PathPrimitive},
-    Expr,
-};
+use super::expr::models::{Expr, IdentifierPrimitive, PathPrimitive};
 
 #[derive(Debug, Clone)]
 pub enum ElseClause {

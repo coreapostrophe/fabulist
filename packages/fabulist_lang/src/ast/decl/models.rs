@@ -1,4 +1,4 @@
-use crate::ast::{dfn::ObjectDfn, expr::primitive::IdentifierPrimitive};
+use crate::ast::{dfn::ObjectDfn, expr::models::IdentifierPrimitive};
 use fabulist_derive::SyntaxTree;
 
 #[derive(SyntaxTree, Debug, Clone)]

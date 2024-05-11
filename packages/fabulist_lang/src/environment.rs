@@ -5,7 +5,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::ast::expr::Expr;
+use crate::ast::expr::models::Expr;
 
 pub struct Environment {
     map: HashMap<String, Expr>,
@@ -84,11 +84,7 @@ impl Environment {
 mod environment_tests {
     use pest::error::LineColLocation;
 
-    use crate::ast::expr::{
-        literal::{Literal, NumberLiteral},
-        primary::{LiteralPrimary, Primary},
-        PrimaryExpr,
-    };
+    use crate::ast::expr::models::{Literal, LiteralPrimary, NumberLiteral, Primary, PrimaryExpr};
 
     use super::*;
 

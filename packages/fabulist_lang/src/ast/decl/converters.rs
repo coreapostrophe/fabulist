@@ -3,10 +3,7 @@ use pest::{error::LineColLocation, iterators::Pair};
 use crate::{
     ast::{
         dfn::ObjectDfn,
-        expr::{
-            literal::{Literal, StringLiteral},
-            primitive::IdentifierPrimitive,
-        },
+        expr::models::{IdentifierPrimitive, Literal, StringLiteral},
     },
     error::Error,
     parser::Rule,

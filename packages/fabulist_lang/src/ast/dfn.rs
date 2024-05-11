@@ -1,4 +1,4 @@
-use super::expr::{primitive::Primitive, Expr};
+use super::expr::models::{Expr, Primitive};
 use crate::{error::Error, parser::Rule};
 use fabulist_derive::SyntaxTree;
 use pest::{error::LineColLocation, iterators::Pair};
