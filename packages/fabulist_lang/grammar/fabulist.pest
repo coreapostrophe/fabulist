@@ -105,4 +105,4 @@ else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
 if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
 statement  = { block_stmt | let_stmt | if_stmt | goto_stmt }
 
-fabulist = { SOI ~ mod_decl* ~ meta_decl? ~ part_decl* ~ EOI }
+story = { SOI ~ mod_decl* ~ meta_decl? ~ part_decl* ~ EOI }

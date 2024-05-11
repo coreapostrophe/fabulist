@@ -49,7 +49,7 @@ mod story_tests {
 
     #[test]
     fn parses_story() {
-        let test_helper = ParserTestHelper::<StoryAst>::new(Rule::fabulist, "Story");
+        let test_helper = ParserTestHelper::<StoryAst>::new(Rule::story, "Story");
         test_helper.assert_parse(
             r#"
 			story {}
