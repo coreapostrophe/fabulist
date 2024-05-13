@@ -1,7 +1,5 @@
 use pest::{iterators::Pairs, Parser};
 
-use crate::error::Error;
-
 #[derive(pest_derive::Parser)]
 #[grammar = "../grammar/fabulist.pest"]
 pub struct GrammarParser;
@@ -9,7 +7,7 @@ pub struct GrammarParser;
 pub struct FabulistParser;
 
 impl FabulistParser {
-    pub fn parse(source: &str) -> Result<Pairs<'_, Rule>, Error> {
-        GrammarParser::parse(Rule::story, source).map_err(Error::map_parser_error)
+    pub fn parse(source: &str) -> Result<Pairs<'_, Rule>, pest::error::Error<Rule>> {
+        GrammarParser::parse(Rule::story, source)
     }
 }

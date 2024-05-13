@@ -1,4 +1,4 @@
-use pest::{error::LineColLocation, RuleType, Span};
+use pest::{error::LineColLocation, Span};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -12,14 +12,6 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn map_parser_error<R>(error: pest::error::Error<R>) -> Error
-    where
-        R: RuleType,
-    {
-        let message = error.variant.message();
-        let line_col = error.line_col;
-        Self::map_line_col(line_col, message)
-    }
     pub fn map_span(span: Span, message: impl Into<String>) -> Error {
         let line_col = LineColLocation::from(span);
         Self::map_line_col(line_col, message)
