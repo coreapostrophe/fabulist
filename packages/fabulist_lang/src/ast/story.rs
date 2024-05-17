@@ -4,7 +4,6 @@ use pest::iterators::Pair;
 use crate::parser::Rule;
 
 use super::decl::models::{MetaDecl, ModuleDecl, PartDecl};
-use super::Error;
 
 #[derive(Debug, Clone)]
 pub struct StoryAst {
@@ -15,7 +14,7 @@ pub struct StoryAst {
 }
 
 impl TryFrom<Pair<'_, Rule>> for StoryAst {
-    type Error = Error;
+    type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let fab_lcol = LineColLocation::from(value.as_span());
 

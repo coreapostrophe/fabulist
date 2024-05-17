@@ -11,7 +11,7 @@ use crate::{
 use super::models::{ArgumentBodyDfn, Dfn, ObjectDfn, ParameterBodyDfn};
 
 impl TryFrom<Pair<'_, Rule>> for Dfn {
-    type Error = Error;
+    type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
 
@@ -19,13 +19,13 @@ impl TryFrom<Pair<'_, Rule>> for Dfn {
             Rule::object => Ok(Dfn::Object(ObjectDfn::try_from(value)?)),
             Rule::argument_body => Ok(Dfn::ArgumentBody(ArgumentBodyDfn::try_from(value)?)),
             Rule::parameter_body => Ok(Dfn::ParameterBody(ParameterBodyDfn::try_from(value)?)),
-            _ => Err(Error::map_span(value_span, "Invalid definition")),
+            _ => Err(Error::map_custom_error(value_span, "Invalid definition")),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
-    type Error = Error;
+    type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_lcol = LineColLocation::from(value.as_span());
 
@@ -57,7 +57,7 @@ impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
 }
 
 impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
-    type Error = Error;
+    type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_lcol = LineColLocation::from(value.as_span());
 
@@ -68,7 +68,7 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
             let arg_expr = arguments
                 .into_inner()
                 .map(Expr::try_from)
-                .collect::<Result<Vec<Expr>, Error>>()?;
+                .collect::<Result<Vec<Expr>, pest::error::Error<Rule>>>()?;
             Ok(ArgumentBodyDfn {
                 lcol: value_lcol,
                 arguments: Some(arg_expr),
@@ -83,7 +83,7 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
 }
 
 impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
-    type Error = Error;
+    type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_lcol = LineColLocation::from(value.as_span());
 
@@ -101,9 +101,9 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
                             return Ok(primitive_expr);
                         }
                     }
-                    Err(Error::map_span(pair_span, "Expected identifier"))
+                    Err(Error::map_custom_error(pair_span, "Expected identifier"))
                 })
-                .collect::<Result<Vec<Primitive>, Error>>()?;
+                .collect::<Result<Vec<Primitive>, pest::error::Error<Rule>>>()?;
             Ok(ParameterBodyDfn {
                 lcol: value_lcol,
                 parameters: Some(param_expr),

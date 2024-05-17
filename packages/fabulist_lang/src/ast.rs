@@ -2,10 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use pest::{iterators::Pair, Parser};
 
-use crate::{
-    error::Error,
-    parser::{GrammarParser, Rule},
-};
+use crate::parser::{GrammarParser, Rule};
 
 pub mod decl;
 pub mod dfn;
@@ -32,15 +29,26 @@ where
     }
     pub fn assert_parse(&self, source: &'a str) -> T
     where
-        T: TryFrom<Pair<'a, Rule>, Error = Error> + Debug,
+        T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
     {
-        let mut result =
-            GrammarParser::parse(self.rule_type, source).expect("Failed to parse string.");
-        let pair = result
-            .next()
-            .unwrap_or_else(|| panic!("Failed to parse {} pair from string", self.struct_name));
-        let ast = T::try_from(pair);
-        assert!(ast.is_ok());
-        ast.unwrap_or_else(|_| panic!("Failed to turn pair to `{}` struct", self.struct_name))
+        match GrammarParser::parse(self.rule_type, source) {
+            Err(error) => {
+                println!("{}", error);
+                panic!("Failed to parse source string");
+            }
+            Ok(mut parsing_result) => {
+                let pair = parsing_result.next().unwrap_or_else(|| {
+                    panic!("Failed to parse {} pair from string", self.struct_name)
+                });
+
+                match T::try_from(pair) {
+                    Err(error) => {
+                        println!("{}", error);
+                        panic!("Failed to turn pair to `{}` struct", self.struct_name);
+                    }
+                    Ok(ast) => ast,
+                }
+            }
+        }
     }
 }
