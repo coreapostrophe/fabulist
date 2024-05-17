@@ -7,7 +7,7 @@ pub struct GrammarParser;
 pub struct FabulistParser;
 
 impl FabulistParser {
-    pub fn parse(source: &str) -> Result<Pairs<'_, Rule>, pest::error::Error<Rule>> {
-        GrammarParser::parse(Rule::story, source)
+    pub fn parse(source: &str) -> Result<Pairs<'_, Rule>, Box<pest::error::Error<Rule>>> {
+        GrammarParser::parse(Rule::story, source).map_err(Box::new)
     }
 }
