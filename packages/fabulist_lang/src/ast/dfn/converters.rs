@@ -19,7 +19,7 @@ impl TryFrom<Pair<'_, Rule>> for Dfn {
             Rule::object => Ok(Dfn::Object(ObjectDfn::try_from(value)?)),
             Rule::argument_body => Ok(Dfn::ArgumentBody(ArgumentBodyDfn::try_from(value)?)),
             Rule::parameter_body => Ok(Dfn::ParameterBody(ParameterBodyDfn::try_from(value)?)),
-            _ => Err(Error::map_custom_error(value_span, "Invalid definition")),
+            _ => Err(Error::map_custom_error(value_span.into(), "Invalid definition")),
         }
     }
 }
@@ -101,7 +101,7 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
                             return Ok(primitive_expr);
                         }
                     }
-                    Err(Error::map_custom_error(pair_span, "Expected identifier"))
+                    Err(Error::map_custom_error(pair_span.into(), "Expected identifier"))
                 })
                 .collect::<Result<Vec<Primitive>, pest::error::Error<Rule>>>()?;
             Ok(ParameterBodyDfn {

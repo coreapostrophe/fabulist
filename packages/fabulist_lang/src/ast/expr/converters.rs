@@ -39,20 +39,20 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
                         "-" => Ok(UnaryOperator::Negation),
                         "!" => Ok(UnaryOperator::Not),
                         _ => Err(Error::map_custom_error(
-                            operator_span,
+                            operator_span.into(),
                             "Invalid unary operator",
                         )),
                     }
                 }
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Expected unary operator",
                 )),
             }?;
             let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
                 Some(right) => Ok(Expr::try_from(right)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Expected value expression",
                 )),
             }?;
@@ -75,7 +75,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             Rule::expression => match value.into_inner().next() {
                 Some(inner) => Ok(Expr::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Unable to parse token tree interior",
                 )),
             },
@@ -103,7 +103,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             | Rule::grouping
             | Rule::boolean
             | Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
-            _ => Err(Error::map_custom_error(value_span, "Invalid expression")),
+            _ => Err(Error::map_custom_error(value_span.into(), "Invalid expression")),
         }
     }
 }
@@ -140,7 +140,7 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
         let callee = match inner.find(|pair| pair.as_node_tag() == Some("callee")) {
             Some(callee) => Expr::try_from(callee),
             None => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Expected a callee expression",
             )),
         }?;
@@ -167,7 +167,7 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
         let left = match inner.next() {
             Some(left) => Expr::try_from(left),
             None => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Expected a value expression",
             )),
         }?;
@@ -193,7 +193,7 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
             Some(left) => Expr::try_from(left),
             None => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Expected a value expression",
             )),
         }?;
@@ -214,7 +214,7 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
                     "&&" => Ok(BinaryOperator::And),
                     "||" => Ok(BinaryOperator::Or),
                     _ => Err(Error::map_custom_error(
-                        operator_span,
+                        operator_span.into(),
                         "Invalid binary operator",
                     )),
                 }?)
@@ -283,7 +283,7 @@ impl TryFrom<Pair<'_, Rule>> for Primary {
             Rule::primary_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Primary::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Unable to parse token tree interior",
                 )),
             },
@@ -302,7 +302,7 @@ impl TryFrom<Pair<'_, Rule>> for Primary {
             | Rule::none
             | Rule::boolean => Ok(Primary::Literal(LiteralPrimary::try_from(value)?)),
             _ => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Invalid primary expression",
             )),
         }
@@ -341,21 +341,21 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
             Rule::literal_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Unable to parse token tree interior",
                 )),
             },
             Rule::string => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Unable to parse token tree interior",
                 )),
             },
             Rule::raw_string => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Unable to parse token tree interior",
                 )),
             },
@@ -370,7 +370,7 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
             Rule::number => {
                 let parsed_number = value.as_str().parse::<f32>().map_err(|_| {
                     Error::map_custom_error(
-                        value_span,
+                        value_span.into(),
                         format!("Unable to parse `{}` to number", value.as_str()),
                     )
                 })?;
@@ -388,11 +388,11 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
                     lcol: value_lcol,
                     value: false,
                 })),
-                _ => Err(Error::map_custom_error(value_span, "Invalid boolean value")),
+                _ => Err(Error::map_custom_error(value_span.into(), "Invalid boolean value")),
             },
             Rule::none => Ok(Literal::None(NoneLiteral { lcol: value_lcol })),
             _ => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Invalid literal expression",
             )),
         }
@@ -409,7 +409,7 @@ impl TryFrom<Pair<'_, Rule>> for Primitive {
             Rule::primitive_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Primitive::try_from(inner)?),
                 None => Err(Error::map_custom_error(
-                    value_span,
+                    value_span.into(),
                     "Invalid primitive expression",
                 )),
             },
@@ -425,7 +425,7 @@ impl TryFrom<Pair<'_, Rule>> for Primitive {
             Rule::lambda => Ok(Primitive::Lambda(LambdaPrimitive::try_from(value)?)),
             Rule::context => Ok(Primitive::Context(ContextPrimitive { lcol: value_lcol })),
             _ => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Invalid primitive expression",
             )),
         }
@@ -455,7 +455,7 @@ impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
                 lcol: value_lcol,
                 name: value.as_str().to_string(),
             }),
-            _ => Err(Error::map_custom_error(value_span, "Invalid primitive")),
+            _ => Err(Error::map_custom_error(value_span.into(), "Invalid primitive")),
         }
     }
 }
@@ -468,7 +468,7 @@ impl TryFrom<Pair<'_, Rule>> for GroupingPrimitive {
 
         let expr = match value.into_inner().next() {
             Some(expr) => Ok(Expr::try_from(expr)?),
-            None => Err(Error::map_custom_error(value_span, "Expected expression")),
+            None => Err(Error::map_custom_error(value_span.into(), "Expected expression")),
         }?;
 
         Ok(GroupingPrimitive {
@@ -504,7 +504,7 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
         let parameters = match inner.find(|pair| pair.as_rule() == Rule::parameter_body) {
             Some(parameter_body_dfn) => ParameterBodyDfn::try_from(parameter_body_dfn),
             None => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Expected parameter body",
             )),
         }?;
@@ -512,7 +512,7 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
         let block_stmt = match inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
             None => Err(Error::map_custom_error(
-                value_span,
+                value_span.into(),
                 "Expected a block statement",
             )),
         }?;
