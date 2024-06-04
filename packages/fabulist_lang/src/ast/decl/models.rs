@@ -1,36 +1,39 @@
-use crate::ast::{dfn::models::ObjectDfn, expr::models::IdentifierPrimitive};
+use crate::{
+    ast::{dfn::models::ObjectDfn, expr::models::IdentifierPrimitive},
+    error::OwnedSpan,
+};
 use fabulist_derive::SyntaxTree;
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Element {
-    #[production(value: DialogueDecl)]
+    #[production(span: OwnedSpan, value: DialogueDecl)]
     Dialogue(DialogueElement),
 
-    #[production(value: QuoteDecl)]
+    #[production(span: OwnedSpan, value: QuoteDecl)]
     Choice(ChoiceElement),
 
-    #[production(value: QuoteDecl)]
+    #[production(span: OwnedSpan, value: QuoteDecl)]
     Narration(NarrationElement),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Decl {
-    #[production(text: String, properties: Option<ObjectDfn>)]
+    #[production(span: OwnedSpan, text: String, properties: Option<ObjectDfn>)]
     Quote(QuoteDecl),
 
-    #[production(character: String, quotes: Vec<QuoteDecl>)]
+    #[production(span: OwnedSpan, character: String, quotes: Vec<QuoteDecl>)]
     Dialogue(DialogueDecl),
 
-    #[production(value: Element)]
+    #[production(span: OwnedSpan, value: Element)]
     Element(ElementDecl),
 
-    #[production(properties: ObjectDfn)]
+    #[production(span: OwnedSpan, properties: ObjectDfn)]
     Meta(MetaDecl),
 
-    #[production(path: String, identifier: IdentifierPrimitive)]
+    #[production(span: OwnedSpan, path: String, identifier: IdentifierPrimitive)]
     Module(ModuleDecl),
 
-    #[production(id: String, elements: Vec<ElementDecl>)]
+    #[production(span: OwnedSpan, id: String, elements: Vec<ElementDecl>)]
     Part(PartDecl),
 }
 

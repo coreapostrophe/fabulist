@@ -1,6 +1,9 @@
-use crate::ast::{
-    dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
-    stmt::models::BlockStmt,
+use crate::{
+    ast::{
+        dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
+        stmt::models::BlockStmt,
+    },
+    error::OwnedSpan,
 };
 use fabulist_derive::SyntaxTree;
 
@@ -28,72 +31,72 @@ pub enum UnaryOperator {
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Unary {
-    #[production(operator: UnaryOperator, right: Expr)]
+    #[production(span: OwnedSpan, operator: UnaryOperator, right: Expr)]
     Standard(StandardUnary),
-    #[production(expr: Expr)]
+    #[production(span: OwnedSpan, expr: Expr)]
     Pass(PassUnary),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Expr {
-    #[production(primary: Primary)]
+    #[production(span: OwnedSpan, primary: Primary)]
     Primary(Box<PrimaryExpr>),
 
-    #[production(unary: Unary)]
+    #[production(span: OwnedSpan, unary: Unary)]
     Unary(Box<UnaryExpr>),
 
-    #[production(callee: Expr, argument_body: Option<ArgumentBodyDfn>)]
+    #[production(span: OwnedSpan, callee: Expr, argument_body: Option<ArgumentBodyDfn>)]
     Call(Box<CallExpr>),
 
-    #[production(left: Expr, members: Vec<Expr>)]
+    #[production(span: OwnedSpan, left: Expr, members: Vec<Expr>)]
     Member(Box<MemberExpr>),
 
-    #[production(left: Expr, operator: Option<BinaryOperator>, right: Option<Expr>)]
+    #[production(span: OwnedSpan, left: Expr, operator: Option<BinaryOperator>, right: Option<Expr>)]
     Binary(Box<BinaryExpr>),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Primary {
-    #[production(literal: Literal)]
+    #[production(span: OwnedSpan, literal: Literal)]
     Literal(LiteralPrimary),
 
-    #[production(primitive: Primitive)]
+    #[production(span: OwnedSpan, primitive: Primitive)]
     Primitive(PrimitivePrimary),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Literal {
-    #[production(value: f32)]
+    #[production(span: OwnedSpan, value: f32)]
     Number(NumberLiteral),
 
-    #[production(value: bool)]
+    #[production(span: OwnedSpan, value: bool)]
     Boolean(BooleanLiteral),
 
-    #[production(value: String)]
+    #[production(span: OwnedSpan, value: String)]
     String(StringLiteral),
 
-    #[production]
+    #[production(span: OwnedSpan)]
     None(NoneLiteral),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Primitive {
-    #[production(object: ObjectDfn)]
+    #[production(span: OwnedSpan, object: ObjectDfn)]
     Object(ObjectPrimitive),
 
-    #[production(expr: Expr)]
+    #[production(span: OwnedSpan, expr: Expr)]
     Grouping(GroupingPrimitive),
 
-    #[production(name: String)]
+    #[production(span: OwnedSpan, name: String)]
     Identifier(IdentifierPrimitive),
 
-    #[production(parameters: ParameterBodyDfn, block_stmt: BlockStmt)]
+    #[production(span: OwnedSpan, parameters: ParameterBodyDfn, block_stmt: BlockStmt)]
     Lambda(LambdaPrimitive),
 
-    #[production(identifiers: Vec<IdentifierPrimitive>)]
+    #[production(span: OwnedSpan, identifiers: Vec<IdentifierPrimitive>)]
     Path(PathPrimitive),
 
-    #[production]
+    #[production(span: OwnedSpan)]
     Context(ContextPrimitive),
 }
 

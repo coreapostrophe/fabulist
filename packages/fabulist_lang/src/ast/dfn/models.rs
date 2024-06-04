@@ -1,16 +1,19 @@
-use crate::ast::expr::models::{Expr, Primitive};
+use crate::{
+    ast::expr::models::{Expr, Primitive},
+    error::OwnedSpan,
+};
 use fabulist_derive::SyntaxTree;
 use std::collections::HashMap;
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Dfn {
-    #[production(arguments: Option<Vec<Expr>>)]
+    #[production(span: OwnedSpan, arguments: Option<Vec<Expr>>)]
     ArgumentBody(ArgumentBodyDfn),
 
-    #[production(parameters: Option<Vec<Primitive>>)]
+    #[production(span: OwnedSpan, parameters: Option<Vec<Primitive>>)]
     ParameterBody(ParameterBodyDfn),
 
-    #[production(object: HashMap<String, Expr>)]
+    #[production(span: OwnedSpan, object: HashMap<String, Expr>)]
     Object(ObjectDfn),
 }
 

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{
     parse::{Parse, Parser},
     parse_str,
@@ -56,7 +56,6 @@ fn build_struct(
             Ok(quote! {
                 #[derive(std::fmt::Debug, core::clone::Clone)]
                 #input_vis struct #formatted_ident {
-                    pub lcol: pest::error::LineColLocation,
                     #fields
                 }
             })
@@ -90,22 +89,7 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
                 .iter()
                 .map(|field| {
                     let field_value = &field.value;
-                    let field_ty = &field_value.ty;
-                    let Some(field_ident) = &field_value.ident else {
-                        return Err(Error::new(meta_tokens.span(), "Expected named identifier"));
-                    };
-                    if field_ty
-                        .to_token_stream()
-                        .to_string()
-                        .contains("LineColLocation")
-                    {
-                        Err(Error::new(
-                            field_ident.span(),
-                            "`LineColLocation` field is already implemented by default",
-                        ))
-                    } else {
-                        Ok(quote! { pub #field_value, })
-                    }
+                    Ok(quote! { pub #field_value, })
                 })
                 .collect::<Result<Vec<TokenStream>>>()?;
 

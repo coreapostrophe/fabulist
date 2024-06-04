@@ -1,4 +1,4 @@
-use pest::{error::LineColLocation, iterators::Pair};
+use pest::iterators::Pair;
 
 use crate::{
     ast::{
@@ -20,7 +20,6 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         if let Some(member) = inner
@@ -28,7 +27,7 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
             .find(|pair| pair.as_rule() == Rule::member_expr)
         {
             Ok(Unary::Pass(PassUnary {
-                lcol: value_lcol,
+                span: value_span.into(),
                 expr: Expr::try_from(member)?,
             }))
         } else {
@@ -58,7 +57,7 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
             }?;
 
             Ok(Unary::Standard(StandardUnary {
-                lcol: value_lcol,
+                span: value_span.into(),
                 operator,
                 right,
             }))
@@ -103,7 +102,10 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             | Rule::grouping
             | Rule::boolean
             | Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
-            _ => Err(Error::map_custom_error(value_span.into(), "Invalid expression")),
+            _ => Err(Error::map_custom_error(
+                value_span.into(),
+                "Invalid expression",
+            )),
         }
     }
 }
@@ -111,9 +113,9 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
 impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_lcol = LineColLocation::from(value.as_span());
+        let value_span = value.as_span();
         Ok(PrimaryExpr {
-            lcol: value_lcol,
+            span: value_span.into(),
             primary: Primary::try_from(value)?,
         })
     }
@@ -122,9 +124,9 @@ impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
 impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_lcol = LineColLocation::from(value.as_span());
+        let value_span = value.as_span();
         Ok(UnaryExpr {
-            lcol: value_lcol,
+            span: value_span.into(),
             unary: Unary::try_from(value)?,
         })
     }
@@ -134,7 +136,6 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         let callee = match inner.find(|pair| pair.as_node_tag() == Some("callee")) {
@@ -150,9 +151,9 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
         };
 
         Ok(CallExpr {
+            span: value_span.into(),
             callee,
             argument_body,
-            lcol: value_lcol,
         })
     }
 }
@@ -161,7 +162,6 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         let left = match inner.next() {
@@ -176,9 +176,9 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
             .collect::<Result<Vec<Expr>, pest::error::Error<Rule>>>()?;
 
         Ok(MemberExpr {
+            span: value_span.into(),
             left,
             members,
-            lcol: value_lcol,
         })
     }
 }
@@ -187,7 +187,6 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
@@ -227,10 +226,10 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
         };
 
         Ok(BinaryExpr {
+            span: value_span.into(),
             left,
             operator,
             right,
-            lcol: value_lcol,
         })
     }
 }
@@ -312,9 +311,9 @@ impl TryFrom<Pair<'_, Rule>> for Primary {
 impl TryFrom<Pair<'_, Rule>> for LiteralPrimary {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_lcol = LineColLocation::from(value.as_span());
+        let value_span = value.as_span();
         Ok(LiteralPrimary {
-            lcol: value_lcol,
+            span: value_span.into(),
             literal: Literal::try_from(value)?,
         })
     }
@@ -323,9 +322,9 @@ impl TryFrom<Pair<'_, Rule>> for LiteralPrimary {
 impl TryFrom<Pair<'_, Rule>> for PrimitivePrimary {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_lcol = LineColLocation::from(value.as_span());
+        let value_span = value.as_span();
         Ok(PrimitivePrimary {
-            lcol: value_lcol,
+            span: value_span.into(),
             primitive: Primitive::try_from(value)?,
         })
     }
@@ -335,7 +334,6 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
 
         match value.as_rule() {
             Rule::literal_expr => match value.into_inner().next() {
@@ -360,11 +358,11 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
                 )),
             },
             Rule::string_interior => Ok(Literal::String(StringLiteral {
-                lcol: value_lcol,
+                span: value_span.into(),
                 value: value.as_str().to_string(),
             })),
             Rule::raw_string_interior => Ok(Literal::String(StringLiteral {
-                lcol: value_lcol,
+                span: value_span.into(),
                 value: value.as_str().to_string(),
             })),
             Rule::number => {
@@ -375,22 +373,27 @@ impl TryFrom<Pair<'_, Rule>> for Literal {
                     )
                 })?;
                 Ok(Literal::Number(NumberLiteral {
-                    lcol: value_lcol,
+                    span: value_span.into(),
                     value: parsed_number,
                 }))
             }
             Rule::boolean => match value.as_str() {
                 "true" => Ok(Literal::Boolean(BooleanLiteral {
-                    lcol: value_lcol,
+                    span: value_span.into(),
                     value: true,
                 })),
                 "false" => Ok(Literal::Boolean(BooleanLiteral {
-                    lcol: value_lcol,
+                    span: value_span.into(),
                     value: false,
                 })),
-                _ => Err(Error::map_custom_error(value_span.into(), "Invalid boolean value")),
+                _ => Err(Error::map_custom_error(
+                    value_span.into(),
+                    "Invalid boolean value",
+                )),
             },
-            Rule::none => Ok(Literal::None(NoneLiteral { lcol: value_lcol })),
+            Rule::none => Ok(Literal::None(NoneLiteral {
+                span: value_span.into(),
+            })),
             _ => Err(Error::map_custom_error(
                 value_span.into(),
                 "Invalid literal expression",
@@ -403,7 +406,6 @@ impl TryFrom<Pair<'_, Rule>> for Primitive {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
 
         match value.as_rule() {
             Rule::primitive_expr => match value.into_inner().next() {
@@ -419,11 +421,13 @@ impl TryFrom<Pair<'_, Rule>> for Primitive {
             }
             Rule::path => Ok(Primitive::Path(PathPrimitive::try_from(value)?)),
             Rule::object => Ok(Primitive::Object(ObjectPrimitive {
-                lcol: value_lcol,
+                span: value_span.into(),
                 object: ObjectDfn::try_from(value)?,
             })),
             Rule::lambda => Ok(Primitive::Lambda(LambdaPrimitive::try_from(value)?)),
-            Rule::context => Ok(Primitive::Context(ContextPrimitive { lcol: value_lcol })),
+            Rule::context => Ok(Primitive::Context(ContextPrimitive {
+                span: value_span.into(),
+            })),
             _ => Err(Error::map_custom_error(
                 value_span.into(),
                 "Invalid primitive expression",
@@ -436,7 +440,6 @@ impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
 
         match value.as_rule() {
             Rule::identifier => match value.into_inner().next() {
@@ -452,10 +455,13 @@ impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
                 None => unreachable!(),
             },
             Rule::ident_interior => Ok(IdentifierPrimitive {
-                lcol: value_lcol,
+                span: value_span.into(),
                 name: value.as_str().to_string(),
             }),
-            _ => Err(Error::map_custom_error(value_span.into(), "Invalid primitive")),
+            _ => Err(Error::map_custom_error(
+                value_span.into(),
+                "Invalid primitive",
+            )),
         }
     }
 }
@@ -464,15 +470,17 @@ impl TryFrom<Pair<'_, Rule>> for GroupingPrimitive {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
 
         let expr = match value.into_inner().next() {
             Some(expr) => Ok(Expr::try_from(expr)?),
-            None => Err(Error::map_custom_error(value_span.into(), "Expected expression")),
+            None => Err(Error::map_custom_error(
+                value_span.into(),
+                "Expected expression",
+            )),
         }?;
 
         Ok(GroupingPrimitive {
-            lcol: value_lcol,
+            span: value_span.into(),
             expr,
         })
     }
@@ -481,14 +489,14 @@ impl TryFrom<Pair<'_, Rule>> for GroupingPrimitive {
 impl TryFrom<Pair<'_, Rule>> for PathPrimitive {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_lcol = LineColLocation::from(value.as_span());
+        let value_span = value.as_span();
         let identifiers = value
             .into_inner()
             .map(IdentifierPrimitive::try_from)
             .collect::<Result<Vec<IdentifierPrimitive>, pest::error::Error<Rule>>>()?;
 
         Ok(PathPrimitive {
-            lcol: value_lcol,
+            span: value_span.into(),
             identifiers,
         })
     }
@@ -498,7 +506,6 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let value_span = value.as_span();
-        let value_lcol = LineColLocation::from(value_span);
         let mut inner = value.into_inner();
 
         let parameters = match inner.find(|pair| pair.as_rule() == Rule::parameter_body) {
@@ -518,7 +525,7 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
         }?;
 
         Ok(LambdaPrimitive {
-            lcol: value_lcol,
+            span: value_span.into(),
             block_stmt,
             parameters,
         })

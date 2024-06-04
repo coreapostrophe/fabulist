@@ -82,7 +82,7 @@ impl Environment {
 
 #[cfg(test)]
 mod environment_tests {
-    use pest::error::LineColLocation;
+    use pest::Span;
 
     use crate::ast::expr::models::{Literal, LiteralPrimary, NumberLiteral, Primary, PrimaryExpr};
 
@@ -104,18 +104,18 @@ mod environment_tests {
 
     #[test]
     fn propagates_value() {
-        let lcol = LineColLocation::Pos((0, 0));
+        let span = Span::new("", 0, 0).expect("Failed to create span.");
 
         let environment = Environment::new();
         Environment::insert(
             &environment,
             "number",
             PrimaryExpr {
-                lcol: lcol.clone(),
+                span: span.into(),
                 primary: Primary::Literal(LiteralPrimary {
-                    lcol: lcol.clone(),
+                    span: span.into(),
                     literal: Literal::Number(NumberLiteral {
-                        lcol: lcol.clone(),
+                        span: span.into(),
                         value: 5.0,
                     }),
                 }),

@@ -1,4 +1,7 @@
-use crate::ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive};
+use crate::{
+    ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
+    error::OwnedSpan,
+};
 use fabulist_derive::SyntaxTree;
 
 #[derive(Debug, Clone)]
@@ -9,16 +12,16 @@ pub enum ElseClause {
 
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Stmt {
-    #[production(statements: Vec<Stmt>)]
+    #[production(span: OwnedSpan, statements: Vec<Stmt>)]
     Block(Box<BlockStmt>),
 
-    #[production(condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
+    #[production(span: OwnedSpan, condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
     If(Box<IfStmt>),
 
-    #[production(identifier: IdentifierPrimitive, value: Expr)]
+    #[production(span: OwnedSpan, identifier: IdentifierPrimitive, value: Expr)]
     Let(Box<LetStmt>),
 
-    #[production(path: PathPrimitive)]
+    #[production(span: OwnedSpan, path: PathPrimitive)]
     Goto(Box<GotoStmt>),
 }
 
