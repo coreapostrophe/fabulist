@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use pest::Span;
 
 use crate::parser::Rule;
@@ -15,6 +17,17 @@ impl From<Span<'_>> for OwnedSpan {
             input: value.get_input().to_string(),
             start: value.start(),
             end: value.end()
+        }
+    }
+}
+
+impl Add for OwnedSpan {
+    type Output = OwnedSpan;
+    fn add(self, rhs: Self) -> Self::Output {
+        OwnedSpan {
+            input: self.input + &rhs.input,
+            start: self.start,
+            end: rhs.end,
         }
     }
 }
