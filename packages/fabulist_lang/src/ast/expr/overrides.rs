@@ -103,3 +103,119 @@ impl Add for Literal {
         }
     }
 }
+
+#[cfg(test)]
+mod expr_overrides_tests {
+
+    use crate::{
+        ast::expr::models::{BooleanLiteral, Literal, NoneLiteral, NumberLiteral, StringLiteral},
+        error::OwnedSpan,
+    };
+
+    #[test]
+    fn add_literal_works() {
+        let number = Literal::Number(NumberLiteral {
+            span: OwnedSpan {
+                input: "".to_string(),
+                start: 0,
+                end: 0,
+            },
+            value: 5.0,
+        });
+        let boolean = Literal::Boolean(BooleanLiteral {
+            span: OwnedSpan {
+                input: "".to_string(),
+                start: 0,
+                end: 0,
+            },
+            value: true,
+        });
+        let none = Literal::None(NoneLiteral {
+            span: OwnedSpan {
+                input: "".to_string(),
+                start: 0,
+                end: 0,
+            },
+        });
+        let string = Literal::String(StringLiteral {
+            span: OwnedSpan {
+                input: "".to_string(),
+                start: 0,
+                end: 0,
+            },
+            value: "10".to_string(),
+        });
+
+        // number + <literal>
+        let result = number.clone() + number.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 10.0);
+        };
+        let result = number.clone() + string.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 15.0);
+        };
+        let result = number.clone() + none.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 5.0);
+        };
+        let result = number.clone() + boolean.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 6.0);
+        };
+
+        // boolean + <literal>
+        let result = boolean.clone() + number.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 6.0);
+        };
+        let result = boolean.clone() + none.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 1.0);
+        };
+        let result = boolean.clone() + boolean.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 2.0);
+        };
+        let result = boolean.clone() + string.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 11.0);
+        };
+
+        // string + <literal>
+        let result = string.clone() + number.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 15.0);
+        };
+        let result = string.clone() + boolean.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 11.0);
+        };
+        let result = string.clone() + none.clone();
+        if let Literal::String(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, "10".to_string());
+        };
+        let result = string.clone() + string.clone();
+        if let Literal::String(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, "1010".to_string());
+        };
+
+        // none + <literal>
+        let result = none.clone() + number.clone();
+        if let Literal::Number(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, 5.0);
+        };
+        let result = none.clone() + boolean.clone();
+        if let Literal::Boolean(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, true);
+        };
+        let result = none.clone() + string.clone();
+        if let Literal::String(result) = result.expect("Add failed with an error") {
+            assert_eq!(result.value, "10".to_string());
+        };
+        let result = none.clone() + none.clone();
+        if let Literal::None(_) = result.expect("Add failed with an error") {
+            assert!(true)
+        };
+    }
+}

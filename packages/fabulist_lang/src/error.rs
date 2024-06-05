@@ -25,7 +25,7 @@ impl Add for OwnedSpan {
     type Output = OwnedSpan;
     fn add(self, rhs: Self) -> Self::Output {
         OwnedSpan {
-            input: self.input + &rhs.input,
+            input: self.input,
             start: self.start,
             end: rhs.end,
         }
