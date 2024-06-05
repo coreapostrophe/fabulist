@@ -15,12 +15,12 @@ impl BooleanLiteral {
 }
 
 impl StringLiteral {
-    pub(crate) fn to_f32(&self) -> Result<f32, pest::error::Error<Rule>> {
+    pub(crate) fn to_f32(&self) -> Result<f32, Box<pest::error::Error<Rule>>> {
         self.value.parse::<f32>().map_err(|_| {
-            Error::map_custom_error(
+            Box::new(Error::map_custom_error(
                 self.span.to_owned(),
                 format!("Unable to parse string `{}` to number", self.value),
-            )
+            ))
         })
     }
 }
@@ -44,7 +44,7 @@ impl Add for Literal {
                 })),
                 Literal::String(addend2) => Ok(Literal::Number(NumberLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value + addend2.to_f32()?,
+                    value: addend1.value + addend2.to_f32().map_err(|err| *err)?,
                 })),
             },
             Literal::None(addend1) => match rhs {
@@ -79,21 +79,21 @@ impl Add for Literal {
                 })),
                 Literal::String(addend2) => Ok(Literal::Number(NumberLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32() + addend2.to_f32()?,
+                    value: addend1.to_f32() + addend2.to_f32().map_err(|err| *err)?,
                 })),
             },
             Literal::String(addend1) => match rhs {
                 Literal::Number(addend2) => Ok(Literal::Number(NumberLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32()? + addend2.value,
+                    value: addend1.to_f32().map_err(|err| *err)? + addend2.value,
                 })),
                 Literal::Boolean(addend2) => Ok(Literal::Number(NumberLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32()? + addend2.to_f32(),
+                    value: addend1.to_f32().map_err(|err| *err)? + addend2.to_f32(),
                 })),
                 Literal::None(addend2) => Ok(Literal::Number(NumberLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32()?,
+                    value: addend1.to_f32().map_err(|err| *err)?,
                 })),
                 Literal::String(addend2) => Ok(Literal::String(StringLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
