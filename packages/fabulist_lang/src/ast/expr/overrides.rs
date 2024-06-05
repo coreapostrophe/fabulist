@@ -1,27 +1,38 @@
 use std::ops::Add;
 
-use crate::{error::Error, parser::Rule};
+use crate::{
+    error::{Error, OwnedSpan},
+    parser::Rule,
+};
 
-use super::models::{BooleanLiteral, Literal, NoneLiteral, NumberLiteral, StringLiteral};
+use super::models::{Literal, NumberLiteral, StringLiteral};
 
-impl BooleanLiteral {
-    pub(crate) fn to_f32(&self) -> f32 {
-        if self.value {
-            1.0
-        } else {
-            0.0
+impl Literal {
+    pub(crate) fn span(&self) -> OwnedSpan {
+        match self {
+            Literal::Number(number_literal) => number_literal.span.to_owned(),
+            Literal::Boolean(boolean_literal) => boolean_literal.span.to_owned(),
+            Literal::String(string_literal) => string_literal.span.to_owned(),
+            Literal::None(none_literal) => none_literal.span.to_owned(),
         }
     }
-}
 
-impl StringLiteral {
-    pub(crate) fn to_f32(&self) -> Result<f32, Box<pest::error::Error<Rule>>> {
-        self.value.parse::<f32>().map_err(|_| {
-            Box::new(Error::map_custom_error(
-                self.span.to_owned(),
-                format!("Unable to parse string `{}` to number", self.value),
-            ))
-        })
+    pub(crate) fn to_num(&self) -> Result<f32, pest::error::Error<Rule>> {
+        match self {
+            Literal::Number(number_literal) => Ok(number_literal.value),
+            Literal::Boolean(boolean_literal) => Ok(if boolean_literal.value { 1.0 } else { 0.0 }),
+            Literal::None(_) => Ok(0.0),
+            Literal::String(string_literal) => {
+                let literal_span = string_literal.span.to_owned();
+                let literal_value = string_literal.value.to_owned();
+                Ok(literal_value.clone().parse::<f32>().map_err(|_| {
+                    Error::map_custom_error(
+                        literal_span,
+                        format!("Unable to parse string `{}` to number", literal_value),
+                    )
+                })?)
+            }
+        }
     }
 }
 
@@ -29,77 +40,28 @@ impl Add for Literal {
     type Output = Result<Literal, pest::error::Error<Rule>>;
     fn add(self, rhs: Self) -> Self::Output {
         match self {
-            Literal::Number(addend1) => match rhs {
-                Literal::Number(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value + addend2.value,
-                })),
-                Literal::Boolean(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value + addend2.to_f32(),
-                })),
-                Literal::None(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value,
-                })),
-                Literal::String(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value + addend2.to_f32().map_err(|err| *err)?,
-                })),
-            },
-            Literal::None(addend1) => match rhs {
-                Literal::Number(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend2.value,
-                })),
-                Literal::Boolean(addend2) => Ok(Literal::Boolean(BooleanLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend2.value,
-                })),
-                Literal::None(addend2) => Ok(Literal::None(NoneLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                })),
-                Literal::String(addend2) => Ok(Literal::String(StringLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend2.value,
-                })),
-            },
-            Literal::Boolean(addend1) => match rhs {
-                Literal::Number(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32() + addend2.value,
-                })),
-                Literal::Boolean(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32() + addend2.to_f32(),
-                })),
-                Literal::None(addend2) => Ok(Literal::Boolean(BooleanLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value,
-                })),
-                Literal::String(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32() + addend2.to_f32().map_err(|err| *err)?,
-                })),
-            },
             Literal::String(addend1) => match rhs {
-                Literal::Number(addend2) => Ok(Literal::Number(NumberLiteral {
+                Literal::Number(addend2) => Ok(Literal::String(StringLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32().map_err(|err| *err)? + addend2.value,
-                })),
-                Literal::Boolean(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32().map_err(|err| *err)? + addend2.to_f32(),
-                })),
-                Literal::None(addend2) => Ok(Literal::Number(NumberLiteral {
-                    span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.to_f32().map_err(|err| *err)?,
+                    value: format!("{}{}", addend1.value, addend2.value),
                 })),
                 Literal::String(addend2) => Ok(Literal::String(StringLiteral {
                     span: addend1.span.to_owned() + addend2.span.to_owned(),
-                    value: addend1.value + &addend2.value,
+                    value: format!("{}{}", addend1.value, addend2.value),
+                })),
+                Literal::Boolean(addend2) => Ok(Literal::String(StringLiteral {
+                    span: addend1.span.to_owned() + addend2.span.to_owned(),
+                    value: format!("{}{}", addend1.value, addend2.value),
+                })),
+                Literal::None(addend2) => Ok(Literal::String(StringLiteral {
+                    span: addend1.span.to_owned() + addend2.span.to_owned(),
+                    value: addend1.value,
                 })),
             },
+            _ => Ok(Literal::Number(NumberLiteral {
+                span: self.span() + rhs.span(),
+                value: self.to_num()? + rhs.to_num()?,
+            })),
         }
     }
 }
