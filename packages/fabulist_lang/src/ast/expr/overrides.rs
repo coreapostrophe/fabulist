@@ -17,7 +17,7 @@ impl Literal {
         }
     }
 
-    pub(crate) fn to_num(&self) -> Result<f32, pest::error::Error<Rule>> {
+    pub(crate) fn to_num(&self) -> Result<f32, Box<pest::error::Error<Rule>>> {
         match self {
             Literal::Number(number_literal) => Ok(number_literal.value),
             Literal::Boolean(boolean_literal) => Ok(if boolean_literal.value { 1.0 } else { 0.0 }),
@@ -26,10 +26,10 @@ impl Literal {
                 let literal_span = string_literal.span.to_owned();
                 let literal_value = string_literal.value.to_owned();
                 Ok(literal_value.clone().parse::<f32>().map_err(|_| {
-                    Error::map_custom_error(
+                    Box::new(Error::map_custom_error(
                         literal_span,
                         format!("Unable to parse string `{}` to number", literal_value),
-                    )
+                    ))
                 })?)
             }
         }
@@ -60,7 +60,7 @@ impl Add for Literal {
             },
             _ => Ok(Literal::Number(NumberLiteral {
                 span: self.span() + rhs.span(),
-                value: self.to_num()? + rhs.to_num()?,
+                value: self.to_num().map_err(|err| *err)? + rhs.to_num().map_err(|err| *err)?,
             })),
         }
     }
