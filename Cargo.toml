@@ -2,7 +2,11 @@
 resolver = "2"
 members = ["packages/*"]
 
+[workspace.package]
+edition = "2021"
+rust-version = "1.90.0"
+
 [workspace.dependencies]
-pest = "2.7.9"
-pest_derive = "2.7.9"
-thiserror = "1.0.58"
+pest = "2.8.4"
+pest_derive = "2.8.4"
+thiserror = "2.0.17"

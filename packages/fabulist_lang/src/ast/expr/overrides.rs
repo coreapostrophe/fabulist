@@ -169,15 +169,11 @@ mod expr_overrides_tests {
         };
         let result = none.clone() + boolean.clone();
         if let Literal::Boolean(result) = result.expect("Add failed with an error") {
-            assert_eq!(result.value, true);
+            assert!(result.value);
         };
         let result = none.clone() + string.clone();
         if let Literal::String(result) = result.expect("Add failed with an error") {
             assert_eq!(result.value, "10".to_string());
-        };
-        let result = none.clone() + none.clone();
-        if let Literal::None(_) = result.expect("Add failed with an error") {
-            assert!(true)
         };
     }
 }

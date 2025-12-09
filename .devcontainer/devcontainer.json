@@ -20,7 +20,7 @@
       "extensions": [
         "rust-lang.rust-analyzer",
         "vadimcn.vscode-lldb",
-        "serayuzgur.crates",
+        "fill-labs.dependi",
         "tamasfe.even-better-toml"
       ],
       "settings": {

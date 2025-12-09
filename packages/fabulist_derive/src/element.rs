@@ -41,8 +41,7 @@ pub fn generate_element(fab_ident: &str, input: DeriveInput) -> Result<TokenStre
 fn build_inset_getter_setters(data_ident: &Ident, fields: &[&Field]) -> Result<TokenStream> {
     let getters_setters: Vec<TokenStream> = fields
         .iter()
-        .enumerate()
-        .filter_map(|(_, field)| {
+        .filter_map(|field| {
             let ident: Ident = match &field.ident {
                 Some(ident) => ident.clone(),
                 _ => return None,

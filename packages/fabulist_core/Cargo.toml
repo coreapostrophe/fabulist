@@ -1,7 +1,8 @@
 [package]
 name = "fabulist_core"
 version = "0.2.0"
-edition = "2021"
+edition.workspace = true
+rust-version.workspace = true
 description = "A branching narrative engine"
 keywords = ["story", "gamedev", "narrative"]
 categories = ["story"]
