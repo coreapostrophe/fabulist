@@ -21,7 +21,8 @@
         "rust-lang.rust-analyzer",
         "vadimcn.vscode-lldb",
         "fill-labs.dependi",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "pest.pest-ide-tools"
       ],
       "settings": {
         "rust-analyzer.checkOnSave.enable": true,
