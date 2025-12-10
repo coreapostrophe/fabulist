@@ -7,7 +7,7 @@
     A branching narrative utility for interactive novels.
 </p>
 <p align="center">
-    <img src="https://github.com/coreapostrophe/fabulist/actions/workflows/rust.yml/badge.svg">
+    <img src="https://github.com/coreapostrophe/fabulist/actions/workflows/ci.yml/badge.svg">
 </p>
 
 ## About
@@ -18,20 +18,6 @@ Fabulist is a builder that uses a context-based model to create a branching narr
 
 1. [`fabulist_core`](./packages/fabulist_core/) - The structural crate of the project. It contains the base specification of the library as well as the data structures that concerns it.
 2. [`fabulist_lang`](./packages/fabulist_lang/) - Crate that contains the grammar definition, parser, and interpreter of the fabulist domain-specific language (DSL).
-
-## Roadmap
-
-The core will serve as the foundation of an ecosystem of applications planned to bring fabulist to everyone. As such, it is tantamount that it's entirely flexible and has all the utilities needed to create a narrative. Future iterations of this library aims to have transpilation to widely used languages (JavaScript, Java, and Python) as well as a markup language preprocessor for industry-use.
-
-```mermaid
-timeline
-    section 2023
-        February: Fabulist Core
-        October: Refactored Fabulist Core
-    section 2024
-        June: Fabulist language
-        July: Fabulist Cli
-```
 
 ## Design
 
