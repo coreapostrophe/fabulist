@@ -22,12 +22,17 @@
         "vadimcn.vscode-lldb",
         "fill-labs.dependi",
         "tamasfe.even-better-toml",
-        "pest.pest-ide-tools"
+        "pest.pest-ide-tools",
+        "DavidAnson.vscode-markdownlint"
       ],
       "settings": {
         "rust-analyzer.checkOnSave.enable": true,
         "rust-analyzer.check.command": "clippy",
-        "rust-analyzer.cargo.features": "all"
+        "rust-analyzer.cargo.features": "all",
+        "pestIdeTools.alwaysUsedRuleNames": [
+          "story",
+          "WHITESPACE"
+        ]
       }
     }
   },

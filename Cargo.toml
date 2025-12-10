@@ -4,7 +4,8 @@ members = ["packages/*"]
 
 [workspace.package]
 edition = "2021"
-rust-version = "1.90.0"
+rust-version = "1.91.0"
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 pest = "2.8.4"

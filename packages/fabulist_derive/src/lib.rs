@@ -1,3 +1,10 @@
+// Licensed under either of
+//   * MIT license
+//   * Apache License, Version 2.0
+// at your option.
+//
+// Copyright (c) 2025 Daveren John Reyes Cordero
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, Error};
 

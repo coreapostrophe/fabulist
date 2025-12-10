@@ -3,10 +3,10 @@ name = "fabulist_core"
 version = "0.2.0"
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 description = "A branching narrative engine"
 keywords = ["story", "gamedev", "narrative"]
 categories = ["story"]
-license = "MIT"
 repository = "https://github.com/coreapostrophe/fabulist-core"
 authors = ["Daveren Cordero <daverencordero@gmail.com>"]
 

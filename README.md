@@ -119,3 +119,9 @@ flowchart LR
 This type of linking introduces a more idiomatic way of creating a branching narrative. Instead of linking nodes to a response, we instead base it on quantified states generated throughout the story.
 
 The applications for this is limitless! Using dating visual novels as an example, affection points of potential lovers could be stored inside the context as incrementing values. This would eliminate a lot of the tedium from designing response trees, and allow creators to focus on just writing dialogues. That, in my opinion, is more organic.
+
+## License
+
+Fabulist is primarily distributed under the terms of both the MIT license and the Apache License (Version 2.0).
+
+See LICENSE-APACHE, LICENSE-MIT, and COPYRIGHT for details.
