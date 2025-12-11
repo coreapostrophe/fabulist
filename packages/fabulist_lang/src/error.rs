@@ -51,7 +51,7 @@ impl ParsingError {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum EvaluationError {
+pub enum RuntimeError {
     #[error("Generic error: {0}")]
     GenericError(String),
 }
