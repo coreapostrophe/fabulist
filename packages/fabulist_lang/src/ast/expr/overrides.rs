@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 use crate::{
     error::{Error, OwnedSpan},
@@ -66,6 +66,28 @@ impl Add for Literal {
     }
 }
 
+impl Mul for Literal {
+    type Output = Result<Literal, pest::error::Error<Rule>>;
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Literal::None(factor1) => Err(Error::map_custom_error(
+                factor1.span.to_owned(),
+                "Unable to multiply `none` literal".to_string(),
+            )),
+            _ => match rhs {
+                Literal::None(factor2) => Err(Error::map_custom_error(
+                    factor2.span.to_owned(),
+                    "Unable to multiply `none` literal".to_string(),
+                )),
+                _ => Ok(Literal::Number(NumberLiteral {
+                    span: self.span() + rhs.span(),
+                    value: self.to_num().map_err(|err| *err)? * rhs.to_num().map_err(|err| *err)?,
+                })),
+            },
+        }
+    }
+}
+
 #[cfg(test)]
 mod expr_overrides_tests {
     use crate::{
@@ -73,10 +95,10 @@ mod expr_overrides_tests {
         error::OwnedSpan,
     };
 
-    fn get_literal_mocks() -> (Literal, Literal, Literal, Literal) {
+    fn get_literal_mocks() -> (Literal, Literal, Literal, Literal, Literal) {
         let number = Literal::Number(NumberLiteral {
             span: OwnedSpan {
-                input: "".to_string(),
+                input: "5".to_string(),
                 start: 0,
                 end: 0,
             },
@@ -84,7 +106,7 @@ mod expr_overrides_tests {
         });
         let boolean = Literal::Boolean(BooleanLiteral {
             span: OwnedSpan {
-                input: "".to_string(),
+                input: "true".to_string(),
                 start: 0,
                 end: 0,
             },
@@ -92,36 +114,50 @@ mod expr_overrides_tests {
         });
         let none = Literal::None(NoneLiteral {
             span: OwnedSpan {
-                input: "".to_string(),
+                input: "none".to_string(),
                 start: 0,
                 end: 0,
             },
         });
         let string = Literal::String(StringLiteral {
             span: OwnedSpan {
-                input: "".to_string(),
+                input: "\"10\"".to_string(),
                 start: 0,
                 end: 0,
             },
             value: "10".to_string(),
         });
+        let alpha_string = Literal::String(StringLiteral {
+            span: OwnedSpan {
+                input: "\"hello\"".to_string(),
+                start: 0,
+                end: 0,
+            },
+            value: "hello".to_string(),
+        });
 
-        (number, boolean, none, string)
+        (number, boolean, none, string, alpha_string)
     }
 
     #[test]
     fn literal_to_num_works() {
-        let (number, boolean, none, string) = get_literal_mocks();
+        let (number, boolean, none, string, alpha_string) = get_literal_mocks();
 
         assert_eq!(number.to_num().unwrap(), 5.0);
         assert_eq!(boolean.to_num().unwrap(), 1.0);
         assert_eq!(none.to_num().unwrap(), 0.0);
         assert_eq!(string.to_num().unwrap(), 10.0);
+
+        assert!(alpha_string.to_num().is_err());
+        assert_eq!(
+            alpha_string.to_num().err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | \"hello\"\n  | ^\n  |\n  = Unable to parse string `hello` to number"
+        );
     }
 
     #[test]
     fn add_literal_works() {
-        let (number, boolean, none, string) = get_literal_mocks();
+        let (number, boolean, none, string, _) = get_literal_mocks();
 
         // number + <literal>
         let result = number.clone() + number.clone();
@@ -222,5 +258,117 @@ mod expr_overrides_tests {
             panic!("Expected result to be a NumberLiteral");
         };
         assert_eq!(result.value, 0.0);
+    }
+
+    #[test]
+    fn mul_literal_works() {
+        let (number, boolean, none, string, _) = get_literal_mocks();
+
+        // number * <literal>
+        let result = number.clone() * number.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 25.0);
+
+        let result = number.clone() * boolean.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 5.0);
+
+        let result = number.clone() * none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = number.clone() * string.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 50.0);
+
+        // boolean * <literal>
+        let result = boolean.clone() * number.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 5.0);
+
+        let result = boolean.clone() * boolean.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 1.0);
+
+        let result = boolean.clone() * none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = boolean.clone() * string.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 10.0);
+
+        // string * <literal>
+        let result = string.clone() * number.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 50.0);
+
+        let result = string.clone() * boolean.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 10.0);
+
+        let result = string.clone() * none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = string.clone() * string.clone();
+        let Literal::Number(result) = result.expect("Mul failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 100.0);
+
+        // none * <literal>
+        let result = none.clone() * number.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = none.clone() * boolean.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = none.clone() * string.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
+
+        let result = none.clone() * none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
+        );
     }
 }
