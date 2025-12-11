@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     error::{Error, OwnedSpan},
@@ -82,6 +82,38 @@ impl Mul for Literal {
                 _ => Ok(Literal::Number(NumberLiteral {
                     span: self.span() + rhs.span(),
                     value: self.to_num().map_err(|err| *err)? * rhs.to_num().map_err(|err| *err)?,
+                })),
+            },
+        }
+    }
+}
+
+impl Sub for Literal {
+    type Output = Result<Literal, pest::error::Error<Rule>>;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Ok(Literal::Number(NumberLiteral {
+            span: self.span() + rhs.span(),
+            value: self.to_num().map_err(|err| *err)? - rhs.to_num().map_err(|err| *err)?,
+        }))
+    }
+}
+
+impl Div for Literal {
+    type Output = Result<Literal, pest::error::Error<Rule>>;
+    fn div(self, rhs: Self) -> Self::Output {
+        match self {
+            Literal::None(dividend) => Err(Error::map_custom_error(
+                dividend.span.to_owned(),
+                "Unable to divide `none` literal".to_string(),
+            )),
+            _ => match rhs {
+                Literal::None(divisor) => Err(Error::map_custom_error(
+                    divisor.span.to_owned(),
+                    "Unable to divide by `none` literal".to_string(),
+                )),
+                _ => Ok(Literal::Number(NumberLiteral {
+                    span: self.span() + rhs.span(),
+                    value: self.to_num().map_err(|err| *err)? / rhs.to_num().map_err(|err| *err)?,
                 })),
             },
         }
@@ -370,5 +402,222 @@ mod expr_overrides_tests {
             result.err().unwrap().to_string(),
             " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to multiply `none` literal"
         );
+    }
+
+    #[test]
+    fn div_literal_works() {
+        let (number, boolean, none, string, _) = get_literal_mocks();
+
+        // number / <literal>
+        let result = number.clone() / number.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 1.0);
+
+        let result = number.clone() / boolean.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 5.0);
+
+        let result = number.clone() / none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide by `none` literal"
+        );
+
+        let result = number.clone() / string.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.5);
+
+        // boolean / <literal>
+        let result = boolean.clone() / number.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.2);
+
+        let result = boolean.clone() / boolean.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 1.0);
+
+        let result = boolean.clone() / none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide by `none` literal"
+        );
+
+        let result = boolean.clone() / string.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.1);
+
+        // string / <literal>
+        let result = string.clone() / number.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 2.0);
+
+        let result = string.clone() / boolean.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 10.0);
+
+        let result = string.clone() / none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide by `none` literal"
+        );
+
+        let result = string.clone() / string.clone();
+        let Literal::Number(result) = result.expect("Div failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 1.0);
+
+        // none / <literal>
+        let result = none.clone() / number.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide `none` literal"
+        );
+
+        let result = none.clone() / boolean.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide `none` literal"
+        );
+
+        let result = none.clone() / string.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide `none` literal"
+        );
+
+        let result = none.clone() / none.clone();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            " --> 1:1\n  |\n1 | none\n  | ^\n  |\n  = Unable to divide `none` literal"
+        );
+    }
+
+    #[test]
+    fn sub_literal_works() {
+        let (number, boolean, none, string, _) = get_literal_mocks();
+
+        // number - <literal>
+        let result = number.clone() - number.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.0);
+
+        let result = number.clone() - boolean.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 4.0);
+
+        let result = number.clone() - none.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 5.0);
+
+        let result = number.clone() - string.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -5.0);
+
+        // boolean - <literal>
+        let result = boolean.clone() - number.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -4.0);
+
+        let result = boolean.clone() - boolean.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.0);
+
+        let result = boolean.clone() - none.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 1.0);
+
+        let result = boolean.clone() - string.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -9.0);
+
+        // string - <literal>
+        let result = string.clone() - number.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 5.0);
+
+        let result = string.clone() - boolean.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 9.0);
+
+        let result = string.clone() - none.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 10.0);
+
+        let result = string.clone() - string.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.0);
+
+        // none - <literal>
+        let result = none.clone() - number.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -5.0);
+
+        let result = none.clone() - boolean.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -1.0);
+
+        let result = none.clone() - string.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, -10.0);
+
+        let result = none.clone() - none.clone();
+        let Literal::Number(result) = result.expect("Sub failed with an error") else {
+            panic!("Expected result to be a NumberLiteral");
+        };
+        assert_eq!(result.value, 0.0);
     }
 }
