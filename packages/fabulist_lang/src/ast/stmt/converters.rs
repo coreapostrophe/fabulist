@@ -2,7 +2,7 @@ use pest::iterators::Pair;
 
 use crate::{
     ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
-    error::Error,
+    error::ParsingError,
     parser::Rule,
 };
 
@@ -19,7 +19,7 @@ impl TryFrom<Pair<'_, Rule>> for ElseClause {
         } else if let Some(block_stmt) = inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Ok(ElseClause::Block(BlockStmt::try_from(block_stmt)?))
         } else {
-            Err(Error::map_custom_error(
+            Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected an `if` or `block` statement",
             ))
@@ -64,7 +64,7 @@ impl TryFrom<Pair<'_, Rule>> for Stmt {
             Rule::if_stmt => Ok(IfStmt::try_from(value)?.into()),
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
-            _ => Err(Error::map_custom_error(
+            _ => Err(ParsingError::map_custom_error(
                 stmt_span.into(),
                 "Invalid statement",
             )),
@@ -96,14 +96,14 @@ impl TryFrom<Pair<'_, Rule>> for IfStmt {
 
         let condition = match inner.find(|pair| pair.as_node_tag() == Some("condition")) {
             Some(condition) => Expr::try_from(condition),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected condition expression",
             )),
         }?;
         let block_stmt = match inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected block statement",
             )),
@@ -130,14 +130,14 @@ impl TryFrom<Pair<'_, Rule>> for LetStmt {
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => IdentifierPrimitive::try_from(identifier),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected an identifier",
             )),
         }?;
         let value = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
             Some(expression) => Expr::try_from(expression),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected value expression",
             )),
@@ -158,7 +158,7 @@ impl TryFrom<Pair<'_, Rule>> for GotoStmt {
 
         let path = match value.into_inner().find(|pair| pair.as_rule() == Rule::path) {
             Some(path) => PathPrimitive::try_from(path),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected path expression",
             )),

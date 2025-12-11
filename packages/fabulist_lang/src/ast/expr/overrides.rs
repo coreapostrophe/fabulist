@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
-    error::{Error, OwnedSpan},
+    error::{ParsingError, OwnedSpan},
     parser::Rule,
 };
 
@@ -26,7 +26,7 @@ impl Literal {
                 let literal_span = string_literal.span.to_owned();
                 let literal_value = string_literal.value.to_owned();
                 Ok(literal_value.clone().parse::<f32>().map_err(|_| {
-                    Box::new(Error::map_custom_error(
+                    Box::new(ParsingError::map_custom_error(
                         literal_span,
                         format!("Unable to parse string `{}` to number", literal_value),
                     ))
@@ -70,12 +70,12 @@ impl Mul for Literal {
     type Output = Result<Literal, pest::error::Error<Rule>>;
     fn mul(self, rhs: Self) -> Self::Output {
         match self {
-            Literal::None(factor1) => Err(Error::map_custom_error(
+            Literal::None(factor1) => Err(ParsingError::map_custom_error(
                 factor1.span.to_owned(),
                 "Unable to multiply `none` literal".to_string(),
             )),
             _ => match rhs {
-                Literal::None(factor2) => Err(Error::map_custom_error(
+                Literal::None(factor2) => Err(ParsingError::map_custom_error(
                     factor2.span.to_owned(),
                     "Unable to multiply `none` literal".to_string(),
                 )),
@@ -102,12 +102,12 @@ impl Div for Literal {
     type Output = Result<Literal, pest::error::Error<Rule>>;
     fn div(self, rhs: Self) -> Self::Output {
         match self {
-            Literal::None(dividend) => Err(Error::map_custom_error(
+            Literal::None(dividend) => Err(ParsingError::map_custom_error(
                 dividend.span.to_owned(),
                 "Unable to divide `none` literal".to_string(),
             )),
             _ => match rhs {
-                Literal::None(divisor) => Err(Error::map_custom_error(
+                Literal::None(divisor) => Err(ParsingError::map_custom_error(
                     divisor.span.to_owned(),
                     "Unable to divide by `none` literal".to_string(),
                 )),

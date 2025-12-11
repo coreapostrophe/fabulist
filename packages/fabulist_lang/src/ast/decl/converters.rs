@@ -5,7 +5,7 @@ use crate::{
         dfn::models::ObjectDfn,
         expr::models::{IdentifierPrimitive, Literal, StringLiteral},
     },
-    error::Error,
+    error::ParsingError,
     parser::Rule,
 };
 
@@ -26,7 +26,7 @@ impl TryFrom<Pair<'_, Rule>> for Decl {
             Rule::meta_decl => Ok(Decl::Meta(MetaDecl::try_from(value)?)),
             Rule::mod_decl => Ok(Decl::Module(ModuleDecl::try_from(value)?)),
             Rule::part_decl => Ok(Decl::Part(PartDecl::try_from(value)?)),
-            _ => Err(Error::map_custom_error(
+            _ => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Invalid declaration",
             )),
@@ -43,12 +43,12 @@ impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
         let text = match inner.find(|pair| pair.as_node_tag() == Some("text")) {
             Some(text) => Ok(match text.into_inner().next() {
                 Some(text) => Ok(text.as_str().to_string()),
-                None => Err(Error::map_custom_error(
+                None => Err(ParsingError::map_custom_error(
                     value_span.into(),
                     "Expected string value",
                 )),
             }?),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected text expression",
             )),
@@ -76,12 +76,12 @@ impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
         let character = match inner.find_first_tagged("character") {
             Some(char) => Ok(match char.into_inner().next() {
                 Some(char) => Ok(char.as_str().to_string()),
-                None => Err(Error::map_custom_error(
+                None => Err(ParsingError::map_custom_error(
                     value_span.into(),
                     "Expected string value",
                 )),
             }?),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected character declaration",
             )),
@@ -123,7 +123,7 @@ impl TryFrom<Pair<'_, Rule>> for MetaDecl {
                 span: value_span.into(),
                 properties: ObjectDfn::try_from(object)?,
             }),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected object definition",
             )),
@@ -143,12 +143,12 @@ impl TryFrom<Pair<'_, Rule>> for ModuleDecl {
         {
             Some(path) => match Literal::try_from(path)? {
                 Literal::String(StringLiteral { value, .. }) => Ok(value),
-                _ => Err(Error::map_custom_error(
+                _ => Err(ParsingError::map_custom_error(
                     value_span.into(),
                     "Expected string",
                 )),
             },
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected string file path",
             )),
@@ -156,7 +156,7 @@ impl TryFrom<Pair<'_, Rule>> for ModuleDecl {
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => IdentifierPrimitive::try_from(identifier),
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected identifier",
             )),
@@ -182,12 +182,12 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
                 .find(|pair| pair.as_node_tag() == Some("name"))
             {
                 Some(identifier) => Ok(identifier.as_str().to_string()),
-                None => Err(Error::map_custom_error(
+                None => Err(ParsingError::map_custom_error(
                     value_span.into(),
                     "Expected identifier",
                 )),
             },
-            None => Err(Error::map_custom_error(
+            None => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Expected id declaration",
             )),
@@ -213,7 +213,7 @@ impl TryFrom<Pair<'_, Rule>> for Element {
         match value.as_rule() {
             Rule::element_decl => match value.into_inner().next() {
                 Some(inner) => Ok(Element::try_from(inner)?),
-                None => Err(Error::map_custom_error(
+                None => Err(ParsingError::map_custom_error(
                     value_span.into(),
                     "Unable to parse token tree interior",
                 )),
@@ -230,7 +230,7 @@ impl TryFrom<Pair<'_, Rule>> for Element {
                 span: value_span.into(),
                 value: QuoteDecl::try_from(value)?,
             })),
-            _ => Err(Error::map_custom_error(
+            _ => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Invalid declaration",
             )),

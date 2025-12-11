@@ -32,9 +32,9 @@ impl Add for OwnedSpan {
     }
 }
 
-pub struct Error;
+pub struct ParsingError;
 
-impl Error {
+impl ParsingError {
     pub fn map_custom_error(
         span: OwnedSpan,
         message: impl Into<String>,
@@ -48,4 +48,10 @@ impl Error {
             span,
         )
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum EvaluationError {
+    #[error("Generic error: {0}")]
+    GenericError(String),
 }

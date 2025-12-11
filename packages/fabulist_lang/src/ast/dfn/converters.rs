@@ -4,7 +4,7 @@ use pest::iterators::Pair;
 
 use crate::{
     ast::expr::models::{Expr, Primitive},
-    error::Error,
+    error::ParsingError,
     parser::Rule,
 };
 
@@ -19,7 +19,7 @@ impl TryFrom<Pair<'_, Rule>> for Dfn {
             Rule::object => Ok(Dfn::Object(ObjectDfn::try_from(value)?)),
             Rule::argument_body => Ok(Dfn::ArgumentBody(ArgumentBodyDfn::try_from(value)?)),
             Rule::parameter_body => Ok(Dfn::ParameterBody(ParameterBodyDfn::try_from(value)?)),
-            _ => Err(Error::map_custom_error(
+            _ => Err(ParsingError::map_custom_error(
                 value_span.into(),
                 "Invalid definition",
             )),
@@ -104,7 +104,7 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
                             return Ok(primitive_expr);
                         }
                     }
-                    Err(Error::map_custom_error(
+                    Err(ParsingError::map_custom_error(
                         pair_span.into(),
                         "Expected identifier",
                     ))
