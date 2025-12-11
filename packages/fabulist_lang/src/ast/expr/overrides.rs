@@ -120,6 +120,54 @@ impl Div for Literal {
     }
 }
 
+impl PartialEq for Literal {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Literal::Number(number_literal1) => match other {
+                Literal::Number(number_literal2) => number_literal1.value == number_literal2.value,
+                _ => false,
+            },
+            Literal::Boolean(boolean_literal1) => match other {
+                Literal::Boolean(boolean_literal2) => {
+                    boolean_literal1.value == boolean_literal2.value
+                }
+                _ => false,
+            },
+            Literal::String(string_literal1) => match other {
+                Literal::String(string_literal2) => string_literal1.value == string_literal2.value,
+                _ => false,
+            },
+            Literal::None(_) => matches!(other, Literal::None(_)),
+        }
+    }
+}
+
+impl PartialOrd for Literal {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match self {
+            Literal::Number(number_literal1) => match other {
+                Literal::Number(number_literal2) => {
+                    number_literal1.value.partial_cmp(&number_literal2.value)
+                }
+                _ => None,
+            },
+            Literal::Boolean(boolean_literal1) => match other {
+                Literal::Boolean(boolean_literal2) => {
+                    boolean_literal1.value.partial_cmp(&boolean_literal2.value)
+                }
+                _ => None,
+            },
+            Literal::String(string_literal1) => match other {
+                Literal::String(string_literal2) => {
+                    string_literal1.value.partial_cmp(&string_literal2.value)
+                }
+                _ => None,
+            },
+            Literal::None(_) => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod expr_overrides_tests {
     use crate::ast::expr::models::{
@@ -607,5 +655,27 @@ mod expr_overrides_tests {
             panic!("Expected result to be a NumberLiteral");
         };
         assert_eq!(result.value, 0.0);
+    }
+
+    #[test]
+    fn eq_literal_works() {
+        assert_eq!(Literal::from(5.0), Literal::from(5.0));
+        assert_ne!(Literal::from(5.0), Literal::from(10.0));
+        assert_eq!(Literal::from(true), Literal::from(true));
+        assert_ne!(Literal::from(true), Literal::from(false));
+        assert_eq!(Literal::from("hello"), Literal::from("hello"));
+        assert_ne!(Literal::from("hello"), Literal::from("world"));
+        assert_eq!(Literal::from(()), Literal::from(()));
+        assert_ne!(Literal::from(()), Literal::from(5.0));
+    }
+
+    #[test]
+    fn ord_literal_works() {
+        assert!(Literal::from(5.0) < Literal::from(10.0));
+        assert!(Literal::from(10.0) > Literal::from(5.0));
+        assert!(Literal::from(true) > Literal::from(false));
+        assert!(Literal::from(false) < Literal::from(true));
+        assert!(Literal::from("apple") < Literal::from("banana"));
+        assert!(Literal::from("banana") > Literal::from("apple"));
     }
 }
