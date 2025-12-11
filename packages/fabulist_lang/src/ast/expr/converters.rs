@@ -460,7 +460,7 @@ impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
             }),
             _ => Err(ParsingError::map_custom_error(
                 value_span.into(),
-                "Invalid primitive",
+                "Invalid identifier primitive",
             )),
         }
     }

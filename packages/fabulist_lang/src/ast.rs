@@ -1,7 +1,10 @@
+#[cfg(test)]
 use std::{fmt::Debug, marker::PhantomData};
 
+#[cfg(test)]
 use pest::{iterators::Pair, Parser};
 
+#[cfg(test)]
 use crate::parser::{GrammarParser, Rule};
 
 pub mod decl;
@@ -10,12 +13,14 @@ pub mod expr;
 pub mod stmt;
 pub mod story;
 
+#[cfg(test)]
 pub struct AstTestHelper<T> {
     rule_type: Rule,
     struct_name: String,
     phantom: PhantomData<T>,
 }
 
+#[cfg(test)]
 impl<'a, T> AstTestHelper<T>
 where
     T: TryFrom<Pair<'a, Rule>> + Debug,
@@ -27,6 +32,7 @@ where
             phantom: PhantomData,
         }
     }
+
     pub fn assert_parse(&self, source: &'a str) -> T
     where
         T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,

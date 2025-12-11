@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use pest::iterators::Pair;
 
 use crate::{
-    ast::expr::models::{Expr, Primitive},
+    ast::expr::models::{Expr, IdentifierPrimitive},
     error::ParsingError,
     parser::Rule,
 };
@@ -96,20 +96,8 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
         {
             let param_expr = parameters
                 .into_inner()
-                .map(|pair| {
-                    let pair_span = pair.as_span();
-                    let primitive_expr = Primitive::try_from(pair);
-                    if let Ok(primitive_expr) = primitive_expr {
-                        if let Primitive::Identifier { .. } = primitive_expr {
-                            return Ok(primitive_expr);
-                        }
-                    }
-                    Err(ParsingError::map_custom_error(
-                        pair_span.into(),
-                        "Expected identifier",
-                    ))
-                })
-                .collect::<Result<Vec<Primitive>, pest::error::Error<Rule>>>()?;
+                .map(IdentifierPrimitive::try_from)
+                .collect::<Result<Vec<IdentifierPrimitive>, pest::error::Error<Rule>>>()?;
             Ok(ParameterBodyDfn {
                 span: value_span.into(),
                 parameters: Some(param_expr),
