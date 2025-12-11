@@ -4,7 +4,7 @@ use pest::Span;
 
 use crate::parser::Rule;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct OwnedSpan {
     pub input: String,
     pub start: usize,
