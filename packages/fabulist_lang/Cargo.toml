@@ -10,5 +10,4 @@ pest.workspace = true
 thiserror.workspace = true
 pest_derive = { workspace = true, features = ["grammar-extras"] }
 
-fabulist_core = { path = "../fabulist_core" }
 fabulist_derive = { path = "../fabulist_derive" }

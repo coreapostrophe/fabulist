@@ -1,3 +1,3 @@
 pub mod converters;
-pub mod models;
 pub mod evaluators;
+pub mod models;

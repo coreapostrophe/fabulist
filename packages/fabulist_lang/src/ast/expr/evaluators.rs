@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::{
     ast::expr::models::{
         BooleanLiteral, Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal,
-        NoneLiteral, NumberLiteral, ObjectPrimitive, StringLiteral,
+        NoneLiteral, NumberLiteral, ObjectPrimitive, PathPrimitive, StringLiteral,
     },
     environment::Environment,
     error::RuntimeError,
@@ -80,6 +80,18 @@ impl Evaluable for IdentifierPrimitive {
 }
 
 impl Evaluable for LambdaPrimitive {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output {
+        Ok(RuntimeValue::Lambda {
+            parameters: self.parameters.clone(),
+            body: self.block_stmt.clone(),
+            closure: environment.clone(),
+        })
+    }
+}
+
+impl Evaluable for PathPrimitive {
     type Output = Result<RuntimeValue, RuntimeError>;
 
     fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {

@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
-    error::{ParsingError, OwnedSpan},
+    error::{OwnedSpan, ParsingError},
     parser::Rule,
 };
 

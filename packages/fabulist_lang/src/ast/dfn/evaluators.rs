@@ -3,7 +3,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::{
     ast::{
         dfn::models::{ObjectDfn, ParameterBodyDfn},
-        expr::models::{Expr, Primitive},
+        expr::models::{Expr, IdentifierPrimitive},
     },
     environment::Environment,
     error::RuntimeError,
@@ -19,9 +19,9 @@ impl Evaluable for ObjectDfn {
 }
 
 impl Evaluable for ParameterBodyDfn {
-    type Output = Result<Vec<Primitive>, RuntimeError>;
+    type Output = Result<Option<Vec<IdentifierPrimitive>>, RuntimeError>;
 
     fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
-        todo!()
+        Ok(self.parameters.clone())
     }
 }
