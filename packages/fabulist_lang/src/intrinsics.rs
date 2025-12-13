@@ -31,15 +31,39 @@ impl NumberIntrinsics {
         }
     }
 
-    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
-        let closure_environment = Environment::add_empty_child(environment);
+    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
+        let intrinsics_environment = Environment::new();
 
         Environment::insert(
-            &closure_environment,
+            &intrinsics_environment,
             "to_string".to_string(),
             RuntimeValue::NativeFunction(Self::to_string),
         );
 
-        closure_environment
+        intrinsics_environment
+    }
+}
+
+pub struct BooleanIntrinsics;
+
+impl BooleanIntrinsics {
+    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
+        todo!()
+    }
+}
+
+pub struct StringIntrinsics;
+
+impl StringIntrinsics {
+    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
+        todo!()
+    }
+}
+
+pub struct ObjectIntrinsics;
+
+impl ObjectIntrinsics {
+    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
+        todo!()
     }
 }

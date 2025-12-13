@@ -3,9 +3,9 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     ast::expr::models::{
         BooleanLiteral, CallExpr, ContextPrimitive, Expr, GroupingPrimitive, IdentifierPrimitive,
-        LambdaPrimitive, Literal, LiteralPrimary, NoneLiteral, NumberLiteral, ObjectPrimitive,
-        PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary,
-        StringLiteral, Unary, UnaryOperator,
+        LambdaPrimitive, Literal, LiteralPrimary, MemberExpr, NoneLiteral, NumberLiteral,
+        ObjectPrimitive, PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive,
+        PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryOperator,
     },
     context::Context,
     environment::Environment,
@@ -350,5 +350,31 @@ impl Evaluable for CallExpr {
             }
             _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
         }
+    }
+}
+
+impl Evaluable for MemberExpr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        let left_value = self.left.evaluate(environment, context)?;
+
+        self.members
+            .iter()
+            .try_fold(left_value, |current_value, member| {
+                let member_env = Environment::add_empty_child(environment);
+
+                if let RuntimeValue::Object(obj_map) = current_value {
+                    for (key, value) in obj_map.iter() {
+                        Environment::insert(&member_env, key.clone(), value.clone());
+                    }
+                }
+
+                member.evaluate(&member_env, context)
+            })
     }
 }

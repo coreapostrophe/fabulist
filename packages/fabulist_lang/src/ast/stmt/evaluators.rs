@@ -1,7 +1,10 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    ast::stmt::models::BlockStmt, context::Context, environment::Environment, error::RuntimeError,
+    ast::stmt::models::BlockStmt,
+    context::Context,
+    environment::Environment,
+    error::RuntimeError,
     interpreter::{Evaluable, RuntimeValue},
 };
 

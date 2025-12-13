@@ -12,7 +12,6 @@ pub enum RuntimeValue {
     Number(f32),
     Boolean(bool),
     String(String),
-    Identifier(String),
     Object(HashMap<String, RuntimeValue>),
     Lambda {
         parameters: ParameterBodyDfn,
@@ -20,6 +19,7 @@ pub enum RuntimeValue {
         closure: Rc<RefCell<Environment>>,
     },
     NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> Result<RuntimeValue, RuntimeError>),
+    Identifier(String),
     None,
     Context,
 }
