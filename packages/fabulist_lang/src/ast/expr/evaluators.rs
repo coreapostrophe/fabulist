@@ -11,6 +11,7 @@ use crate::{
     environment::Environment,
     error::RuntimeError,
     interpreter::{Evaluable, RuntimeValue},
+    intrinsics::{BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics},
 };
 
 impl Evaluable for NumberLiteral {
@@ -366,15 +367,32 @@ impl Evaluable for MemberExpr {
         self.members
             .iter()
             .try_fold(left_value, |current_value, member| {
-                let member_env = Environment::add_empty_child(environment);
-
-                if let RuntimeValue::Object(obj_map) = current_value {
-                    for (key, value) in obj_map.iter() {
-                        Environment::insert(&member_env, key.clone(), value.clone());
+                let injected_env = match &current_value {
+                    RuntimeValue::Number(_) => {
+                        Some(NumberIntrinsics::inject_intrinsics(environment))
                     }
-                }
+                    RuntimeValue::Boolean(_) => {
+                        Some(BooleanIntrinsics::inject_intrinsics(environment))
+                    }
+                    RuntimeValue::String(_) => {
+                        Some(StringIntrinsics::inject_intrinsics(environment))
+                    }
+                    RuntimeValue::Object(obj_map) => {
+                        let injected_env = ObjectIntrinsics::inject_intrinsics(environment);
 
-                member.evaluate(&member_env, context)
+                        for (key, value) in obj_map.iter() {
+                            Environment::insert(&injected_env, key.clone(), value.clone());
+                        }
+
+                        Some(injected_env)
+                    }
+                    _ => None,
+                };
+
+                match injected_env {
+                    Some(injected_env) => member.evaluate(&injected_env, context),
+                    None => member.evaluate(environment, context),
+                }
             })
     }
 }

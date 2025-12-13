@@ -31,8 +31,8 @@ impl NumberIntrinsics {
         }
     }
 
-    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
-        let intrinsics_environment = Environment::new();
+    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        let intrinsics_environment = Environment::add_empty_child(environment);
 
         Environment::insert(
             &intrinsics_environment,
@@ -47,23 +47,23 @@ impl NumberIntrinsics {
 pub struct BooleanIntrinsics;
 
 impl BooleanIntrinsics {
-    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
-        todo!()
+    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        Environment::add_empty_child(environment)
     }
 }
 
 pub struct StringIntrinsics;
 
 impl StringIntrinsics {
-    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
-        todo!()
+    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        Environment::add_empty_child(environment)
     }
 }
 
 pub struct ObjectIntrinsics;
 
 impl ObjectIntrinsics {
-    pub fn get_intrinsics_env() -> Rc<RefCell<Environment>> {
-        todo!()
+    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+        Environment::add_empty_child(environment)
     }
 }
