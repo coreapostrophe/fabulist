@@ -33,11 +33,7 @@
         "rust-analyzer.cargo.targetDir": "/home/vscode/.cache/fabulist/target",
         "rust-analyzer.cargo.extraEnv": {
           "CARGO_TARGET_DIR": "/home/vscode/.cache/fabulist/target"
-        },
-        "pestIdeTools.alwaysUsedRuleNames": [
-          "story",
-          "WHITESPACE"
-        ]
+        }
       }
     }
   },

@@ -297,9 +297,36 @@ impl Evaluable for CallExpr {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
     ) -> Self::Output {
-        todo!()
+        let callee = self.callee.evaluate(environment, context)?;
+        let args = self
+            .argument_body
+            .as_ref()
+            .map(|arg| arg.evaluate(environment, context))
+            .transpose()?
+            .flatten()
+            .unwrap_or_default();
+
+        match callee {
+            RuntimeValue::Lambda {
+                parameters,
+                body,
+                closure,
+            } => {
+                let new_env = Environment::add_empty_child(&closure);
+
+                if let Some(params) = parameters.parameters.as_ref() {
+                    for (param, arg) in params.iter().zip(args.iter()) {
+                        Environment::insert(&new_env, param.name.clone(), arg.clone());
+                    }
+                }
+
+                let return_value = body.evaluate(&new_env, context)?;
+                Ok(return_value)
+            }
+            _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+        }
     }
 }

@@ -5,10 +5,11 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::ast::expr::models::Expr;
+use crate::interpreter::RuntimeValue;
 
+#[derive(Debug)]
 pub struct Environment {
-    map: HashMap<String, Expr>,
+    map: HashMap<String, RuntimeValue>,
     parent: Option<Weak<RefCell<Environment>>>,
     child: Option<Rc<RefCell<Environment>>>,
 }
@@ -21,10 +22,10 @@ impl Environment {
             child: None,
         }))
     }
-    pub fn map(&self) -> &HashMap<String, Expr> {
+    pub fn map(&self) -> &HashMap<String, RuntimeValue> {
         &self.map
     }
-    pub fn mut_map(&mut self) -> &mut HashMap<String, Expr> {
+    pub fn mut_map(&mut self) -> &mut HashMap<String, RuntimeValue> {
         &mut self.map
     }
     pub fn parent(&self) -> Option<&Weak<RefCell<Environment>>> {
@@ -33,7 +34,7 @@ impl Environment {
     pub fn child(&self) -> Option<&Rc<RefCell<Environment>>> {
         self.child.as_ref()
     }
-    pub fn value(&self, key: impl Into<String>) -> Option<Expr> {
+    pub fn value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
         let key = key.into();
         if let Some(value) = self.map.get(&key) {
             Some(value.clone())
@@ -67,7 +68,11 @@ impl Environment {
     pub fn unwrap_mut(environment: &Rc<RefCell<Environment>>) -> RefMut<'_, Environment> {
         environment.deref().borrow_mut()
     }
-    pub fn insert(environment: &Rc<RefCell<Environment>>, key: impl Into<String>, value: Expr) {
+    pub fn insert(
+        environment: &Rc<RefCell<Environment>>,
+        key: impl Into<String>,
+        value: RuntimeValue,
+    ) {
         Environment::unwrap_mut(environment)
             .mut_map()
             .insert(key.into(), value);
@@ -75,17 +80,13 @@ impl Environment {
     pub fn get_value(
         environment: &Rc<RefCell<Environment>>,
         key: impl Into<String>,
-    ) -> Option<Expr> {
+    ) -> Option<RuntimeValue> {
         Environment::unwrap(environment).value(key)
     }
 }
 
 #[cfg(test)]
 mod environment_tests {
-    use pest::Span;
-
-    use crate::ast::expr::models::{Literal, LiteralPrimary, NumberLiteral, Primary, PrimaryExpr};
-
     use super::*;
 
     #[test]
@@ -104,39 +105,17 @@ mod environment_tests {
 
     #[test]
     fn propagates_value() {
-        let span = Span::new("", 0, 0).expect("Failed to create span.");
-
         let environment = Environment::new();
-        Environment::insert(
-            &environment,
-            "number",
-            PrimaryExpr {
-                span: span.into(),
-                primary: Primary::Literal(LiteralPrimary {
-                    span: span.into(),
-                    literal: Literal::Number(NumberLiteral {
-                        span: span.into(),
-                        value: 5.0,
-                    }),
-                }),
-            }
-            .into(),
-        );
+        Environment::insert(&environment, "number", RuntimeValue::Number(5.0));
 
         let child = Environment::add_empty_child(&environment);
 
-        if let Some(Expr::Primary(primary)) = Environment::get_value(&child, "number") {
-            if let PrimaryExpr {
-                primary:
-                    Primary::Literal(LiteralPrimary {
-                        literal: Literal::Number(NumberLiteral { value, .. }),
-                        ..
-                    }),
-                ..
-            } = *primary
-            {
-                assert_eq!(value, 5.0);
-            }
+        let value = Environment::get_value(&child, "number")
+            .expect("Could not find propagated value from parent environment");
+
+        match value {
+            RuntimeValue::Number(num) => assert_eq!(num, 5.0),
+            _ => panic!("Propagated value has incorrect type"),
         }
     }
 }

@@ -6,19 +6,20 @@ use crate::{
     environment::Environment,
 };
 
+#[derive(Clone, Debug)]
 pub enum RuntimeValue {
     Number(f32),
     Boolean(bool),
     String(String),
-    None,
+    Identifier(String),
+    Object(HashMap<String, RuntimeValue>),
     Lambda {
         parameters: ParameterBodyDfn,
         body: BlockStmt,
         closure: Rc<RefCell<Environment>>,
     },
+    None,
     Context,
-    Object(HashMap<String, RuntimeValue>),
-    Identifier(String),
 }
 
 pub trait Evaluable {
