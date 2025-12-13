@@ -28,7 +28,10 @@
       "settings": {
         "rust-analyzer.checkOnSave.enable": true,
         "rust-analyzer.check.command": "clippy",
-        "rust-analyzer.cargo.features": "all",
+        "rust-analyzer.cargo.targetDir": "/home/vscode/.cache/fabulist/target",
+        "rust-analyzer.cargo.extraEnv": {
+          "CARGO_TARGET_DIR": "/home/vscode/.cache/fabulist/target"
+        },
         "pestIdeTools.alwaysUsedRuleNames": [
           "story",
           "WHITESPACE"
