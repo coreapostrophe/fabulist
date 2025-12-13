@@ -27,7 +27,10 @@ impl Evaluable for ObjectDfn {
                 Ok((key.clone(), value))
             })
             .collect::<Result<HashMap<String, RuntimeValue>, RuntimeError>>()
-            .map(RuntimeValue::Object)
+            .map(|properties| RuntimeValue::Object {
+                properties,
+                span: self.span.clone(),
+            })
     }
 }
 

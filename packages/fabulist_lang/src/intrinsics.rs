@@ -22,7 +22,10 @@ impl NumberIntrinsics {
         }
 
         match &args[0] {
-            RuntimeValue::Number(n) => Ok(RuntimeValue::String(n.to_string())),
+            RuntimeValue::Number { value: n, .. } => Ok(RuntimeValue::String {
+                value: n.to_string(),
+                span: span.clone(),
+            }),
             _ => Err(RuntimeError::TypeMismatch {
                 expected: "Number".to_string(),
                 got: args[0].type_name(),

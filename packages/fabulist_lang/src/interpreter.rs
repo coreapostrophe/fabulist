@@ -9,17 +9,32 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub enum RuntimeValue {
-    Number(f32),
-    Boolean(bool),
-    String(String),
-    Object(HashMap<String, RuntimeValue>),
+    Number {
+        value: f32,
+        span: OwnedSpan,
+    },
+    Boolean {
+        value: bool,
+        span: OwnedSpan,
+    },
+    String {
+        value: String,
+        span: OwnedSpan,
+    },
+    Object {
+        properties: HashMap<String, RuntimeValue>,
+        span: OwnedSpan,
+    },
     Lambda {
         parameters: ParameterBodyDfn,
         body: BlockStmt,
         closure: Rc<RefCell<Environment>>,
     },
     NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> Result<RuntimeValue, RuntimeError>),
-    Identifier(String),
+    Identifier {
+        name: String,
+        span: OwnedSpan,
+    },
     None,
     Context,
 }
@@ -27,11 +42,11 @@ pub enum RuntimeValue {
 impl RuntimeValue {
     pub fn type_name(&self) -> String {
         match self {
-            RuntimeValue::Number(_) => "Number".to_string(),
-            RuntimeValue::Boolean(_) => "Boolean".to_string(),
-            RuntimeValue::String(_) => "String".to_string(),
-            RuntimeValue::Identifier(_) => "Identifier".to_string(),
-            RuntimeValue::Object(_) => "Object".to_string(),
+            RuntimeValue::Number { .. } => "Number".to_string(),
+            RuntimeValue::Boolean { .. } => "Boolean".to_string(),
+            RuntimeValue::String { .. } => "String".to_string(),
+            RuntimeValue::Identifier { .. } => "Identifier".to_string(),
+            RuntimeValue::Object { .. } => "Object".to_string(),
             RuntimeValue::Lambda { .. } => "Lambda".to_string(),
             RuntimeValue::NativeFunction(_) => "NativeFunction".to_string(),
             RuntimeValue::None => "None".to_string(),

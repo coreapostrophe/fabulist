@@ -106,7 +106,14 @@ mod environment_tests {
     #[test]
     fn propagates_value() {
         let environment = Environment::new();
-        Environment::insert(&environment, "number", RuntimeValue::Number(5.0));
+        Environment::insert(
+            &environment,
+            "number",
+            RuntimeValue::Number {
+                value: 5.0,
+                span: Default::default(),
+            },
+        );
 
         let child = Environment::add_empty_child(&environment);
 
@@ -114,7 +121,7 @@ mod environment_tests {
             .expect("Could not find propagated value from parent environment");
 
         match value {
-            RuntimeValue::Number(num) => assert_eq!(num, 5.0),
+            RuntimeValue::Number { value: num, .. } => assert_eq!(num, 5.0),
             _ => panic!("Propagated value has incorrect type"),
         }
     }

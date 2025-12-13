@@ -2,9 +2,9 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     ast::expr::models::{
-        BooleanLiteral, CallExpr, ContextPrimitive, Expr, GroupingPrimitive, IdentifierPrimitive,
-        LambdaPrimitive, Literal, LiteralPrimary, MemberExpr, NoneLiteral, NumberLiteral,
-        ObjectPrimitive, PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive,
+        BinaryExpr, BooleanLiteral, CallExpr, ContextPrimitive, Expr, GroupingPrimitive,
+        IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary, MemberExpr, NoneLiteral,
+        NumberLiteral, ObjectPrimitive, PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive,
         PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryOperator,
     },
     context::Context,
@@ -22,7 +22,10 @@ impl Evaluable for NumberLiteral {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::Number(self.value))
+        Ok(RuntimeValue::Number {
+            value: self.value,
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -34,7 +37,10 @@ impl Evaluable for BooleanLiteral {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::Boolean(self.value))
+        Ok(RuntimeValue::Boolean {
+            value: self.value,
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -46,7 +52,10 @@ impl Evaluable for StringLiteral {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::String(self.value.clone()))
+        Ok(RuntimeValue::String {
+            value: self.value.clone(),
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -111,7 +120,10 @@ impl Evaluable for IdentifierPrimitive {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::Identifier(self.name.clone()))
+        Ok(RuntimeValue::Identifier {
+            name: self.name.clone(),
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -247,20 +259,30 @@ impl Evaluable for StandardUnary {
     ) -> Self::Output {
         match self.operator {
             UnaryOperator::Negation => {
-                let RuntimeValue::Number(runtime_value) =
-                    self.right.evaluate(environment, context)?
+                let RuntimeValue::Number {
+                    value: runtime_value,
+                    ..
+                } = self.right.evaluate(environment, context)?
                 else {
                     return Err(RuntimeError::UnaryNegationNonNumber(self.span.clone()));
                 };
-                Ok(RuntimeValue::Number(-runtime_value))
+                Ok(RuntimeValue::Number {
+                    value: -runtime_value,
+                    span: self.span.clone(),
+                })
             }
             UnaryOperator::Not => {
-                let RuntimeValue::Boolean(runtime_value) =
-                    self.right.evaluate(environment, context)?
+                let RuntimeValue::Boolean {
+                    value: runtime_value,
+                    ..
+                } = self.right.evaluate(environment, context)?
                 else {
                     return Err(RuntimeError::UnaryNotNonBoolean(self.span.clone()));
                 };
-                Ok(RuntimeValue::Boolean(!runtime_value))
+                Ok(RuntimeValue::Boolean {
+                    value: !runtime_value,
+                    span: self.span.clone(),
+                })
             }
         }
     }
@@ -302,6 +324,11 @@ impl Evaluable for CallExpr {
         context: &mut Context,
     ) -> Self::Output {
         let callee = self.callee.evaluate(environment, context)?;
+
+        if self.argument_body.is_none() {
+            return Ok(callee);
+        }
+
         let args = self
             .argument_body
             .as_ref()
@@ -327,28 +354,28 @@ impl Evaluable for CallExpr {
                 let return_value = body.evaluate(&new_env, context)?;
                 Ok(return_value)
             }
-            RuntimeValue::Identifier(ident_name) => {
-                match Environment::get_value(environment, &ident_name) {
-                    Some(RuntimeValue::Lambda {
-                        parameters,
-                        body,
-                        closure,
-                    }) => {
-                        let new_env = Environment::add_empty_child(&closure);
+            RuntimeValue::Identifier {
+                name: ident_name, ..
+            } => match Environment::get_value(environment, &ident_name) {
+                Some(RuntimeValue::Lambda {
+                    parameters,
+                    body,
+                    closure,
+                }) => {
+                    let new_env = Environment::add_empty_child(&closure);
 
-                        if let Some(params) = parameters.parameters.as_ref() {
-                            for (param, arg) in params.iter().zip(args.iter()) {
-                                Environment::insert(&new_env, param.name.clone(), arg.clone());
-                            }
+                    if let Some(params) = parameters.parameters.as_ref() {
+                        for (param, arg) in params.iter().zip(args.iter()) {
+                            Environment::insert(&new_env, param.name.clone(), arg.clone());
                         }
-
-                        let return_value = body.evaluate(&new_env, context)?;
-                        Ok(return_value)
                     }
-                    Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())?),
-                    _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+
+                    let return_value = body.evaluate(&new_env, context)?;
+                    Ok(return_value)
                 }
-            }
+                Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())?),
+                _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+            },
             _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
         }
     }
@@ -364,20 +391,27 @@ impl Evaluable for MemberExpr {
     ) -> Self::Output {
         let left_value = self.left.evaluate(environment, context)?;
 
+        if self.members.is_empty() {
+            return Ok(left_value);
+        }
+
         self.members
             .iter()
             .try_fold(left_value, |current_value, member| {
                 let injected_env = match &current_value {
-                    RuntimeValue::Number(_) => {
+                    RuntimeValue::Number { .. } => {
                         Some(NumberIntrinsics::inject_intrinsics(environment))
                     }
-                    RuntimeValue::Boolean(_) => {
+                    RuntimeValue::Boolean { .. } => {
                         Some(BooleanIntrinsics::inject_intrinsics(environment))
                     }
-                    RuntimeValue::String(_) => {
+                    RuntimeValue::String { .. } => {
                         Some(StringIntrinsics::inject_intrinsics(environment))
                     }
-                    RuntimeValue::Object(obj_map) => {
+                    RuntimeValue::Object {
+                        properties: obj_map,
+                        ..
+                    } => {
                         let injected_env = ObjectIntrinsics::inject_intrinsics(environment);
 
                         for (key, value) in obj_map.iter() {
@@ -394,5 +428,27 @@ impl Evaluable for MemberExpr {
                     None => member.evaluate(environment, context),
                 }
             })
+    }
+}
+
+impl Evaluable for BinaryExpr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        let left_value = self.left.evaluate(environment, context)?;
+
+        let Some(_operator) = &self.operator else {
+            return Ok(left_value);
+        };
+
+        let Some(_right_expr) = &self.right else {
+            return Ok(left_value);
+        };
+
+        todo!()
     }
 }
