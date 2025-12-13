@@ -24,7 +24,8 @@
         "tamasfe.even-better-toml",
         "pest.pest-ide-tools",
         "DavidAnson.vscode-markdownlint",
-        "donjayamanne.githistory"
+        "donjayamanne.githistory",
+        "redhat.vscode-yaml"
       ],
       "settings": {
         "rust-analyzer.checkOnSave.enable": true,
