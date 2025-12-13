@@ -2,15 +2,16 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     ast::expr::models::{
-        BinaryExpr, BooleanLiteral, CallExpr, ContextPrimitive, Expr, GroupingPrimitive,
-        IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary, MemberExpr, NoneLiteral,
-        NumberLiteral, ObjectPrimitive, PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive,
-        PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryOperator,
+        BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive, Expr,
+        GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary,
+        MemberExpr, NoneLiteral, NumberLiteral, ObjectPrimitive, PassUnary, PathPrimitive, Primary,
+        PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryExpr,
+        UnaryOperator,
     },
     context::Context,
     environment::Environment,
     error::RuntimeError,
-    interpreter::{Evaluable, RuntimeValue},
+    interpreter::{runtime_value::RuntimeValue, Evaluable},
     intrinsics::{BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics},
 };
 
@@ -67,7 +68,9 @@ impl Evaluable for NoneLiteral {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::None)
+        Ok(RuntimeValue::None {
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -139,6 +142,7 @@ impl Evaluable for LambdaPrimitive {
             parameters: self.parameters.clone(),
             body: self.block_stmt.clone(),
             closure: environment.clone(),
+            span: self.span.clone(),
         })
     }
 }
@@ -163,7 +167,9 @@ impl Evaluable for ContextPrimitive {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::Context)
+        Ok(RuntimeValue::Context {
+            span: self.span.clone(),
+        })
     }
 }
 
@@ -183,18 +189,6 @@ impl Evaluable for Primitive {
             Primitive::Path(path) => path.evaluate(environment, context),
             Primitive::Context(ctx) => ctx.evaluate(environment, context),
         }
-    }
-}
-
-impl Evaluable for Expr {
-    type Output = Result<RuntimeValue, RuntimeError>;
-
-    fn evaluate(
-        &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
-    ) -> Self::Output {
-        todo!()
     }
 }
 
@@ -315,6 +309,18 @@ impl Evaluable for Unary {
     }
 }
 
+impl Evaluable for UnaryExpr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.unary.evaluate(environment, context)
+    }
+}
+
 impl Evaluable for CallExpr {
     type Output = Result<RuntimeValue, RuntimeError>;
 
@@ -342,6 +348,7 @@ impl Evaluable for CallExpr {
                 parameters,
                 body,
                 closure,
+                ..
             } => {
                 let new_env = Environment::add_empty_child(&closure);
 
@@ -361,6 +368,7 @@ impl Evaluable for CallExpr {
                     parameters,
                     body,
                     closure,
+                    ..
                 }) => {
                     let new_env = Environment::add_empty_child(&closure);
 
@@ -441,14 +449,71 @@ impl Evaluable for BinaryExpr {
     ) -> Self::Output {
         let left_value = self.left.evaluate(environment, context)?;
 
-        let Some(_operator) = &self.operator else {
+        let Some(operator) = &self.operator else {
             return Ok(left_value);
         };
 
-        let Some(_right_expr) = &self.right else {
+        let Some(right_expr) = &self.right else {
             return Ok(left_value);
         };
 
-        todo!()
+        let right_value = right_expr.evaluate(environment, context)?;
+
+        match operator {
+            BinaryOperator::Addition => left_value + right_value,
+            BinaryOperator::Subtraction => left_value - right_value,
+            BinaryOperator::Multiply => left_value * right_value,
+            BinaryOperator::Divide => left_value / right_value,
+            BinaryOperator::EqualEqual => Ok(RuntimeValue::Boolean {
+                value: left_value == right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::NotEqual => Ok(RuntimeValue::Boolean {
+                value: left_value != right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::GreaterThan => Ok(RuntimeValue::Boolean {
+                value: left_value > right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::GreaterEqual => Ok(RuntimeValue::Boolean {
+                value: left_value >= right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::LessThan => Ok(RuntimeValue::Boolean {
+                value: left_value < right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::LessEqual => Ok(RuntimeValue::Boolean {
+                value: left_value <= right_value,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::And => Ok(RuntimeValue::Boolean {
+                value: left_value.to_bool()? && right_value.to_bool()?,
+                span: self.span.clone(),
+            }),
+            BinaryOperator::Or => Ok(RuntimeValue::Boolean {
+                value: left_value.to_bool()? || right_value.to_bool()?,
+                span: self.span.clone(),
+            }),
+        }
+    }
+}
+
+impl Evaluable for Expr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match self {
+            Expr::Primary(primary_expr) => primary_expr.evaluate(environment, context),
+            Expr::Unary(unary_expr) => unary_expr.evaluate(environment, context),
+            Expr::Call(call_expr) => call_expr.evaluate(environment, context),
+            Expr::Member(member_expr) => member_expr.evaluate(environment, context),
+            Expr::Binary(binary_expr) => binary_expr.evaluate(environment, context),
+        }
     }
 }

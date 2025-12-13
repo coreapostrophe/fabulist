@@ -5,7 +5,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::interpreter::RuntimeValue;
+use crate::interpreter::runtime_value::RuntimeValue;
 
 #[derive(Debug)]
 pub struct Environment {

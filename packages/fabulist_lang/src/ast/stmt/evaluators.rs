@@ -5,7 +5,7 @@ use crate::{
     context::Context,
     environment::Environment,
     error::RuntimeError,
-    interpreter::{Evaluable, RuntimeValue},
+    interpreter::{runtime_value::RuntimeValue, Evaluable},
 };
 
 impl Evaluable for BlockStmt {

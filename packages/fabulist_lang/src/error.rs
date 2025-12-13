@@ -74,4 +74,14 @@ pub enum RuntimeError {
         got: String,
         span: OwnedSpan,
     },
+    #[error("Cannot cast value to boolean.")]
+    CannotCastToBoolean(OwnedSpan),
+    #[error("Cannot cast value to number.")]
+    CannotCastToNumber(OwnedSpan),
+    #[error("Cannot parse string `{value}` to number.")]
+    CannotParseStringToNumber { value: String, span: OwnedSpan },
+    #[error("Invalid multiplication operation: {message}")]
+    InvalidMultiplication { message: String, span: OwnedSpan },
+    #[error("Invalid division operation: {message}")]
+    InvalidDivision { message: String, span: OwnedSpan },
 }

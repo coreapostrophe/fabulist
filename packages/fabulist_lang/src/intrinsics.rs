@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::{
     environment::Environment,
     error::{OwnedSpan, RuntimeError},
-    interpreter::RuntimeValue,
+    interpreter::runtime_value::RuntimeValue,
 };
 
 pub struct NumberIntrinsics;
