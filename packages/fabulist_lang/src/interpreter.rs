@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
@@ -16,6 +16,9 @@ pub enum RuntimeValue {
         body: BlockStmt,
         closure: Rc<RefCell<Environment>>,
     },
+    Context,
+    Object(HashMap<String, RuntimeValue>),
+    Identifier(String),
 }
 
 pub trait Evaluable {

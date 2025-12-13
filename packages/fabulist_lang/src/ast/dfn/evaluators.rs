@@ -2,24 +2,32 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     ast::{
-        dfn::models::{ObjectDfn, ParameterBodyDfn},
-        expr::models::{Expr, IdentifierPrimitive},
+        dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
+        expr::models::IdentifierPrimitive,
     },
     context::Context,
     environment::Environment,
     error::RuntimeError,
-    interpreter::Evaluable,
+    interpreter::{Evaluable, RuntimeValue},
 };
 
 impl Evaluable for ObjectDfn {
-    type Output = Result<HashMap<String, Expr>, RuntimeError>;
+    type Output = Result<RuntimeValue, RuntimeError>;
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
     ) -> Self::Output {
-        Ok(self.object.clone())
+        self.object
+            .clone()
+            .into_iter()
+            .map(|(key, expr)| {
+                let value = expr.evaluate(environment, context)?;
+                Ok((key.clone(), value))
+            })
+            .collect::<Result<HashMap<String, RuntimeValue>, RuntimeError>>()
+            .map(RuntimeValue::Object)
     }
 }
 
@@ -32,5 +40,24 @@ impl Evaluable for ParameterBodyDfn {
         _context: &mut Context,
     ) -> Self::Output {
         Ok(self.parameters.clone())
+    }
+}
+
+impl Evaluable for ArgumentBodyDfn {
+    type Output = Result<Option<Vec<RuntimeValue>>, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match &self.arguments {
+            Some(args) => args
+                .iter()
+                .map(|arg| arg.evaluate(environment, context))
+                .collect::<Result<Vec<RuntimeValue>, RuntimeError>>()
+                .map(Some),
+            None => Ok(None),
+        }
     }
 }

@@ -1,9 +1,11 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     ast::expr::models::{
-        BooleanLiteral, Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal,
-        NoneLiteral, NumberLiteral, ObjectPrimitive, PathPrimitive, StringLiteral,
+        BooleanLiteral, CallExpr, ContextPrimitive, Expr, GroupingPrimitive, IdentifierPrimitive,
+        LambdaPrimitive, Literal, LiteralPrimary, NoneLiteral, NumberLiteral, ObjectPrimitive,
+        PassUnary, PathPrimitive, Primary, PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary,
+        StringLiteral, Unary, UnaryOperator,
     },
     context::Context,
     environment::Environment,
@@ -77,7 +79,7 @@ impl Evaluable for Literal {
 }
 
 impl Evaluable for ObjectPrimitive {
-    type Output = Result<HashMap<String, Expr>, RuntimeError>;
+    type Output = Result<RuntimeValue, RuntimeError>;
 
     fn evaluate(
         &self,
@@ -108,7 +110,7 @@ impl Evaluable for IdentifierPrimitive {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        Ok(RuntimeValue::String(self.name.clone()))
+        Ok(RuntimeValue::Identifier(self.name.clone()))
     }
 }
 
@@ -136,11 +138,161 @@ impl Evaluable for PathPrimitive {
         _environment: &Rc<RefCell<Environment>>,
         _context: &mut Context,
     ) -> Self::Output {
-        todo!()
+        todo!("Defer module implementations for last")
+    }
+}
+
+impl Evaluable for ContextPrimitive {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
+        Ok(RuntimeValue::Context)
+    }
+}
+
+impl Evaluable for Primitive {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match self {
+            Primitive::Object(obj) => obj.evaluate(environment, context),
+            Primitive::Grouping(group) => group.evaluate(environment, context),
+            Primitive::Identifier(ident) => ident.evaluate(environment, context),
+            Primitive::Lambda(lambda) => lambda.evaluate(environment, context),
+            Primitive::Path(path) => path.evaluate(environment, context),
+            Primitive::Context(ctx) => ctx.evaluate(environment, context),
+        }
     }
 }
 
 impl Evaluable for Expr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
+        todo!()
+    }
+}
+
+impl Evaluable for LiteralPrimary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.literal.evaluate(environment, context)
+    }
+}
+
+impl Evaluable for PrimitivePrimary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.primitive.evaluate(environment, context)
+    }
+}
+
+impl Evaluable for Primary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match self {
+            Primary::Literal(lit_primary) => lit_primary.evaluate(environment, context),
+            Primary::Primitive(prim_primary) => prim_primary.evaluate(environment, context),
+        }
+    }
+}
+
+impl Evaluable for PrimaryExpr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.primary.evaluate(environment, context)
+    }
+}
+
+impl Evaluable for StandardUnary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match self.operator {
+            UnaryOperator::Negation => {
+                let RuntimeValue::Number(runtime_value) =
+                    self.right.evaluate(environment, context)?
+                else {
+                    return Err(RuntimeError::UnaryNegationNonNumber(self.span.clone()));
+                };
+                Ok(RuntimeValue::Number(-runtime_value))
+            }
+            UnaryOperator::Not => {
+                let RuntimeValue::Boolean(runtime_value) =
+                    self.right.evaluate(environment, context)?
+                else {
+                    return Err(RuntimeError::UnaryNotNonBoolean(self.span.clone()));
+                };
+                Ok(RuntimeValue::Boolean(!runtime_value))
+            }
+        }
+    }
+}
+
+impl Evaluable for PassUnary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.expr.evaluate(environment, context)
+    }
+}
+
+impl Evaluable for Unary {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        match self {
+            Unary::Standard(standard_unary) => standard_unary.evaluate(environment, context),
+            Unary::Pass(pass_unary) => pass_unary.evaluate(environment, context),
+        }
+    }
+}
+
+impl Evaluable for CallExpr {
     type Output = Result<RuntimeValue, RuntimeError>;
 
     fn evaluate(
