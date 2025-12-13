@@ -6,3 +6,5 @@ RUN rustup update stable && \
     rustup component add rustfmt clippy rust-src
 
 USER vscode
+
+RUN cargo install pest-language-server
