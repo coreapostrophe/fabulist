@@ -344,7 +344,7 @@ impl Evaluable for CallExpr {
                         let return_value = body.evaluate(&new_env, context)?;
                         Ok(return_value)
                     }
-                    Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())),
+                    Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())?),
                     _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
                 }
             }

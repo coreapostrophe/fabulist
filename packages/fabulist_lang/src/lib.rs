@@ -10,4 +10,5 @@ pub mod context;
 pub mod environment;
 pub mod error;
 pub mod interpreter;
+pub mod intrinsics;
 pub mod parser;

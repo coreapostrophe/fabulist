@@ -60,4 +60,18 @@ pub enum RuntimeError {
     UnaryNotNonBoolean(OwnedSpan),
     #[error("Value is not callable.")]
     CallNonCallable(OwnedSpan),
+    #[error("Error when calling intrinsic function: `{0}`.")]
+    IntrinsicFunctionError(String, OwnedSpan),
+    #[error("Argument type mismatch. Expected `{expected}`, got `{got}`.")]
+    InvalidArgumentsCount {
+        expected: usize,
+        got: usize,
+        span: OwnedSpan,
+    },
+    #[error("Argument type mismatch. Expected `{expected}`, got `{got}`.")]
+    TypeMismatch {
+        expected: String,
+        got: String,
+        span: OwnedSpan,
+    },
 }

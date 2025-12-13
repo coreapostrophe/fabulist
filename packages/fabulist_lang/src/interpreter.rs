@@ -4,7 +4,7 @@ use crate::{
     ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
     context::Context,
     environment::Environment,
-    error::OwnedSpan,
+    error::{OwnedSpan, RuntimeError},
 };
 
 #[derive(Clone, Debug)]
@@ -19,9 +19,25 @@ pub enum RuntimeValue {
         body: BlockStmt,
         closure: Rc<RefCell<Environment>>,
     },
-    NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> RuntimeValue),
+    NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> Result<RuntimeValue, RuntimeError>),
     None,
     Context,
+}
+
+impl RuntimeValue {
+    pub fn type_name(&self) -> String {
+        match self {
+            RuntimeValue::Number(_) => "Number".to_string(),
+            RuntimeValue::Boolean(_) => "Boolean".to_string(),
+            RuntimeValue::String(_) => "String".to_string(),
+            RuntimeValue::Identifier(_) => "Identifier".to_string(),
+            RuntimeValue::Object(_) => "Object".to_string(),
+            RuntimeValue::Lambda { .. } => "Lambda".to_string(),
+            RuntimeValue::NativeFunction(_) => "NativeFunction".to_string(),
+            RuntimeValue::None => "None".to_string(),
+            RuntimeValue::Context => "Context".to_string(),
+        }
+    }
 }
 
 pub trait Evaluable {
