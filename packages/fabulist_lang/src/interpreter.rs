@@ -2,6 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
+    context::Context,
     environment::Environment,
 };
 
@@ -19,7 +20,11 @@ pub enum RuntimeValue {
 
 pub trait Evaluable {
     type Output;
-    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output;
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output;
 }
 
 pub struct FabulistInterpreter;

@@ -5,6 +5,7 @@ use crate::{
         BooleanLiteral, Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal,
         NoneLiteral, NumberLiteral, ObjectPrimitive, PathPrimitive, StringLiteral,
     },
+    context::Context,
     environment::Environment,
     error::RuntimeError,
     interpreter::{Evaluable, RuntimeValue},
@@ -13,7 +14,11 @@ use crate::{
 impl Evaluable for NumberLiteral {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::Number(self.value))
     }
 }
@@ -21,7 +26,11 @@ impl Evaluable for NumberLiteral {
 impl Evaluable for BooleanLiteral {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::Boolean(self.value))
     }
 }
@@ -29,7 +38,11 @@ impl Evaluable for BooleanLiteral {
 impl Evaluable for StringLiteral {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::String(self.value.clone()))
     }
 }
@@ -37,7 +50,11 @@ impl Evaluable for StringLiteral {
 impl Evaluable for NoneLiteral {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::None)
     }
 }
@@ -45,12 +62,16 @@ impl Evaluable for NoneLiteral {
 impl Evaluable for Literal {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
         match self {
-            Literal::Number(num_lit) => num_lit.evaluate(environment),
-            Literal::Boolean(bool_lit) => bool_lit.evaluate(environment),
-            Literal::String(str_lit) => str_lit.evaluate(environment),
-            Literal::None(none_lit) => none_lit.evaluate(environment),
+            Literal::Number(num_lit) => num_lit.evaluate(environment, context),
+            Literal::Boolean(bool_lit) => bool_lit.evaluate(environment, context),
+            Literal::String(str_lit) => str_lit.evaluate(environment, context),
+            Literal::None(none_lit) => none_lit.evaluate(environment, context),
         }
     }
 }
@@ -58,23 +79,35 @@ impl Evaluable for Literal {
 impl Evaluable for ObjectPrimitive {
     type Output = Result<HashMap<String, Expr>, RuntimeError>;
 
-    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output {
-        self.object.evaluate(environment)
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.object.evaluate(environment, context)
     }
 }
 
 impl Evaluable for GroupingPrimitive {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output {
-        self.expr.evaluate(environment)
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        self.expr.evaluate(environment, context)
     }
 }
 
 impl Evaluable for IdentifierPrimitive {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::String(self.name.clone()))
     }
 }
@@ -82,7 +115,11 @@ impl Evaluable for IdentifierPrimitive {
 impl Evaluable for LambdaPrimitive {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         Ok(RuntimeValue::Lambda {
             parameters: self.parameters.clone(),
             body: self.block_stmt.clone(),
@@ -94,7 +131,11 @@ impl Evaluable for LambdaPrimitive {
 impl Evaluable for PathPrimitive {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         todo!()
     }
 }
@@ -102,7 +143,11 @@ impl Evaluable for PathPrimitive {
 impl Evaluable for Expr {
     type Output = Result<RuntimeValue, RuntimeError>;
 
-    fn evaluate(&self, _environment: &Rc<RefCell<Environment>>) -> Self::Output {
+    fn evaluate(
+        &self,
+        _environment: &Rc<RefCell<Environment>>,
+        _context: &mut Context,
+    ) -> Self::Output {
         todo!()
     }
 }
