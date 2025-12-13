@@ -58,12 +58,6 @@ pub enum RuntimeError {
     UnaryNegationNonNumber(OwnedSpan),
     #[error("Unary operator `not` can only be applied to booleans.")]
     UnaryNotNonBoolean(OwnedSpan),
-    #[error("Cannot call intrinsic number method on non-number value.")]
-    InvalidNumberIntrinsicCall(OwnedSpan),
-    #[error("Intrinsic methods can only be called on valid structures.")]
-    InvalidIntrinsicCall(OwnedSpan),
-    #[error("Missing intrinsic method call implementation.")]
-    MissingIntrinsicCall(OwnedSpan),
-    #[error("Attempted to call a non-callable value.")]
+    #[error("Value is not callable.")]
     CallNonCallable(OwnedSpan),
 }

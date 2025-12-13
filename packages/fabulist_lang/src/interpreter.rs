@@ -4,6 +4,7 @@ use crate::{
     ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
     context::Context,
     environment::Environment,
+    error::OwnedSpan,
 };
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,7 @@ pub enum RuntimeValue {
         body: BlockStmt,
         closure: Rc<RefCell<Environment>>,
     },
+    NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> RuntimeValue),
     None,
     Context,
 }

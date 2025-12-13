@@ -326,6 +326,28 @@ impl Evaluable for CallExpr {
                 let return_value = body.evaluate(&new_env, context)?;
                 Ok(return_value)
             }
+            RuntimeValue::Identifier(ident_name) => {
+                match Environment::get_value(environment, &ident_name) {
+                    Some(RuntimeValue::Lambda {
+                        parameters,
+                        body,
+                        closure,
+                    }) => {
+                        let new_env = Environment::add_empty_child(&closure);
+
+                        if let Some(params) = parameters.parameters.as_ref() {
+                            for (param, arg) in params.iter().zip(args.iter()) {
+                                Environment::insert(&new_env, param.name.clone(), arg.clone());
+                            }
+                        }
+
+                        let return_value = body.evaluate(&new_env, context)?;
+                        Ok(return_value)
+                    }
+                    Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())),
+                    _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+                }
+            }
             _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
         }
     }
