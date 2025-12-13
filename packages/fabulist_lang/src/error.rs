@@ -52,8 +52,8 @@ impl ParsingError {
 
 #[derive(thiserror::Error, Debug)]
 pub enum RuntimeError {
-    #[error("Invalid identifier in  lambda parameters.")]
-    LambdaParameters(OwnedSpan),
+    #[error("Invalid identifier.")]
+    InvalidIdentifier(OwnedSpan),
     #[error("Unary operator `negation` can only be applied to numbers.")]
     UnaryNegationNonNumber(OwnedSpan),
     #[error("Unary operator `not` can only be applied to booleans.")]
