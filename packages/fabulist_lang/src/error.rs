@@ -14,7 +14,7 @@ pub struct OwnedSpan {
 impl From<Span<'_>> for OwnedSpan {
     fn from(value: Span<'_>) -> Self {
         OwnedSpan {
-            input: value.get_input().to_string(),
+            input: value.as_str().to_string(),
             start: value.start(),
             end: value.end(),
         }

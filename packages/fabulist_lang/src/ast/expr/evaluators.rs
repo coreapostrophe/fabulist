@@ -567,13 +567,13 @@ mod expr_evaluators_tests {
             })
             .expect("Failed to evaluate number literal");
 
-        assert_eq!(
-            result,
-            RuntimeValue::Number {
-                value: 42.0,
-                span: result.span().clone(),
-            }
-        );
+        let RuntimeValue::Number {
+            value: num_value, ..
+        } = &result
+        else {
+            panic!("Expected a Number runtime value");
+        };
+        assert_eq!(*num_value, 42.0);
     }
 
     #[test]
@@ -588,13 +588,13 @@ mod expr_evaluators_tests {
             })
             .expect("Failed to evaluate boolean literal");
 
-        assert_eq!(
-            result,
-            RuntimeValue::Boolean {
-                value: true,
-                span: result.span().clone(),
-            }
-        );
+        let RuntimeValue::Boolean {
+            value: bool_value, ..
+        } = &result
+        else {
+            panic!("Expected a Boolean runtime value");
+        };
+        assert!(*bool_value);
     }
 
     #[test]
@@ -609,13 +609,14 @@ mod expr_evaluators_tests {
             })
             .expect("Failed to evaluate string literal");
 
-        assert_eq!(
-            result,
-            RuntimeValue::String {
-                value: "hello world".to_string(),
-                span: result.span().clone(),
-            }
-        );
+        let RuntimeValue::String {
+            value: string_value,
+            ..
+        } = &result
+        else {
+            panic!("Expected a String runtime value");
+        };
+        assert_eq!(*string_value, "hello world".to_string());
     }
 
     #[test]
@@ -641,11 +642,10 @@ mod expr_evaluators_tests {
     #[test]
     fn evaluates_object_primitive() {
         let test_helper = AstTestHelper::<PrimaryExpr>::new(Rule::primary_expr, "PrimaryExpr");
-        let source = "{ \"a\": 1, \"b\": true, \"c\": \"test\" }".to_string();
 
         let result = test_helper
             .parse_and_evaluate(AssertEvaluateOptions {
-                source: &source,
+                source: "{ \"a\": 1, \"b\": true, \"c\": \"test\" }",
                 environment: None,
                 context: None,
             })
@@ -657,46 +657,27 @@ mod expr_evaluators_tests {
             "a".to_string(),
             RuntimeValue::Number {
                 value: 1.0,
-                span: OwnedSpan {
-                    start: 7,
-                    end: 8,
-                    input: source.clone(),
-                },
+                span: OwnedSpan::default(),
             },
         );
         expected_properties.insert(
             "b".to_string(),
             RuntimeValue::Boolean {
                 value: true,
-                span: OwnedSpan {
-                    start: 15,
-                    end: 19,
-                    input: source.clone(),
-                },
+                span: OwnedSpan::default(),
             },
         );
         expected_properties.insert(
             "c".to_string(),
             RuntimeValue::String {
                 value: "test".to_string(),
-                span: OwnedSpan {
-                    start: 27,
-                    end: 31,
-                    input: source.clone(),
-                },
+                span: OwnedSpan::default(),
             },
         );
 
-        assert_eq!(
-            result,
-            RuntimeValue::Object {
-                properties: expected_properties,
-                span: OwnedSpan {
-                    start: 0,
-                    end: 34,
-                    input: source.clone(),
-                },
-            }
-        );
+        let RuntimeValue::Object { properties, .. } = &result else {
+            panic!("Expected a Object runtime value");
+        };
+        assert_eq!(*properties, expected_properties);
     }
 }

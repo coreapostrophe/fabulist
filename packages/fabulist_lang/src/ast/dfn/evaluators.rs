@@ -89,6 +89,7 @@ mod dfn_evaluators_tests {
             .expect("Expected Some parameters");
 
         assert_eq!(result.len(), 3);
+
         assert_eq!(result[0].name, "param1");
         assert_eq!(result[1].name, "param2");
         assert_eq!(result[2].name, "param3");
@@ -109,27 +110,21 @@ mod dfn_evaluators_tests {
             .expect("Expected Some arguments");
 
         assert_eq!(result.len(), 3);
-        assert_eq!(
-            result[0],
-            RuntimeValue::Number {
-                value: 42.0,
-                span: result[0].span().clone()
-            }
-        );
-        assert_eq!(
-            result[1],
-            RuntimeValue::String {
-                value: "hello".to_string(),
-                span: result[1].span().clone()
-            }
-        );
-        assert_eq!(
-            result[2],
-            RuntimeValue::Boolean {
-                value: true,
-                span: result[2].span().clone()
-            }
-        );
+
+        let RuntimeValue::Number { value: arg_1, .. } = &result[0] else {
+            panic!("Expected first argument to be a Number");
+        };
+        assert_eq!(*arg_1, 42.0);
+
+        let RuntimeValue::String { value: arg_2, .. } = &result[1] else {
+            panic!("Expected second argument to be a String");
+        };
+        assert_eq!(*arg_2, "hello".to_string());
+
+        let RuntimeValue::Boolean { value: arg_3, .. } = &result[2] else {
+            panic!("Expected third argument to be a Boolean");
+        };
+        assert!(*arg_3);
     }
 
     #[test]
@@ -148,32 +143,30 @@ mod dfn_evaluators_tests {
             panic!("Expected RuntimeValue::Object");
         };
 
-        let key1_value = properties.get("key1").expect("Failed to get key1");
         assert_eq!(properties.len(), 3);
-        assert_eq!(
-            key1_value,
-            &RuntimeValue::Number {
-                value: 100.0,
-                span: key1_value.span().clone(),
-            }
-        );
 
-        let key2_value = properties.get("key2").expect("Failed to get key2");
-        assert_eq!(
-            key2_value,
-            &RuntimeValue::String {
-                value: "value".to_string(),
-                span: key2_value.span().clone(),
-            }
-        );
+        let RuntimeValue::Number {
+            value: key1_value, ..
+        } = properties.get("key1").expect("Failed to get key1")
+        else {
+            panic!("Expected key1 to be a Number");
+        };
+        assert_eq!(*key1_value, 100.0);
 
-        let key3_value = properties.get("key3").expect("Failed to get key3");
-        assert_eq!(
-            key3_value,
-            &RuntimeValue::Boolean {
-                value: false,
-                span: key3_value.span().clone()
-            }
-        );
+        let RuntimeValue::String {
+            value: key2_value, ..
+        } = properties.get("key2").expect("Failed to get key2")
+        else {
+            panic!("Expected key2 to be a String");
+        };
+        assert_eq!(*key2_value, "value".to_string());
+
+        let RuntimeValue::Boolean {
+            value: key3_value, ..
+        } = properties.get("key3").expect("Failed to get key3")
+        else {
+            panic!("Expected key3 to be a Boolean");
+        };
+        assert!(!*key3_value);
     }
 }

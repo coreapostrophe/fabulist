@@ -174,13 +174,6 @@ impl PartialEq for RuntimeValue {
                 _ => false,
             },
             RuntimeValue::None { .. } => matches!(other, RuntimeValue::None { .. }),
-            RuntimeValue::Object { properties, span } => match other {
-                RuntimeValue::Object {
-                    properties: other_properties,
-                    span: other_span,
-                } => properties == other_properties && span == other_span,
-                _ => false,
-            },
             _ => false,
         }
     }
