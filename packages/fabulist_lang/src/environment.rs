@@ -7,6 +7,8 @@ use std::{
 
 use crate::interpreter::runtime_value::RuntimeValue;
 
+pub type RuntimeEnvironment = Rc<RefCell<Environment>>;
+
 #[derive(Debug)]
 pub struct Environment {
     map: HashMap<String, RuntimeValue>,

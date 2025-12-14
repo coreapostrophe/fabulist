@@ -1,11 +1,15 @@
 #[cfg(test)]
-use std::{cell::RefCell, fmt::Debug, marker::PhantomData, rc::Rc};
+use std::{fmt::Debug, marker::PhantomData};
 
 #[cfg(test)]
 use pest::iterators::Pair;
 
 #[cfg(test)]
-use crate::{context::Context, environment::Environment, interpreter::Evaluable, parser::Rule};
+use crate::{
+    environment::{Environment, RuntimeEnvironment},
+    interpreter::Evaluable,
+    parser::Rule,
+};
 
 pub mod decl;
 pub mod dfn;
@@ -65,8 +69,8 @@ where
 #[cfg(test)]
 pub struct AssertEvaluateOptions<'a> {
     pub source: &'a str,
-    pub environment: Option<Rc<RefCell<Environment>>>,
-    pub context: Option<Context>,
+    pub environment: Option<RuntimeEnvironment>,
+    pub context: Option<RuntimeEnvironment>,
 }
 
 #[cfg(test)]
@@ -80,8 +84,8 @@ where
     {
         let ast = self.assert_parse(options.source);
         let environment = options.environment.unwrap_or_else(Environment::new);
-        let mut context = options.context.unwrap_or_default();
+        let context = options.context.unwrap_or_else(Environment::new);
 
-        ast.evaluate(&environment, &mut context)
+        ast.evaluate(&environment, &context)
     }
 }

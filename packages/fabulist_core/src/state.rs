@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use fabulist_lang::context::Context;
-
-use crate::story::reference::{DialogueIndex, ListKey};
+use crate::story::{
+    context::Context,
+    reference::{DialogueIndex, ListKey},
+};
 
 #[derive(Debug)]
 pub struct State {

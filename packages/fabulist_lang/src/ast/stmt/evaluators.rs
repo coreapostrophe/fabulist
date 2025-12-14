@@ -1,9 +1,6 @@
-use std::{cell::RefCell, rc::Rc};
-
 use crate::{
     ast::stmt::models::{BlockStmt, ElseClause, GotoStmt, IfStmt, LetStmt, Stmt},
-    context::Context,
-    environment::Environment,
+    environment::{Environment, RuntimeEnvironment},
     error::RuntimeError,
     interpreter::{runtime_value::RuntimeValue, Evaluable},
 };
@@ -13,8 +10,8 @@ impl Evaluable for BlockStmt {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let block_environment = Environment::add_empty_child(environment);
 
@@ -33,8 +30,8 @@ impl Evaluable for IfStmt {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let condition = self.condition.evaluate(environment, context)?;
 
@@ -58,8 +55,8 @@ impl Evaluable for LetStmt {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let identifier = &self.identifier.evaluate(environment, context)?;
         let value = self.value.evaluate(environment, context)?;
@@ -83,8 +80,8 @@ impl Evaluable for GotoStmt {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         todo!()
     }
@@ -95,8 +92,8 @@ impl Evaluable for Stmt {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Stmt::Block(block_stmt) => block_stmt.evaluate(environment, context),

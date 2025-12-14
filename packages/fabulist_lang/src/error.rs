@@ -86,4 +86,6 @@ pub enum RuntimeError {
     InvalidDivision { message: String, span: OwnedSpan },
     #[error("Invalid assignment to non-identifier.")]
     AssignmentToNonIdentifier(OwnedSpan),
+    #[error("Invalid memory access.")]
+    InvalidMemoryAccess(OwnedSpan),
 }

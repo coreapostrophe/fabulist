@@ -1,6 +1,4 @@
-use fabulist_lang::context::Context;
-
-use crate::story::reference::ListKey;
+use crate::story::{context::Context, reference::ListKey};
 
 pub type QueryNextClosure = fn(&Context) -> ListKey<String>;
 pub trait QueryNext {

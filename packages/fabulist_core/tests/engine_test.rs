@@ -3,6 +3,7 @@ use fabulist_core::{
     state::State,
     story::{
         character::CharacterBuilder,
+        context::ContextValue,
         part::{
             choice::ChoiceBuilder,
             dialogue::{DialogueBuilder, DialogueLayout},
@@ -12,7 +13,6 @@ use fabulist_core::{
         StoryBuilder,
     },
 };
-use fabulist_lang::context::ContextValue;
 
 #[test]
 pub fn engine_runs_basic_story() {

@@ -13,6 +13,7 @@ use self::{
 };
 
 pub mod character;
+pub mod context;
 pub mod part;
 pub mod reference;
 pub mod resource;

@@ -6,7 +6,6 @@
 // Copyright (c) 2025 Daveren John Reyes Cordero
 
 pub mod ast;
-pub mod context;
 pub mod environment;
 pub mod error;
 pub mod interpreter;

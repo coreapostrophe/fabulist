@@ -1,12 +1,11 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use crate::{
     ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         expr::models::IdentifierPrimitive,
     },
-    context::Context,
-    environment::Environment,
+    environment::RuntimeEnvironment,
     error::RuntimeError,
     interpreter::{runtime_value::RuntimeValue, Evaluable},
 };
@@ -16,8 +15,8 @@ impl Evaluable for ObjectDfn {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.object
             .clone()
@@ -39,8 +38,8 @@ impl Evaluable for ParameterBodyDfn {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(self.parameters.clone())
     }
@@ -51,8 +50,8 @@ impl Evaluable for ArgumentBodyDfn {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match &self.arguments {
             Some(args) => args

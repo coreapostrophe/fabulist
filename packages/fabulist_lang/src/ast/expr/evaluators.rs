@@ -1,5 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
-
 use crate::{
     ast::expr::models::{
         AssignmentExpr, BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive,
@@ -8,8 +6,7 @@ use crate::{
         PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryExpr,
         UnaryOperator,
     },
-    context::Context,
-    environment::Environment,
+    environment::{Environment, RuntimeEnvironment},
     error::RuntimeError,
     interpreter::{runtime_value::RuntimeValue, Evaluable},
     intrinsics::{BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics},
@@ -20,8 +17,8 @@ impl Evaluable for NumberLiteral {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Number {
             value: self.value,
@@ -35,8 +32,8 @@ impl Evaluable for BooleanLiteral {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Boolean {
             value: self.value,
@@ -50,8 +47,8 @@ impl Evaluable for StringLiteral {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::String {
             value: self.value.clone(),
@@ -65,8 +62,8 @@ impl Evaluable for NoneLiteral {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::None {
             span: self.span.clone(),
@@ -79,8 +76,8 @@ impl Evaluable for Literal {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Literal::Number(num_lit) => num_lit.evaluate(environment, context),
@@ -96,8 +93,8 @@ impl Evaluable for ObjectPrimitive {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.object.evaluate(environment, context)
     }
@@ -108,8 +105,8 @@ impl Evaluable for GroupingPrimitive {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.expr.evaluate(environment, context)
     }
@@ -120,8 +117,8 @@ impl Evaluable for IdentifierPrimitive {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Identifier {
             name: self.name.clone(),
@@ -135,8 +132,8 @@ impl Evaluable for LambdaPrimitive {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Lambda {
             parameters: self.parameters.clone(),
@@ -152,8 +149,8 @@ impl Evaluable for PathPrimitive {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         todo!("Defer module implementations for last")
     }
@@ -164,8 +161,8 @@ impl Evaluable for ContextPrimitive {
 
     fn evaluate(
         &self,
-        _environment: &Rc<RefCell<Environment>>,
-        _context: &mut Context,
+        _environment: &RuntimeEnvironment,
+        _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Context {
             span: self.span.clone(),
@@ -178,8 +175,8 @@ impl Evaluable for Primitive {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Primitive::Object(obj) => obj.evaluate(environment, context),
@@ -197,8 +194,8 @@ impl Evaluable for LiteralPrimary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.literal.evaluate(environment, context)
     }
@@ -209,8 +206,8 @@ impl Evaluable for PrimitivePrimary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.primitive.evaluate(environment, context)
     }
@@ -221,8 +218,8 @@ impl Evaluable for Primary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Primary::Literal(lit_primary) => lit_primary.evaluate(environment, context),
@@ -236,8 +233,8 @@ impl Evaluable for PrimaryExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.primary.evaluate(environment, context)
     }
@@ -248,8 +245,8 @@ impl Evaluable for StandardUnary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self.operator {
             UnaryOperator::Negation => {
@@ -287,8 +284,8 @@ impl Evaluable for PassUnary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.expr.evaluate(environment, context)
     }
@@ -299,8 +296,8 @@ impl Evaluable for Unary {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Unary::Standard(standard_unary) => standard_unary.evaluate(environment, context),
@@ -314,8 +311,8 @@ impl Evaluable for UnaryExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         self.unary.evaluate(environment, context)
     }
@@ -326,8 +323,8 @@ impl Evaluable for CallExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let callee = self.callee.evaluate(environment, context)?;
 
@@ -394,8 +391,8 @@ impl Evaluable for MemberExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let left_value = self.left.evaluate(environment, context)?;
 
@@ -407,15 +404,11 @@ impl Evaluable for MemberExpr {
             .iter()
             .try_fold(left_value, |current_value, member| {
                 let injected_env = match &current_value {
-                    RuntimeValue::Number { .. } => {
-                        Some(NumberIntrinsics::inject_intrinsics(environment))
-                    }
+                    RuntimeValue::Number { .. } => NumberIntrinsics::inject_intrinsics(environment),
                     RuntimeValue::Boolean { .. } => {
-                        Some(BooleanIntrinsics::inject_intrinsics(environment))
+                        BooleanIntrinsics::inject_intrinsics(environment)
                     }
-                    RuntimeValue::String { .. } => {
-                        Some(StringIntrinsics::inject_intrinsics(environment))
-                    }
+                    RuntimeValue::String { .. } => StringIntrinsics::inject_intrinsics(environment),
                     RuntimeValue::Object {
                         properties: obj_map,
                         ..
@@ -426,15 +419,13 @@ impl Evaluable for MemberExpr {
                             Environment::insert(&injected_env, key.clone(), value.clone());
                         }
 
-                        Some(injected_env)
+                        injected_env
                     }
-                    _ => None,
+                    RuntimeValue::Context { .. } => context.clone(),
+                    other => return Err(RuntimeError::InvalidMemoryAccess(other.span().clone())),
                 };
 
-                match injected_env {
-                    Some(injected_env) => member.evaluate(&injected_env, context),
-                    None => member.evaluate(environment, context),
-                }
+                member.evaluate(&injected_env, context)
             })
     }
 }
@@ -444,8 +435,8 @@ impl Evaluable for BinaryExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let left_value = self.left.evaluate(environment, context)?;
 
@@ -505,8 +496,8 @@ impl Evaluable for AssignmentExpr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         let left = self.left.evaluate(environment, context)?;
 
@@ -531,8 +522,8 @@ impl Evaluable for Expr {
 
     fn evaluate(
         &self,
-        environment: &Rc<RefCell<Environment>>,
-        context: &mut Context,
+        environment: &RuntimeEnvironment,
+        context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self {
             Expr::Primary(primary_expr) => primary_expr.evaluate(environment, context),
