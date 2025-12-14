@@ -84,4 +84,6 @@ pub enum RuntimeError {
     InvalidMultiplication { message: String, span: OwnedSpan },
     #[error("Invalid division operation: {message}")]
     InvalidDivision { message: String, span: OwnedSpan },
+    #[error("Invalid assignment to non-identifier.")]
+    AssignmentToNonIdentifier(OwnedSpan),
 }

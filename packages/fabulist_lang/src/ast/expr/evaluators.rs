@@ -2,8 +2,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     ast::expr::models::{
-        BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive, Expr,
-        GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary,
+        AssignmentExpr, BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive,
+        Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary,
         MemberExpr, NoneLiteral, NumberLiteral, ObjectPrimitive, PassUnary, PathPrimitive, Primary,
         PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryExpr,
         UnaryOperator,
@@ -500,6 +500,32 @@ impl Evaluable for BinaryExpr {
     }
 }
 
+impl Evaluable for AssignmentExpr {
+    type Output = Result<RuntimeValue, RuntimeError>;
+
+    fn evaluate(
+        &self,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> Self::Output {
+        let left = self.left.evaluate(environment, context)?;
+
+        let Some(right) = &self.right else {
+            return Ok(left);
+        };
+
+        let RuntimeValue::Identifier { name, .. } = left else {
+            return Err(RuntimeError::AssignmentToNonIdentifier(self.span.clone()));
+        };
+
+        Environment::insert(environment, name, right.evaluate(environment, context)?);
+
+        Ok(RuntimeValue::None {
+            span: self.span.clone(),
+        })
+    }
+}
+
 impl Evaluable for Expr {
     type Output = Result<RuntimeValue, RuntimeError>;
 
@@ -514,6 +540,7 @@ impl Evaluable for Expr {
             Expr::Call(call_expr) => call_expr.evaluate(environment, context),
             Expr::Member(member_expr) => member_expr.evaluate(environment, context),
             Expr::Binary(binary_expr) => binary_expr.evaluate(environment, context),
+            Expr::Assignment(assignment_expr) => assignment_expr.evaluate(environment, context),
         }
     }
 }

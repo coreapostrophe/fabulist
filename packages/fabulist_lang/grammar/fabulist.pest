@@ -64,6 +64,7 @@ term_operator       = { "-" | "+" }
 comparison_operator = { ">=" | "<=" | ">" | "<" }
 equality_operator   = { "!=" | "==" }
 logical_operator    = { "&&" | "||" }
+assignment_operator = { "=" }
 
 // DEFINITIONS
 arguments      = { expression ~ ("," ~ expression)* }
@@ -83,7 +84,8 @@ term_expr       = { #left = factor_expr ~ (#operator = term_operator ~ #right = 
 comparison_expr = { #left = term_expr ~ (#operator = comparison_operator ~ #right = term_expr)* }
 equality_expr   = { #left = comparison_expr ~ (#operator = equality_operator ~ #right = comparison_expr)* }
 logical_expr    = { #left = equality_expr ~ (#operator = logical_operator ~ #right = equality_expr)* }
-expression      = { logical_expr }
+assignment_expr = { #left = logical_expr ~ (assignment_operator ~ #right = assignment_expr)? }
+expression      = { assignment_expr }
 
 // DECLARATIONS
 character_decl = { "[" ~ #name = identifier ~ "]" }

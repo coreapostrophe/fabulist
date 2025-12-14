@@ -53,6 +53,9 @@ pub enum Expr {
 
     #[production(span: OwnedSpan, left: Expr, operator: Option<BinaryOperator>, right: Option<Expr>)]
     Binary(Box<BinaryExpr>),
+
+    #[production(span: OwnedSpan, left: Expr, right: Option<Expr>)]
+    Assignment(Box<AssignmentExpr>),
 }
 
 #[derive(SyntaxTree, Debug, Clone)]
@@ -138,6 +141,14 @@ mod expr_tests {
         test_helper.assert_parse("5/ 2");
         test_helper.assert_parse("5 *2");
         test_helper.assert_parse("5== 2");
+    }
+
+    #[test]
+    fn parses_assignment_expr() {
+        let test_helper =
+            AstTestHelper::<AssignmentExpr>::new(Rule::assignment_expr, "AssignmentExpr");
+        test_helper.assert_parse("a = 5");
+        test_helper.assert_parse("b = a + 2");
     }
 
     #[test]

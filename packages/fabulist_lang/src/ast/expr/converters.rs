@@ -3,6 +3,7 @@ use pest::iterators::Pair;
 use crate::{
     ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
+        expr::models::AssignmentExpr,
         stmt::models::BlockStmt,
     },
     error::ParsingError,
@@ -82,6 +83,7 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             Rule::unary_expr => Ok(UnaryExpr::try_from(value)?.into()),
             Rule::call_expr => Ok(CallExpr::try_from(value)?.into()),
             Rule::member_expr => Ok(MemberExpr::try_from(value)?.into()),
+            Rule::assignment_expr => Ok(AssignmentExpr::try_from(value)?.into()),
 
             Rule::logical_expr
             | Rule::equality_expr
@@ -234,6 +236,33 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
     }
 }
 
+impl TryFrom<Pair<'_, Rule>> for AssignmentExpr {
+    type Error = pest::error::Error<Rule>;
+    fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let value_span = value.as_span();
+        let mut inner = value.into_inner();
+
+        let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
+            Some(left) => Expr::try_from(left),
+            None => Err(ParsingError::map_custom_error(
+                value_span.into(),
+                "Expected a target expression",
+            )),
+        }?;
+
+        let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
+            Some(right) => Some(Expr::try_from(right)?),
+            None => None,
+        };
+
+        Ok(AssignmentExpr {
+            span: value_span.into(),
+            left,
+            right,
+        })
+    }
+}
+
 impl From<PrimaryExpr> for Expr {
     fn from(value: PrimaryExpr) -> Self {
         Expr::Primary(Box::new(value))
@@ -270,6 +299,15 @@ impl From<BinaryExpr> for Expr {
             return value.left;
         }
         Expr::Binary(Box::new(value))
+    }
+}
+
+impl From<AssignmentExpr> for Expr {
+    fn from(value: AssignmentExpr) -> Self {
+        if value.right.is_none() {
+            return value.left;
+        }
+        Expr::Assignment(Box::new(value))
     }
 }
 
