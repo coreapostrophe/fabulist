@@ -1,9 +1,9 @@
 //! Statement evaluators that execute within a runtime environment.
 use crate::{
-    ast::stmt::models::{BlockStmt, ElseClause, ExprStmt, GotoStmt, IfStmt, LetStmt, Stmt},
-    environment::{Environment, RuntimeEnvironment},
     error::RuntimeError,
+    interpreter::environment::{Environment, RuntimeEnvironment},
     interpreter::{runtime_value::RuntimeValue, Evaluable},
+    parser::ast::stmt::models::{BlockStmt, ElseClause, ExprStmt, GotoStmt, IfStmt, LetStmt, Stmt},
 };
 
 impl Evaluable for BlockStmt {
@@ -133,13 +133,13 @@ impl Evaluable for Stmt {
 #[cfg(test)]
 mod stmt_evaluators_tests {
     use crate::{
-        ast::{
+        error::OwnedSpan,
+        interpreter::environment::Environment,
+        interpreter::runtime_value::RuntimeValue,
+        parser::ast::{
             stmt::models::{BlockStmt, ExprStmt, LetStmt},
             AssertEvaluateOptions, AstTestHelper,
         },
-        environment::Environment,
-        error::OwnedSpan,
-        interpreter::runtime_value::RuntimeValue,
         parser::Rule,
     };
 

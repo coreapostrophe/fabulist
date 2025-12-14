@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
 use fabulist_lang::{
-    ast::{
+    interpreter::environment::Environment,
+    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    parser::ast::{
         decl::models::{
             ChoiceElement, DialogueElement, Element, ElementDecl, NarrationElement, PartDecl,
             QuoteDecl,
         },
         story::StoryAst,
     },
-    environment::Environment,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
 };
 
 use crate::{

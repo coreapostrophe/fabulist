@@ -2,9 +2,9 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
-    ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
-    environment::Environment,
     error::{OwnedSpan, RuntimeError},
+    interpreter::environment::Environment,
+    parser::ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
 };
 
 pub mod overrides;

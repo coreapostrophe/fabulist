@@ -2,13 +2,13 @@
 use std::collections::HashMap;
 
 use crate::{
-    ast::{
+    error::RuntimeError,
+    interpreter::environment::RuntimeEnvironment,
+    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    parser::ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         expr::models::IdentifierPrimitive,
     },
-    environment::RuntimeEnvironment,
-    error::RuntimeError,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
 };
 
 impl Evaluable for ObjectDfn {
@@ -68,7 +68,7 @@ impl Evaluable for ArgumentBodyDfn {
 #[cfg(test)]
 mod dfn_evaluators_tests {
     use crate::{
-        ast::{AssertEvaluateOptions, AstTestHelper},
+        parser::ast::{AssertEvaluateOptions, AstTestHelper},
         parser::Rule,
     };
 

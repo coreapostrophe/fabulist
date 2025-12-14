@@ -1,16 +1,18 @@
 //! Expression evaluators that turn AST nodes into runtime values.
 use crate::{
-    ast::expr::models::{
+    error::RuntimeError,
+    interpreter::environment::{Environment, RuntimeEnvironment},
+    interpreter::intrinsics::{
+        BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics,
+    },
+    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    parser::ast::expr::models::{
         AssignmentExpr, BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive,
         Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary,
         MemberExpr, NoneLiteral, NumberLiteral, ObjectPrimitive, PassUnary, PathPrimitive, Primary,
         PrimaryExpr, Primitive, PrimitivePrimary, StandardUnary, StringLiteral, Unary, UnaryExpr,
         UnaryOperator,
     },
-    environment::{Environment, RuntimeEnvironment},
-    error::RuntimeError,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
-    intrinsics::{BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics},
 };
 
 impl Evaluable for NumberLiteral {
@@ -580,11 +582,10 @@ impl Evaluable for Expr {
 
 #[cfg(test)]
 mod expr_evaluators_tests {
-
     use crate::{
-        ast::{expr::models::PrimaryExpr, AssertEvaluateOptions, AstTestHelper},
         error::OwnedSpan,
         interpreter::runtime_value::RuntimeValue,
+        parser::ast::{expr::models::PrimaryExpr, AssertEvaluateOptions, AstTestHelper},
         parser::Rule,
     };
 

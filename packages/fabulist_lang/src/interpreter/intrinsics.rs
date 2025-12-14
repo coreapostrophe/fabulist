@@ -2,8 +2,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    environment::Environment,
     error::{OwnedSpan, RuntimeError},
+    interpreter::environment::Environment,
     interpreter::runtime_value::RuntimeValue,
 };
 

@@ -3,9 +3,11 @@
 use pest::Parser;
 
 use crate::{
-    ast::story::StoryAst,
     error::{OwnedSpan, ParsingError},
+    parser::ast::story::StoryAst,
 };
+
+pub mod ast;
 
 #[derive(pest_derive::Parser)]
 #[grammar = "../grammar/fabulist.pest"]
@@ -34,7 +36,9 @@ impl FabulistParser {
     /// let ast = FabulistParser::parse(source).expect("parse failure");
     /// assert_eq!(ast.parts.len(), 1);
     /// ```
-    pub fn parse(source: impl Into<String>) -> Result<StoryAst, Box<pest::error::Error<Rule>>> {
+    pub fn parse(
+        source: impl Into<String>,
+    ) -> Result<ast::story::StoryAst, Box<pest::error::Error<Rule>>> {
         let source = source.into();
         let mut pairs = GrammarParser::parse(Rule::story, &source).map_err(Box::new)?;
 

@@ -48,9 +48,6 @@
 //! [`FabulistParser`]: crate::parser::FabulistParser
 //! [`fabulist_core`]: https://crates.io/crates/fabulist_core
 
-pub mod ast;
-pub mod environment;
 pub mod error;
 pub mod interpreter;
-pub mod intrinsics;
 pub mod parser;

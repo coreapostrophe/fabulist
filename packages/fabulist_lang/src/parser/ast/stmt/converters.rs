@@ -2,11 +2,11 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::{
+    error::ParsingError,
+    parser::ast::{
         expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
         stmt::models::ExprStmt,
     },
-    error::ParsingError,
     parser::Rule,
 };
 
@@ -205,7 +205,7 @@ impl TryFrom<Pair<'_, Rule>> for GotoStmt {
 
 #[cfg(test)]
 mod stmt_converters_tests {
-    use crate::{ast::AstTestHelper, parser::Rule};
+    use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;
 

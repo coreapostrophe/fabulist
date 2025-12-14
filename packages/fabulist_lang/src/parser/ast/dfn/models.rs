@@ -1,7 +1,7 @@
 //! AST nodes for reusable definition fragments (objects, parameters, arguments).
 use crate::{
-    ast::expr::models::{Expr, IdentifierPrimitive},
     error::OwnedSpan,
+    parser::ast::expr::models::{Expr, IdentifierPrimitive},
 };
 use fabulist_derive::SyntaxTree;
 use std::collections::HashMap;

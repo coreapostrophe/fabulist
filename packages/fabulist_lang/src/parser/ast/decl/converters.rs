@@ -2,11 +2,11 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::{
+    error::ParsingError,
+    parser::ast::{
         dfn::models::ObjectDfn,
         expr::models::{IdentifierPrimitive, Literal, StringLiteral},
     },
-    error::ParsingError,
     parser::Rule,
 };
 
@@ -241,7 +241,7 @@ impl TryFrom<Pair<'_, Rule>> for Element {
 
 #[cfg(test)]
 mod decl_converters_tests {
-    use crate::{ast::AstTestHelper, parser::Rule};
+    use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;
 

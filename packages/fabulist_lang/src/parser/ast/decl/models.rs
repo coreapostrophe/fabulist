@@ -1,7 +1,7 @@
 //! AST nodes for declarations: quotes, dialogues, parts, modules, and metadata.
 use crate::{
-    ast::{dfn::models::ObjectDfn, expr::models::IdentifierPrimitive},
     error::OwnedSpan,
+    parser::ast::{dfn::models::ObjectDfn, expr::models::IdentifierPrimitive},
 };
 use fabulist_derive::SyntaxTree;
 

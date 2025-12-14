@@ -1,6 +1,9 @@
 //! Traits that make AST nodes evaluable in a runtime environment.
-use crate::environment::RuntimeEnvironment;
 
+use crate::interpreter::environment::RuntimeEnvironment;
+
+pub mod environment;
+pub mod intrinsics;
 pub mod runtime_value;
 
 /// Contract for AST nodes that can be evaluated by the interpreter.

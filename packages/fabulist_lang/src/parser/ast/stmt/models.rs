@@ -1,7 +1,7 @@
 //! Statement AST nodes (blocks, conditionals, bindings, jumps, and expression statements).
 use crate::{
-    ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
     error::OwnedSpan,
+    parser::ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
 };
 use fabulist_derive::SyntaxTree;
 

@@ -36,7 +36,7 @@ impl Environment {
     /// # Examples
     ///
     /// ```rust
-    /// use fabulist_lang::environment::Environment;
+    /// use fabulist_lang::interpreter::environment::Environment;
     ///
     /// let env = Environment::new();
     /// assert!(Environment::get_child(&env).is_none());
@@ -84,7 +84,7 @@ impl Environment {
     /// # Examples
     ///
     /// ```rust
-    /// use fabulist_lang::environment::Environment;
+    /// use fabulist_lang::interpreter::environment::Environment;
     ///
     /// let env = Environment::new();
     /// let child = Environment::add_empty_child(&env);

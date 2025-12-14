@@ -7,7 +7,7 @@ use pest::iterators::Pair;
 
 #[cfg(test)]
 use crate::{
-    environment::{Environment, RuntimeEnvironment},
+    interpreter::environment::{Environment, RuntimeEnvironment},
     interpreter::Evaluable,
     parser::Rule,
 };

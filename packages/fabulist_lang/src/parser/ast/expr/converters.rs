@@ -2,12 +2,12 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::{
+    error::ParsingError,
+    parser::ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         expr::models::AssignmentExpr,
         stmt::models::BlockStmt,
     },
-    error::ParsingError,
     parser::Rule,
 };
 
@@ -573,7 +573,7 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
 
 #[cfg(test)]
 mod expr_converters_tests {
-    use crate::{ast::AstTestHelper, parser::Rule};
+    use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;
 

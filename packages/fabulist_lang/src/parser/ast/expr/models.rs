@@ -1,10 +1,10 @@
 //! Expression AST nodes and primitives.
 use crate::{
-    ast::{
+    error::OwnedSpan,
+    parser::ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         stmt::models::BlockStmt,
     },
-    error::OwnedSpan,
 };
 use fabulist_derive::SyntaxTree;
 

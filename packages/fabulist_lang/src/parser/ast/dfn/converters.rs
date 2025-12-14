@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use pest::iterators::Pair;
 
 use crate::{
-    ast::expr::models::{Expr, IdentifierPrimitive},
     error::ParsingError,
+    parser::ast::expr::models::{Expr, IdentifierPrimitive},
     parser::Rule,
 };
 
@@ -114,7 +114,7 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
 
 #[cfg(test)]
 mod dfn_converters_tests {
-    use crate::{ast::AstTestHelper, parser::Rule};
+    use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;
 

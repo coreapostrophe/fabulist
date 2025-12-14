@@ -42,7 +42,7 @@ impl TryFrom<Pair<'_, Rule>> for StoryAst {
 
 #[cfg(test)]
 mod story_tests {
-    use crate::ast::AstTestHelper;
+    use crate::parser::ast::AstTestHelper;
 
     use super::*;
 
