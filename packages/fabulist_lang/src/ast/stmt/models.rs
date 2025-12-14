@@ -23,4 +23,7 @@ pub enum Stmt {
 
     #[production(span: OwnedSpan, path: PathPrimitive)]
     Goto(Box<GotoStmt>),
+
+    #[production(span: OwnedSpan, value: Expr)]
+    Expr(Box<ExprStmt>),
 }

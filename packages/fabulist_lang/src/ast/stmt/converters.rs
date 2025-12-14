@@ -1,7 +1,10 @@
 use pest::iterators::Pair;
 
 use crate::{
-    ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
+    ast::{
+        expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
+        stmt::models::ExprStmt,
+    },
     error::ParsingError,
     parser::Rule,
 };
@@ -51,6 +54,12 @@ impl From<GotoStmt> for Stmt {
     }
 }
 
+impl From<ExprStmt> for Stmt {
+    fn from(value: ExprStmt) -> Self {
+        Self::Expr(Box::new(value))
+    }
+}
+
 impl TryFrom<Pair<'_, Rule>> for Stmt {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
@@ -64,11 +73,33 @@ impl TryFrom<Pair<'_, Rule>> for Stmt {
             Rule::if_stmt => Ok(IfStmt::try_from(value)?.into()),
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
+            Rule::expression_stmt => Ok(ExprStmt::try_from(value)?.into()),
             _ => Err(ParsingError::map_custom_error(
                 stmt_span.into(),
                 "Invalid statement",
             )),
         }
+    }
+}
+
+impl TryFrom<Pair<'_, Rule>> for ExprStmt {
+    type Error = pest::error::Error<Rule>;
+    fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let value_span = value.as_span();
+        let mut inner = value.into_inner();
+
+        let expr = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
+            Some(expression) => Expr::try_from(expression),
+            None => Err(ParsingError::map_custom_error(
+                value_span.into(),
+                "Expected expression",
+            )),
+        }?;
+
+        Ok(ExprStmt {
+            span: value_span.into(),
+            value: expr,
+        })
     }
 }
 

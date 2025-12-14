@@ -54,6 +54,8 @@ impl ParsingError {
 pub enum RuntimeError {
     #[error("Invalid identifier.")]
     InvalidIdentifier(OwnedSpan),
+    #[error("Identifier does not exist in environment.")]
+    IdentifierDoesNotExist(OwnedSpan),
     #[error("Unary operator `negation` can only be applied to numbers.")]
     UnaryNegationNonNumber(OwnedSpan),
     #[error("Unary operator `not` can only be applied to booleans.")]

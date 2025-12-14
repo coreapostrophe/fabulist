@@ -249,32 +249,56 @@ impl Evaluable for StandardUnary {
         context: &RuntimeEnvironment,
     ) -> Self::Output {
         match self.operator {
-            UnaryOperator::Negation => {
-                let RuntimeValue::Number {
+            UnaryOperator::Negation => match self.right.evaluate(environment, context)? {
+                RuntimeValue::Number {
                     value: runtime_value,
                     ..
-                } = self.right.evaluate(environment, context)?
-                else {
-                    return Err(RuntimeError::UnaryNegationNonNumber(self.span.clone()));
-                };
-                Ok(RuntimeValue::Number {
+                } => Ok(RuntimeValue::Number {
                     value: -runtime_value,
                     span: self.span.clone(),
-                })
-            }
-            UnaryOperator::Not => {
-                let RuntimeValue::Boolean {
+                }),
+                RuntimeValue::Identifier { name, span } => {
+                    let value = Environment::get_value(environment, &name)
+                        .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
+
+                    match value {
+                        RuntimeValue::Number {
+                            value: runtime_value,
+                            ..
+                        } => Ok(RuntimeValue::Number {
+                            value: -runtime_value,
+                            span: self.span.clone(),
+                        }),
+                        other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
+                    }
+                }
+                other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
+            },
+            UnaryOperator::Not => match self.right.evaluate(environment, context)? {
+                RuntimeValue::Boolean {
                     value: runtime_value,
                     ..
-                } = self.right.evaluate(environment, context)?
-                else {
-                    return Err(RuntimeError::UnaryNotNonBoolean(self.span.clone()));
-                };
-                Ok(RuntimeValue::Boolean {
+                } => Ok(RuntimeValue::Boolean {
                     value: !runtime_value,
                     span: self.span.clone(),
-                })
-            }
+                }),
+                RuntimeValue::Identifier { name, span } => {
+                    let value = Environment::get_value(environment, &name)
+                        .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
+
+                    match value {
+                        RuntimeValue::Boolean {
+                            value: runtime_value,
+                            ..
+                        } => Ok(RuntimeValue::Boolean {
+                            value: !runtime_value,
+                            span: self.span.clone(),
+                        }),
+                        other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
+                    }
+                }
+                other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
+            },
         }
     }
 }
@@ -438,7 +462,15 @@ impl Evaluable for BinaryExpr {
         environment: &RuntimeEnvironment,
         context: &RuntimeEnvironment,
     ) -> Self::Output {
-        let left_value = self.left.evaluate(environment, context)?;
+        let mut left_value = self.left.evaluate(environment, context)?;
+
+        if let RuntimeValue::Identifier { name, span } = &left_value {
+            if let Some(value) = Environment::get_value(environment, name) {
+                left_value = value;
+            } else {
+                return Err(RuntimeError::InvalidIdentifier(span.clone()));
+            }
+        }
 
         let Some(operator) = &self.operator else {
             return Ok(left_value);
@@ -448,7 +480,15 @@ impl Evaluable for BinaryExpr {
             return Ok(left_value);
         };
 
-        let right_value = right_expr.evaluate(environment, context)?;
+        let mut right_value = right_expr.evaluate(environment, context)?;
+
+        if let RuntimeValue::Identifier { name, span } = &right_value {
+            if let Some(value) = Environment::get_value(environment, name) {
+                right_value = value;
+            } else {
+                return Err(RuntimeError::InvalidIdentifier(span.clone()));
+            }
+        }
 
         match operator {
             BinaryOperator::Addition => left_value + right_value,
@@ -509,7 +549,8 @@ impl Evaluable for AssignmentExpr {
             return Err(RuntimeError::AssignmentToNonIdentifier(self.span.clone()));
         };
 
-        Environment::insert(environment, name, right.evaluate(environment, context)?);
+        let right_value = right.evaluate(environment, context)?;
+        Environment::assign(environment, name, right_value)?;
 
         Ok(RuntimeValue::None {
             span: self.span.clone(),

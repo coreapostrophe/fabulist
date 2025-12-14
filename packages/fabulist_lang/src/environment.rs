@@ -1,11 +1,14 @@
 use std::{
     cell::{Ref, RefCell, RefMut},
-    collections::HashMap,
+    collections::{hash_map::Entry, HashMap},
     ops::Deref,
     rc::{Rc, Weak},
 };
 
-use crate::interpreter::runtime_value::RuntimeValue;
+use crate::{
+    error::{OwnedSpan, RuntimeError},
+    interpreter::runtime_value::RuntimeValue,
+};
 
 pub type RuntimeEnvironment = Rc<RefCell<Environment>>;
 
@@ -24,19 +27,13 @@ impl Environment {
             child: None,
         }))
     }
-    pub fn map(&self) -> &HashMap<String, RuntimeValue> {
-        &self.map
-    }
-    pub fn mut_map(&mut self) -> &mut HashMap<String, RuntimeValue> {
+    fn mut_map(&mut self) -> &mut HashMap<String, RuntimeValue> {
         &mut self.map
     }
-    pub fn parent(&self) -> Option<&Weak<RefCell<Environment>>> {
-        self.parent.as_ref()
-    }
-    pub fn child(&self) -> Option<&Rc<RefCell<Environment>>> {
+    fn child(&self) -> Option<&Rc<RefCell<Environment>>> {
         self.child.as_ref()
     }
-    pub fn value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
+    fn value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
         let key = key.into();
         if let Some(value) = self.map.get(&key) {
             Some(value.clone())
@@ -49,7 +46,7 @@ impl Environment {
             None
         }
     }
-    pub fn set_parent(&mut self, environment: Weak<RefCell<Environment>>) {
+    fn set_parent(&mut self, environment: Weak<RefCell<Environment>>) {
         self.parent = Some(environment);
     }
     pub fn nest_child(parent: &Rc<RefCell<Environment>>, environment: &Rc<RefCell<Environment>>) {
@@ -84,6 +81,32 @@ impl Environment {
         key: impl Into<String>,
     ) -> Option<RuntimeValue> {
         Environment::unwrap(environment).value(key)
+    }
+    pub fn get_child(environment: &Rc<RefCell<Environment>>) -> Option<Rc<RefCell<Environment>>> {
+        Environment::unwrap(environment).child().cloned()
+    }
+    pub fn assign(
+        environment: &Rc<RefCell<Environment>>,
+        key: impl Into<String>,
+        value: RuntimeValue,
+    ) -> Result<(), RuntimeError> {
+        let key = key.into();
+        let mut env_ref = environment.deref().borrow_mut();
+
+        match env_ref.map.entry(key.clone()) {
+            Entry::Occupied(mut entry) => {
+                entry.insert(value);
+                Ok(())
+            }
+            Entry::Vacant(_) => {
+                if let Some(parent) = env_ref.parent.as_ref() {
+                    if let Some(rc_parent) = parent.upgrade() {
+                        return Environment::assign(&rc_parent, key, value);
+                    }
+                }
+                Err(RuntimeError::IdentifierDoesNotExist(OwnedSpan::default()))
+            }
+        }
     }
 }
 

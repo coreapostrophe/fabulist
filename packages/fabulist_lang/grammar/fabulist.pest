@@ -100,11 +100,12 @@ meta_decl      = { meta_keyword ~ object }
 mod_decl       = { mod_keyword ~ #path = string ~ as_keyword ~ identifier ~ ";" }
 
 // STATEMENT
-block_stmt = { "{" ~ statement* ~ "}" }
-let_stmt   = { let_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
-goto_stmt  = { goto_keyword ~ path ~ ";" }
-else_stmt  = { else_keyword ~ (if_stmt | block_stmt) }
-if_stmt    = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
-statement  = { block_stmt | let_stmt | if_stmt | goto_stmt }
+block_stmt      = { "{" ~ statement* ~ "}" }
+let_stmt        = { let_keyword ~ identifier ~ "=" ~ #value = expression ~ ";" }
+goto_stmt       = { goto_keyword ~ path ~ ";" }
+else_stmt       = { else_keyword ~ (if_stmt | block_stmt) }
+if_stmt         = { if_keyword ~ #condition = expression ~ block_stmt ~ else_stmt? }
+expression_stmt = { #value = expression ~ ";" }
+statement       = { block_stmt | let_stmt | if_stmt | goto_stmt | expression_stmt }
 
 story = { SOI ~ mod_decl* ~ meta_decl? ~ part_decl* ~ EOI }
