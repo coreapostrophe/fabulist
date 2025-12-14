@@ -1,6 +1,6 @@
 use fabulist_derive::ElementInternal;
 
-use crate::{engine::Progressive, error::Result, state::State, story::reference::ListKey};
+use crate::{engine::Progressive, error::EngineResult, state::State, story::reference::ListKey};
 
 use super::{
     actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure},
@@ -93,7 +93,7 @@ impl From<NarrationBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Narration {
-    type Output = Result<Option<ListKey<String>>>;
+    type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         if let Some(change_context_closure) = self.change_context {
             change_context_closure(state.mut_context());

@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::EngineResult,
     state::State,
     story::{reference::ListKey, Progressive},
 };
@@ -97,7 +97,7 @@ impl From<ChoiceBuilder> for Choice {
 }
 
 impl Progressive for Choice {
-    type Output = Result<Option<ListKey<String>>>;
+    type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         if let Some(change_context_closure) = self.change_context {
             change_context_closure(state.mut_context());

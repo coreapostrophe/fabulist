@@ -1,5 +1,4 @@
 //! Root AST node for a Fabulist source file.
-use pest::error::LineColLocation;
 use pest::iterators::Pair;
 
 use crate::parser::Rule;
@@ -9,8 +8,6 @@ use super::decl::models::{MetaDecl, ModuleDecl, PartDecl};
 /// Complete story AST containing module imports, metadata, and narrative parts.
 #[derive(Debug, Clone)]
 pub struct StoryAst {
-    /// Line/column reference for the `story` rule.
-    pub lcol: LineColLocation,
     /// `module` declarations collected in the file.
     pub module: Vec<ModuleDecl>,
     /// Optional `story { ... }` metadata block.
@@ -22,8 +19,6 @@ pub struct StoryAst {
 impl TryFrom<Pair<'_, Rule>> for StoryAst {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let fab_lcol = LineColLocation::from(value.as_span());
-
         let mut module: Vec<ModuleDecl> = Vec::new();
         let mut meta: Option<MetaDecl> = None;
         let mut parts: Vec<PartDecl> = Vec::new();
@@ -41,7 +36,6 @@ impl TryFrom<Pair<'_, Rule>> for StoryAst {
             module,
             meta,
             parts,
-            lcol: fab_lcol,
         })
     }
 }

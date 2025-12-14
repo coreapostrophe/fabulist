@@ -1,6 +1,6 @@
 use fabulist_core::{
     engine::Progressive,
-    error::Result,
+    error::EngineResult,
     story::{character::Character, resource::Inset},
 };
 use fabulist_derive::Element;
@@ -12,7 +12,7 @@ pub struct SampleElement {
 }
 
 impl Progressive for SampleElement {
-    type Output = Result<Option<String>>;
+    type Output = EngineResult<Option<String>>;
     fn next(
         &self,
         _state: &mut fabulist_core::state::State,
@@ -26,7 +26,7 @@ impl Progressive for SampleElement {
 pub struct SampleElementUnnamed(pub Inset<Character>);
 
 impl Progressive for SampleElementUnnamed {
-    type Output = Result<Option<String>>;
+    type Output = EngineResult<Option<String>>;
     fn next(
         &self,
         _state: &mut fabulist_core::state::State,

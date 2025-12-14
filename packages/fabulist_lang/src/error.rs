@@ -37,6 +37,9 @@ impl Add for OwnedSpan {
     }
 }
 
+/// Type alias for parsing errors.
+pub type PestParsingError = pest::error::Error<Rule>;
+
 /// Adapter for constructing custom pest errors from owned spans.
 pub struct ParsingError;
 

@@ -1,7 +1,7 @@
 use fabulist_derive::ElementInternal;
 
 use crate::{
-    error::{Error, Result},
+    error::{EngineError, EngineResult},
     story::{reference::ListKey, Progressive},
 };
 
@@ -54,19 +54,19 @@ impl From<SelectionBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Selection {
-    type Output = Result<Option<ListKey<String>>>;
+    type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut crate::state::State, choice_index: Option<usize>) -> Self::Output {
         if !self.0.is_empty() {
             let choice = match choice_index {
                 Some(choice_index) => match self.0.get(choice_index) {
                     Some(choice) => choice,
                     None => {
-                        return Err(Error::InvalidChoice {
+                        return Err(EngineError::InvalidChoice {
                             index: choice_index,
                         })
                     }
                 },
-                None => return Err(Error::ChoiceWasNotProvided),
+                None => return Err(EngineError::ChoiceWasNotProvided),
             };
             choice.next(state, choice_index)
         } else {

@@ -1,7 +1,7 @@
 use std::{borrow::BorrowMut, fmt::Debug};
 
 use crate::{
-    error::Result,
+    error::EngineResult,
     state::State,
     story::{reference::DialogueIndex, Story},
 };
@@ -40,12 +40,12 @@ where
     pub fn mut_story(&mut self) -> &mut Str {
         &mut self.story
     }
-    pub fn start(&mut self) -> Result<DialogueIndex> {
+    pub fn start(&mut self) -> EngineResult<DialogueIndex> {
         let start_key = self.story.borrow().start().cloned();
         self.state.borrow_mut().set_current_part(start_key);
         self.next(None)
     }
-    pub fn next(&mut self, choice_index: Option<usize>) -> Result<DialogueIndex> {
+    pub fn next(&mut self, choice_index: Option<usize>) -> EngineResult<DialogueIndex> {
         Story::next(
             self.story.borrow_mut(),
             self.state.borrow_mut(),

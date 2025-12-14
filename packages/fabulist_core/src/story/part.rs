@@ -1,5 +1,5 @@
 use crate::{
-    error::{Error, Result},
+    error::{EngineError, EngineResult},
     state::State,
 };
 
@@ -18,7 +18,7 @@ pub mod selection;
 
 pub trait Element: Progressive + InterpInset {}
 
-pub type PartElement = dyn Element<Output = Result<Option<ListKey<String>>>>;
+pub type PartElement = dyn Element<Output = EngineResult<Option<ListKey<String>>>>;
 
 #[derive(Debug)]
 pub struct Part {
@@ -36,19 +36,19 @@ impl Part {
     pub fn mut_elements(&mut self) -> &mut Vec<Box<PartElement>> {
         &mut self.elements
     }
-    pub fn element(&self, index: usize) -> Result<&PartElement> {
+    pub fn element(&self, index: usize) -> EngineResult<&PartElement> {
         match self.elements.get(index) {
             Some(element) => Ok(element.as_ref()),
-            None => Err(Error::ElementDoesNotExist {
+            None => Err(EngineError::ElementDoesNotExist {
                 dialogue_index: index,
                 part_key: self.id.clone(),
             }),
         }
     }
-    pub fn mut_element(&mut self, index: usize) -> Result<&mut Box<PartElement>> {
+    pub fn mut_element(&mut self, index: usize) -> EngineResult<&mut Box<PartElement>> {
         match self.elements.get_mut(index) {
             Some(element) => Ok(element),
-            None => Err(Error::ElementDoesNotExist {
+            None => Err(EngineError::ElementDoesNotExist {
                 dialogue_index: index,
                 part_key: self.id.clone(),
             }),
@@ -99,7 +99,7 @@ impl InterpInset for Part {
 }
 
 impl Progressive for Part {
-    type Output = Result<DialogueIndex>;
+    type Output = EngineResult<DialogueIndex>;
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
         if state.current_element().is_none() {
             if !self.elements.is_empty() {
@@ -138,6 +138,6 @@ impl Progressive for Part {
             }
         }
         state.reset();
-        Err(Error::EndOfStory)
+        Err(EngineError::EndOfStory)
     }
 }

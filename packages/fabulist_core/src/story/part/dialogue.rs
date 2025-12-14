@@ -1,7 +1,7 @@
 use fabulist_derive::ElementInternal;
 
 use crate::{
-    error::Result,
+    error::EngineResult,
     state::State,
     story::{character::Character, reference::ListKey, resource::Inset, Progressive},
 };
@@ -110,7 +110,7 @@ impl From<DialogueBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Dialogue {
-    type Output = Result<Option<ListKey<String>>>;
+    type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
         if let Some(change_context_closure) = self.change_context {
             change_context_closure(state.mut_context());

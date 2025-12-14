@@ -1,7 +1,9 @@
+use fabulist_lang::error::{PestParsingError, RuntimeError};
+
 use crate::story::reference::ListKey;
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+pub enum EngineError {
     #[error("Required choice index was not provided.")]
     ChoiceWasNotProvided,
     #[error("Provided choice index `{index}` is invalid.")]
@@ -23,4 +25,20 @@ pub enum Error {
     EndOfStory,
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type EngineResult<T> = std::result::Result<T, EngineError>;
+
+#[derive(thiserror::Error, Debug)]
+pub enum StoryError {
+    #[error("Story start metadata is required but missing.")]
+    StartMetadataRequired,
+    #[error("Parsing error: {0}")]
+    ParsingError(#[from] Box<PestParsingError>),
+    #[error("Metadata evaluation error: {0}")]
+    MetaEvaluationError(#[from] RuntimeError),
+    #[error("Quote properties is not a valid object.")]
+    InvalidQuoteProperties,
+    #[error("Query next shouldn't have any parameters.")]
+    QueryNextShouldNotHaveParameters,
+}
+
+pub type StoryResult<T> = std::result::Result<T, StoryError>;

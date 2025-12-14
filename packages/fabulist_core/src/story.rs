@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use crate::{
     engine::Progressive,
-    error::{Error, Result},
+    error::{EngineError, EngineResult, StoryError, StoryResult},
     state::State,
 };
 
@@ -14,6 +14,7 @@ use self::{
 
 pub mod character;
 pub mod context;
+pub mod converter;
 pub mod part;
 pub mod reference;
 pub mod resource;
@@ -67,18 +68,18 @@ impl Story {
     pub fn mut_parts(&mut self) -> &mut HashMap<ListKey<String>, Part> {
         &mut self.parts
     }
-    pub fn part(&self, key: &ListKey<String>) -> Result<&Part> {
+    pub fn part(&self, key: &ListKey<String>) -> EngineResult<&Part> {
         match self.parts.get(key) {
             Some(part) => Ok(part),
-            None => Err(Error::PartDoesNotExist {
+            None => Err(EngineError::PartDoesNotExist {
                 key: key.to_owned(),
             }),
         }
     }
-    pub fn mut_part(&mut self, key: &ListKey<String>) -> Result<&mut Part> {
+    pub fn mut_part(&mut self, key: &ListKey<String>) -> EngineResult<&mut Part> {
         match self.parts.get_mut(key) {
             Some(part) => Ok(part),
-            None => Err(Error::PartDoesNotExist {
+            None => Err(EngineError::PartDoesNotExist {
                 key: key.to_owned(),
             }),
         }
@@ -89,13 +90,13 @@ impl Story {
     pub fn mut_resources(&mut self) -> &mut Resources {
         &mut self.resources
     }
-    pub fn element(&self, index: DialogueIndex) -> Result<&PartElement> {
+    pub fn element(&self, index: DialogueIndex) -> EngineResult<&PartElement> {
         let part_key = &index.part_key;
         let part = self.part(part_key)?;
         let dialogue_index = &index.dialogue_index;
         part.element(*dialogue_index)
     }
-    pub fn mut_element(&mut self, index: DialogueIndex) -> Result<&mut Box<PartElement>> {
+    pub fn mut_element(&mut self, index: DialogueIndex) -> EngineResult<&mut Box<PartElement>> {
         let part_key = &index.part_key;
         let part = self.mut_part(part_key)?;
         let dialogue_index = &index.dialogue_index;
@@ -155,8 +156,13 @@ impl StoryBuilder {
         self.resources.insert_collection::<T, N>(collection);
         self
     }
+    pub fn parse(source: impl Into<String>) -> StoryResult<Self> {
+        let _story_ast = fabulist_lang::parser::FabulistParser::parse(source.into())
+            .map_err(|err| StoryError::from(Box::new(*err)))?;
+
+        todo!()
+    }
     pub fn build(mut self) -> Story {
-        // Interpolates inset values with resources
         self.parts
             .iter_mut()
             .for_each(|(_, part)| part.interp_inset(&mut self.resources));
@@ -180,13 +186,13 @@ impl From<StoryBuilder> for Story {
 }
 
 impl Progressive for Story {
-    type Output = Result<DialogueIndex>;
+    type Output = EngineResult<DialogueIndex>;
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
         if let Some(part_key) = state.current_part() {
             let part = self.part(part_key)?;
             return part.next(state, choice_index);
         }
         state.reset();
-        Err(Error::EndOfStory)
+        Err(EngineError::EndOfStory)
     }
 }

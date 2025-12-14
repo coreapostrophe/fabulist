@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum ContextValue {
-    Integer(i32),
+    Integer(f32),
     Bool(bool),
     String(String),
 }
@@ -19,8 +19,8 @@ impl From<String> for ContextValue {
     }
 }
 
-impl From<i32> for ContextValue {
-    fn from(value: i32) -> Self {
+impl From<f32> for ContextValue {
+    fn from(value: f32) -> Self {
         Self::Integer(value)
     }
 }
