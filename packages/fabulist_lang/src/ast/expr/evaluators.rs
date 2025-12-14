@@ -1,3 +1,4 @@
+//! Expression evaluators that turn AST nodes into runtime values.
 use crate::{
     ast::expr::models::{
         AssignmentExpr, BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive,

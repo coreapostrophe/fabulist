@@ -1,3 +1,4 @@
+//! Abstract syntax tree modules for the Fabulist language.
 #[cfg(test)]
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -18,7 +19,8 @@ pub mod stmt;
 pub mod story;
 
 #[cfg(test)]
-pub struct AstTestHelper<T> {
+/// Helper for parsing AST nodes inside unit tests.
+pub(crate) struct AstTestHelper<T> {
     rule_type: Rule,
     struct_name: String,
     phantom: PhantomData<T>,
@@ -29,6 +31,7 @@ impl<'a, T> AstTestHelper<T>
 where
     T: TryFrom<Pair<'a, Rule>> + Debug,
 {
+    /// Creates a helper bound to a pest rule and a descriptive name.
     pub fn new(rule_type: Rule, struct_name: impl Into<String>) -> Self {
         Self {
             rule_type,
@@ -37,6 +40,7 @@ where
         }
     }
 
+    /// Parses the source and returns the AST, panicking with a readable message on failure.
     pub fn assert_parse(&self, source: &'a str) -> T
     where
         T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
@@ -67,9 +71,13 @@ where
 }
 
 #[cfg(test)]
-pub struct AssertEvaluateOptions<'a> {
+/// Options for evaluating parsed AST nodes inside tests.
+pub(crate) struct AssertEvaluateOptions<'a> {
+    /// Source string to parse.
     pub source: &'a str,
+    /// Optional pre-seeded environment to use during evaluation.
     pub environment: Option<RuntimeEnvironment>,
+    /// Optional pre-seeded story context.
     pub context: Option<RuntimeEnvironment>,
 }
 
@@ -78,6 +86,7 @@ impl<'a, T> AstTestHelper<T>
 where
     T: TryFrom<Pair<'a, Rule>> + Debug + Evaluable,
 {
+    /// Parses the source then evaluates the resulting AST within optional runtime scopes.
     pub fn parse_and_evaluate(&self, options: AssertEvaluateOptions<'a>) -> <T as Evaluable>::Output
     where
         T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,

@@ -1,3 +1,4 @@
+//! Intrinsic helpers available to runtime values.
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
@@ -6,9 +7,14 @@ use crate::{
     interpreter::runtime_value::RuntimeValue,
 };
 
-pub struct NumberIntrinsics;
+/// Intrinsics for numeric runtime values.
+pub(crate) struct NumberIntrinsics;
 
 impl NumberIntrinsics {
+    /// Converts a single numeric argument into its string representation.
+    ///
+    /// Returns a [`RuntimeError::InvalidArgumentsCount`] when called with the wrong
+    /// arity or [`RuntimeError::TypeMismatch`] if the argument is not a number.
     pub fn to_string(
         args: Vec<RuntimeValue>,
         span: OwnedSpan,
@@ -34,6 +40,10 @@ impl NumberIntrinsics {
         }
     }
 
+    /// Adds number intrinsics as a child environment and returns it.
+    ///
+    /// The returned environment currently exposes [`NumberIntrinsics::to_string`]
+    /// under the symbol `to_string`.
     pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         let intrinsics_environment = Environment::add_empty_child(environment);
 
@@ -47,25 +57,37 @@ impl NumberIntrinsics {
     }
 }
 
-pub struct BooleanIntrinsics;
+/// Intrinsics for boolean runtime values.
+pub(crate) struct BooleanIntrinsics;
 
 impl BooleanIntrinsics {
+    /// Attaches a fresh child environment for boolean intrinsics.
+    ///
+    /// Placeholder for future helpers.
     pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         Environment::add_empty_child(environment)
     }
 }
 
-pub struct StringIntrinsics;
+/// Intrinsics for string runtime values.
+pub(crate) struct StringIntrinsics;
 
 impl StringIntrinsics {
+    /// Attaches a fresh child environment for string intrinsics.
+    ///
+    /// Placeholder for future helpers.
     pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         Environment::add_empty_child(environment)
     }
 }
 
-pub struct ObjectIntrinsics;
+/// Intrinsics for object runtime values.
+pub(crate) struct ObjectIntrinsics;
 
 impl ObjectIntrinsics {
+    /// Attaches a fresh child environment for object intrinsics.
+    ///
+    /// Placeholder for future helpers.
     pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         Environment::add_empty_child(environment)
     }

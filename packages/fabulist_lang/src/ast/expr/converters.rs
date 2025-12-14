@@ -1,3 +1,4 @@
+//! Converters from pest parse pairs into expression AST nodes.
 use pest::iterators::Pair;
 
 use crate::{

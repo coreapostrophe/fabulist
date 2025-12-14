@@ -1,3 +1,4 @@
+//! Root AST node for a Fabulist source file.
 use pest::error::LineColLocation;
 use pest::iterators::Pair;
 
@@ -5,11 +6,16 @@ use crate::parser::Rule;
 
 use super::decl::models::{MetaDecl, ModuleDecl, PartDecl};
 
+/// Complete story AST containing module imports, metadata, and narrative parts.
 #[derive(Debug, Clone)]
 pub struct StoryAst {
+    /// Line/column reference for the `story` rule.
     pub lcol: LineColLocation,
+    /// `module` declarations collected in the file.
     pub module: Vec<ModuleDecl>,
+    /// Optional `story { ... }` metadata block.
     pub meta: Option<MetaDecl>,
+    /// Story parts grouped by `# part` declarations.
     pub parts: Vec<PartDecl>,
 }
 

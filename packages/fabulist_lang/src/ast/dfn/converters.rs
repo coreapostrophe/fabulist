@@ -1,3 +1,4 @@
+//! Converters from pest parse pairs into definition fragments.
 use std::collections::HashMap;
 
 use pest::iterators::Pair;

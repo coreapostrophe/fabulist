@@ -1,3 +1,4 @@
+//! RuntimeValue helpers and arithmetic implementations.
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -5,6 +6,7 @@ use crate::error::{OwnedSpan, RuntimeError};
 use crate::interpreter::runtime_value::RuntimeValue;
 
 impl RuntimeValue {
+    /// Returns the span associated with the value.
     pub fn span(&self) -> OwnedSpan {
         match self {
             RuntimeValue::Number { span, .. }
@@ -19,6 +21,7 @@ impl RuntimeValue {
         }
     }
 
+    /// Attempts to coerce the value to a boolean, returning a runtime error when coercion fails.
     pub(crate) fn to_bool(&self) -> Result<bool, RuntimeError> {
         match self {
             RuntimeValue::Boolean { value, .. } => Ok(*value),
@@ -29,6 +32,7 @@ impl RuntimeValue {
         }
     }
 
+    /// Attempts to coerce the value to a number, returning a runtime error when coercion fails.
     pub(crate) fn to_num(&self) -> Result<f32, RuntimeError> {
         match self {
             RuntimeValue::Number { value, .. } => Ok(*value),

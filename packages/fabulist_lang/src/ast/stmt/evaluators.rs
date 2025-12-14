@@ -1,3 +1,4 @@
+//! Statement evaluators that execute within a runtime environment.
 use crate::{
     ast::stmt::models::{BlockStmt, ElseClause, ExprStmt, GotoStmt, IfStmt, LetStmt, Stmt},
     environment::{Environment, RuntimeEnvironment},

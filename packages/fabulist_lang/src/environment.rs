@@ -1,3 +1,10 @@
+//! Runtime environment shared by the interpreter.
+//!
+//! Values are stored in nested environments backed by [`Rc`] + [`RefCell`], allowing
+//! lightweight scoping for expressions and statements.
+//!
+//! [`Rc`]: std::rc::Rc
+//! [`RefCell`]: std::cell::RefCell
 use std::{
     cell::{Ref, RefCell, RefMut},
     collections::{hash_map::Entry, HashMap},
@@ -10,8 +17,12 @@ use crate::{
     interpreter::runtime_value::RuntimeValue,
 };
 
+/// Shared pointer to an [`Environment`], used throughout evaluation.
+///
+/// Cloning the alias keeps references to the same interior state.
 pub type RuntimeEnvironment = Rc<RefCell<Environment>>;
 
+/// Runtime environment with optional parent/child links.
 #[derive(Debug)]
 pub struct Environment {
     map: HashMap<String, RuntimeValue>,
@@ -20,6 +31,16 @@ pub struct Environment {
 }
 
 impl Environment {
+    /// Creates an empty environment with no parent or child.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fabulist_lang::environment::Environment;
+    ///
+    /// let env = Environment::new();
+    /// assert!(Environment::get_child(&env).is_none());
+    /// ```
     pub fn new() -> Rc<RefCell<Environment>> {
         Rc::new(RefCell::new(Self {
             map: HashMap::new(),
@@ -49,6 +70,7 @@ impl Environment {
     fn set_parent(&mut self, environment: Weak<RefCell<Environment>>) {
         self.parent = Some(environment);
     }
+    /// Links an existing environment as a child of the given parent.
     pub fn nest_child(parent: &Rc<RefCell<Environment>>, environment: &Rc<RefCell<Environment>>) {
         environment
             .deref()
@@ -56,17 +78,39 @@ impl Environment {
             .set_parent(Rc::downgrade(parent));
         parent.deref().borrow_mut().child = Some(environment.clone());
     }
+
+    /// Attaches a new empty child to the given environment and returns it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use fabulist_lang::environment::Environment;
+    ///
+    /// let env = Environment::new();
+    /// let child = Environment::add_empty_child(&env);
+    /// assert!(Environment::get_child(&env).is_some());
+    /// assert!(std::rc::Rc::ptr_eq(
+    ///     &child,
+    ///     &Environment::get_child(&env).unwrap()
+    /// ));
+    /// ```
     pub fn add_empty_child(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
         let child = Environment::new();
         Environment::nest_child(environment, &child);
         child
     }
+
+    /// Borrows the environment immutably.
     pub fn unwrap(environment: &Rc<RefCell<Environment>>) -> Ref<'_, Environment> {
         environment.deref().borrow()
     }
+
+    /// Borrows the environment mutably.
     pub fn unwrap_mut(environment: &Rc<RefCell<Environment>>) -> RefMut<'_, Environment> {
         environment.deref().borrow_mut()
     }
+
+    /// Inserts a value into the current environment without propagating upward.
     pub fn insert(
         environment: &Rc<RefCell<Environment>>,
         key: impl Into<String>,
@@ -76,15 +120,22 @@ impl Environment {
             .mut_map()
             .insert(key.into(), value);
     }
+    /// Looks up a value in the current environment, falling back to parents.
     pub fn get_value(
         environment: &Rc<RefCell<Environment>>,
         key: impl Into<String>,
     ) -> Option<RuntimeValue> {
         Environment::unwrap(environment).value(key)
     }
+
+    /// Returns the direct child environment if one exists.
     pub fn get_child(environment: &Rc<RefCell<Environment>>) -> Option<Rc<RefCell<Environment>>> {
         Environment::unwrap(environment).child().cloned()
     }
+
+    /// Assigns a value to an existing binding, walking up parent scopes when needed.
+    ///
+    /// Returns an error when the identifier does not exist in any accessible scope.
     pub fn assign(
         environment: &Rc<RefCell<Environment>>,
         key: impl Into<String>,

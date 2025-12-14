@@ -42,7 +42,16 @@ fn build_struct(
     variant: &Variant,
 ) -> Result<TokenStream> {
     let variant_ident = &variant.ident;
-    let first_attr = variant.attrs.first();
+    let production_attr = variant
+        .attrs
+        .iter()
+        .find(|attr| attr.path().is_ident("production"));
+
+    let passthrough_attrs: Vec<&Attribute> = variant
+        .attrs
+        .iter()
+        .filter(|attr| !attr.path().is_ident("production"))
+        .collect();
 
     let formatted_ident: Ident = parse_str(&format!(
         "{}{}",
@@ -50,10 +59,16 @@ fn build_struct(
         quote! {#input_ident}
     ))?;
 
-    match first_attr {
+    match production_attr {
         Some(attr) => {
             let fields = build_fields(attr)?;
+            let struct_doc = format!(
+                "SyntaxTree-generated AST node for `{}`::`{}`.",
+                input_ident, variant_ident
+            );
             Ok(quote! {
+                #(#passthrough_attrs)*
+                #[doc = #struct_doc]
                 #[derive(std::fmt::Debug, core::clone::Clone)]
                 #input_vis struct #formatted_ident {
                     #fields
@@ -89,7 +104,17 @@ fn build_fields(attr: &Attribute) -> Result<TokenStream> {
                 .iter()
                 .map(|field| {
                     let field_value = &field.value;
-                    Ok(quote! { pub #field_value, })
+                    let name = field_value
+                        .ident
+                        .as_ref()
+                        .map(|ident| ident.to_string())
+                        .unwrap_or_else(|| "field".to_string());
+                    let field_doc =
+                        format!("Generated field `{}` from a SyntaxTree production.", name);
+                    Ok(quote! {
+                        #[doc = #field_doc]
+                        pub #field_value,
+                    })
                 })
                 .collect::<Result<Vec<TokenStream>>>()?;
 

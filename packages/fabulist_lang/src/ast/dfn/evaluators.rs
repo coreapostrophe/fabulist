@@ -1,3 +1,4 @@
+//! Evaluators for definition fragments, producing runtime values.
 use std::collections::HashMap;
 
 use crate::{

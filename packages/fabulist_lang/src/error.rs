@@ -1,13 +1,18 @@
+//! Error types used by the parser and interpreter.
 use std::ops::Add;
 
 use pest::Span;
 
 use crate::parser::Rule;
 
+/// Span owned by the AST for error reporting.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct OwnedSpan {
+    /// Input slice of the source string isolated to a symbol.
     pub input: String,
+    /// Starting byte offset (inclusive).
     pub start: usize,
+    /// Ending byte offset (exclusive).
     pub end: usize,
 }
 
@@ -32,9 +37,13 @@ impl Add for OwnedSpan {
     }
 }
 
+/// Adapter for constructing custom pest errors from owned spans.
 pub struct ParsingError;
 
 impl ParsingError {
+    /// Creates a `pest::error::Error` from an [`OwnedSpan`] and a message.
+    ///
+    /// [`OwnedSpan`]: crate::error::OwnedSpan
     pub fn map_custom_error(
         span: OwnedSpan,
         message: impl Into<String>,
@@ -51,43 +60,80 @@ impl ParsingError {
 }
 
 #[derive(thiserror::Error, Debug)]
+/// Errors produced at runtime by the interpreter.
 pub enum RuntimeError {
+    /// Identifier failed validation before lookup.
     #[error("Invalid identifier.")]
     InvalidIdentifier(OwnedSpan),
+    /// Identifier was not found in any environment.
     #[error("Identifier does not exist in environment.")]
     IdentifierDoesNotExist(OwnedSpan),
+    /// The unary negation operator was applied to a non-number.
     #[error("Unary operator `negation` can only be applied to numbers.")]
     UnaryNegationNonNumber(OwnedSpan),
+    /// The unary logical-not operator was applied to a non-boolean.
     #[error("Unary operator `not` can only be applied to booleans.")]
     UnaryNotNonBoolean(OwnedSpan),
+    /// A call attempted to invoke a value that is not callable.
     #[error("Value is not callable.")]
     CallNonCallable(OwnedSpan),
+    /// Intrinsic function raised an error.
     #[error("Error when calling intrinsic function: `{0}`.")]
     IntrinsicFunctionError(String, OwnedSpan),
+    /// The wrong number of arguments was provided to a callable.
     #[error("Argument type mismatch. Expected `{expected}`, got `{got}`.")]
     InvalidArgumentsCount {
+        /// Expected arity of the callee.
         expected: usize,
+        /// Actual number of arguments supplied.
         got: usize,
+        /// Span covering the call site.
         span: OwnedSpan,
     },
+    /// A value's runtime type did not match the expected one.
     #[error("Argument type mismatch. Expected `{expected}`, got `{got}`.")]
     TypeMismatch {
+        /// Type the interpreter was expecting.
         expected: String,
+        /// Type encountered during evaluation.
         got: String,
+        /// Span covering the mismatch.
         span: OwnedSpan,
     },
+    /// A value could not be coerced to boolean.
     #[error("Cannot cast value to boolean.")]
     CannotCastToBoolean(OwnedSpan),
+    /// A value could not be coerced to number.
     #[error("Cannot cast value to number.")]
     CannotCastToNumber(OwnedSpan),
+    /// Parsing a string to a number failed.
     #[error("Cannot parse string `{value}` to number.")]
-    CannotParseStringToNumber { value: String, span: OwnedSpan },
+    CannotParseStringToNumber {
+        /// String that failed to parse.
+        value: String,
+        /// Span covering the literal.
+        span: OwnedSpan,
+    },
+    /// Multiplication could not be performed for the given operands.
     #[error("Invalid multiplication operation: {message}")]
-    InvalidMultiplication { message: String, span: OwnedSpan },
+    InvalidMultiplication {
+        /// Explanation of why the operation failed.
+        message: String,
+        /// Span covering the invalid operation.
+        span: OwnedSpan,
+    },
+    /// Division could not be performed for the given operands.
     #[error("Invalid division operation: {message}")]
-    InvalidDivision { message: String, span: OwnedSpan },
+    InvalidDivision {
+        /// Explanation of why the operation failed.
+        message: String,
+        /// Span covering the invalid operation.
+        span: OwnedSpan,
+    },
+    /// Assignment target was not an identifier.
     #[error("Invalid assignment to non-identifier.")]
     AssignmentToNonIdentifier(OwnedSpan),
+    /// Invalid or unsupported member access was attempted.
     #[error("Invalid memory access.")]
     InvalidMemoryAccess(OwnedSpan),
 }
