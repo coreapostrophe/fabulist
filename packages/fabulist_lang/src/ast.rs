@@ -1,11 +1,11 @@
 #[cfg(test)]
-use std::{fmt::Debug, marker::PhantomData};
+use std::{cell::RefCell, fmt::Debug, marker::PhantomData, rc::Rc};
 
 #[cfg(test)]
-use pest::{iterators::Pair, Parser};
+use pest::iterators::Pair;
 
 #[cfg(test)]
-use crate::parser::{GrammarParser, Rule};
+use crate::{context::Context, environment::Environment, interpreter::Evaluable, parser::Rule};
 
 pub mod decl;
 pub mod dfn;
@@ -37,6 +37,10 @@ where
     where
         T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
     {
+        use pest::Parser;
+
+        use crate::parser::GrammarParser;
+
         match GrammarParser::parse(self.rule_type, source) {
             Err(error) => {
                 println!("{}", error);
@@ -46,7 +50,6 @@ where
                 let pair = parsing_result.next().unwrap_or_else(|| {
                     panic!("Failed to parse {} pair from string", self.struct_name)
                 });
-
                 match T::try_from(pair) {
                     Err(error) => {
                         println!("{}", error);
@@ -56,5 +59,29 @@ where
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+pub struct AssertEvaluateOptions<'a> {
+    pub source: &'a str,
+    pub environment: Option<Rc<RefCell<Environment>>>,
+    pub context: Option<Context>,
+}
+
+#[cfg(test)]
+impl<'a, T> AstTestHelper<T>
+where
+    T: TryFrom<Pair<'a, Rule>> + Debug + Evaluable,
+{
+    pub fn parse_and_evaluate(&self, options: AssertEvaluateOptions<'a>) -> <T as Evaluable>::Output
+    where
+        T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
+    {
+        let ast = self.assert_parse(options.source);
+        let environment = options.environment.unwrap_or_else(Environment::new);
+        let mut context = options.context.unwrap_or_default();
+
+        ast.evaluate(&environment, &mut context)
     }
 }

@@ -14,3 +14,13 @@ pub trait Evaluable {
 }
 
 pub struct FabulistInterpreter;
+
+impl FabulistInterpreter {
+    pub fn evaluate<T: Evaluable>(
+        node: &T,
+        environment: &Rc<RefCell<Environment>>,
+        context: &mut Context,
+    ) -> T::Output {
+        node.evaluate(environment, context)
+    }
+}
