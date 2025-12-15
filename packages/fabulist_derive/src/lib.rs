@@ -30,10 +30,13 @@ pub fn impl_element(input: TokenStream) -> TokenStream {
         .unwrap_or_else(Error::into_compile_error);
 
     #[cfg(feature = "debug")]
-    println!("{}", prettify(result.clone()));
+    if std::env::var_os("FABULIST_DEBUG").is_some_and(|env| env == "true") {
+        println!("{}", prettify(result.clone()));
+    }
 
     result.into()
 }
+
 
 #[proc_macro_derive(ElementInternal)]
 pub fn impl_element_internal(input: TokenStream) -> TokenStream {
@@ -42,7 +45,9 @@ pub fn impl_element_internal(input: TokenStream) -> TokenStream {
         .unwrap_or_else(Error::into_compile_error);
 
     #[cfg(feature = "debug")]
-    println!("{}", prettify(result.clone()));
+    if std::env::var_os("FABULIST_DEBUG").is_some_and(|env| env == "true") {
+        println!("{}", prettify(result.clone()));
+    }
 
     result.into()
 }
@@ -53,7 +58,9 @@ pub fn impl_syn_tree(input: TokenStream) -> TokenStream {
     let result = ast::generate_syn_tree(parsed_input).unwrap_or_else(Error::into_compile_error);
 
     #[cfg(feature = "debug")]
-    println!("{}", prettify(result.clone()));
+    if std::env::var_os("FABULIST_DEBUG").is_some_and(|env| env == "true") {
+        println!("{}", prettify(result.clone()));
+    }
 
     result.into()
 }

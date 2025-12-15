@@ -44,15 +44,19 @@ impl Context {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
+
     pub fn value(&self) -> &HashMap<String, ContextValue> {
         &self.0
     }
+
     pub fn mut_value(&mut self) -> &mut HashMap<String, ContextValue> {
         &mut self.0
     }
+
     pub fn insert(&mut self, key: impl Into<String>, value: impl Into<ContextValue>) {
         self.0.insert(key.into(), value.into());
     }
+
     pub fn clear(&mut self) {
         self.0.clear();
     }

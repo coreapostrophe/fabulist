@@ -1,3 +1,4 @@
+#[cfg(feature = "parsing")]
 use fabulist_lang::error::{PestParsingError, RuntimeError};
 
 use crate::story::reference::ListKey;
@@ -27,8 +28,9 @@ pub enum EngineError {
 
 pub type EngineResult<T> = std::result::Result<T, EngineError>;
 
+#[cfg(feature = "parsing")]
 #[derive(thiserror::Error, Debug)]
-pub enum StoryError {
+pub enum ParsingError {
     #[error("Story start metadata is required but missing.")]
     StartMetadataRequired,
     #[error("Parsing error: {0}")]
@@ -41,4 +43,5 @@ pub enum StoryError {
     QueryNextShouldNotHaveParameters,
 }
 
-pub type StoryResult<T> = std::result::Result<T, StoryError>;
+#[cfg(feature = "parsing")]
+pub type ParsingResult<T> = std::result::Result<T, ParsingError>;

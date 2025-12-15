@@ -23,6 +23,7 @@ impl Dialogue {
     pub fn text(&self) -> &String {
         &self.text
     }
+
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
@@ -32,6 +33,7 @@ impl QueryNext for Dialogue {
     fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
     }
+
     fn set_query_next(&mut self, closure: QueryNextClosure) {
         self.query_next = Some(closure);
     }
@@ -41,6 +43,7 @@ impl ChangeContext for Dialogue {
     fn change_context(&self) -> Option<&ChangeContextClosure> {
         self.change_context.as_ref()
     }
+
     fn set_change_context(&mut self, closure: ChangeContextClosure) {
         self.change_context = Some(closure);
     }
@@ -69,14 +72,17 @@ impl DialogueBuilder {
             change_context: None,
         }
     }
+
     pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
         self.query_next = Some(closure);
         self
     }
+
     pub fn set_change_context(mut self, closure: ChangeContextClosure) -> Self {
         self.change_context = Some(closure);
         self
     }
+
     pub fn build(self) -> Dialogue {
         Dialogue {
             text: self.text,

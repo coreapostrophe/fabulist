@@ -30,12 +30,15 @@ impl Part {
     pub fn id(&self) -> &String {
         &self.id
     }
+
     pub fn elements(&self) -> &Vec<Box<PartElement>> {
         &self.elements
     }
+
     pub fn mut_elements(&mut self) -> &mut Vec<Box<PartElement>> {
         &mut self.elements
     }
+
     pub fn element(&self, index: usize) -> EngineResult<&PartElement> {
         match self.elements.get(index) {
             Some(element) => Ok(element.as_ref()),
@@ -45,6 +48,7 @@ impl Part {
             }),
         }
     }
+
     pub fn mut_element(&mut self, index: usize) -> EngineResult<&mut Box<PartElement>> {
         match self.elements.get_mut(index) {
             Some(element) => Ok(element),
@@ -69,10 +73,12 @@ impl PartBuilder {
             quotes: Vec::new(),
         }
     }
+
     pub fn add_element(mut self, dialogue: impl Into<Box<PartElement>>) -> Self {
         self.quotes.push(dialogue.into());
         self
     }
+    
     pub fn build(self) -> Part {
         Part {
             id: self.id,

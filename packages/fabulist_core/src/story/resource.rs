@@ -22,6 +22,7 @@ impl Resources {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
+
     pub fn get<T>(&self, key: impl Into<String>) -> Option<Rc<T>>
     where
         T: Debug + 'static,
@@ -47,12 +48,14 @@ impl Resources {
             None => None,
         }
     }
+
     pub fn insert<T>(&mut self, resource: T)
     where
         T: Keyed + Clone + 'static,
     {
         self.insert_collection([resource]);
     }
+
     pub fn insert_collection<T, const N: usize>(&mut self, collection: [T; N])
     where
         T: Keyed + Clone + 'static,
@@ -72,15 +75,19 @@ impl<T> Inset<T> {
     pub fn new(id: impl Into<String>) -> Self {
         Self(id.into(), None)
     }
+
     pub fn id(&self) -> &String {
         &self.0
     }
+
     pub fn set_id(&mut self, id: impl Into<String>) {
         self.0 = id.into();
     }
+
     pub fn value(&self) -> Option<&Rc<T>> {
         self.1.as_ref()
     }
+
     pub fn set_value(&mut self, value: Option<Rc<T>>) {
         self.1 = value;
     }

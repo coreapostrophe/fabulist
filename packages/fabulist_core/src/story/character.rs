@@ -24,12 +24,15 @@ impl Character {
             },
         }
     }
+
     pub fn name(&self) -> &Name {
         &self.name
     }
+
     pub fn set_long(&mut self, long: impl Into<String>) {
         self.name.long = Some(long.into());
     }
+
     pub fn set_nick(&mut self, nick: impl Into<String>) {
         self.name.nick = Some(nick.into())
     }
@@ -52,14 +55,17 @@ impl CharacterBuilder {
             },
         }
     }
+
     pub fn set_long(mut self, long: impl Into<String>) -> Self {
         self.name.long = Some(long.into());
         self
     }
+
     pub fn set_nick(mut self, nick: impl Into<String>) -> Self {
         self.name.nick = Some(nick.into());
         self
     }
+
     pub fn build(self) -> Character {
         Character {
             id: self.id,

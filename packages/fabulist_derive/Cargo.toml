@@ -25,4 +25,5 @@ trybuild = "1.0.114"
 fabulist_core = { path = "../fabulist_core" }
 
 [features]
+default = []
 debug = ["dep:prettyplease"]

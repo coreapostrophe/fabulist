@@ -180,7 +180,7 @@ mod environment_tests {
     }
 
     #[test]
-    fn propagates_value() {
+    fn propagates_value_downwards() {
         let environment = Environment::new();
         Environment::insert(
             &environment,
@@ -199,6 +199,38 @@ mod environment_tests {
         match value {
             RuntimeValue::Number { value: num, .. } => assert_eq!(num, 5.0),
             _ => panic!("Propagated value has incorrect type"),
+        }
+    }
+
+    #[test]
+    fn assigns_value_upwards() {
+        let environment = Environment::new();
+        Environment::insert(
+            &environment,
+            "number",
+            RuntimeValue::Number {
+                value: 5.0,
+                span: Default::default(),
+            },
+        );
+        let child = Environment::add_empty_child(&environment);
+
+        Environment::assign(
+            &child,
+            "number",
+            RuntimeValue::Number {
+                value: 10.0,
+                span: Default::default(),
+            },
+        )
+        .expect("Failed to assign value upwards");
+
+        let value = Environment::get_value(&environment, "number")
+            .expect("Could not find assigned value in parent environment");
+
+        match value {
+            RuntimeValue::Number { value: num, .. } => assert_eq!(num, 10.0),
+            _ => panic!("Assigned value has incorrect type"),
         }
     }
 }

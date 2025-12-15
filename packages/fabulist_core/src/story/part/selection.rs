@@ -14,6 +14,7 @@ impl Selection {
     pub fn choices(&self) -> &Vec<Choice> {
         &self.0
     }
+
     pub fn mut_choices(&mut self) -> &mut Vec<Choice> {
         &mut self.0
     }
@@ -32,10 +33,12 @@ impl SelectionBuilder {
     pub fn new() -> Self {
         Self(Vec::new())
     }
+
     pub fn add_choice(mut self, choice: impl Into<Choice>) -> Self {
         self.0.push(choice.into());
         self
     }
+
     pub fn build(self) -> Selection {
         Selection(self.0)
     }

@@ -13,7 +13,7 @@ use fabulist_lang::{
 };
 
 use crate::{
-    error::StoryError,
+    error::ParsingError,
     story::{
         part::{
             dialogue::Dialogue, narration::Narration, selection::Selection, Part, PartBuilder,
@@ -29,14 +29,14 @@ pub struct Quote {
 }
 
 impl TryFrom<QuoteDecl> for Quote {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(value: QuoteDecl) -> Result<Self, Self::Error> {
         let properties = match value.properties {
             Some(obj_dfn) => {
                 let RuntimeValue::Object { properties, .. } =
                     obj_dfn.evaluate(&Environment::new(), &Environment::new())?
                 else {
-                    return Err(StoryError::InvalidQuoteProperties);
+                    return Err(ParsingError::InvalidQuoteProperties);
                 };
                 Some(properties)
             }
@@ -51,28 +51,28 @@ impl TryFrom<QuoteDecl> for Quote {
 }
 
 impl TryFrom<DialogueElement> for Dialogue {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(_value: DialogueElement) -> Result<Self, Self::Error> {
         todo!()
     }
 }
 
 impl TryFrom<ChoiceElement> for Selection {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(_value: ChoiceElement) -> Result<Self, Self::Error> {
         todo!()
     }
 }
 
 impl TryFrom<NarrationElement> for Narration {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(_value: NarrationElement) -> Result<Self, Self::Error> {
         todo!()
     }
 }
 
 impl TryFrom<ElementDecl> for Box<PartElement> {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(element_decl: ElementDecl) -> Result<Self, Self::Error> {
         match element_decl.value {
             Element::Dialogue(dialogue_element) => {
@@ -92,7 +92,7 @@ impl TryFrom<ElementDecl> for Box<PartElement> {
 }
 
 impl TryFrom<PartDecl> for Part {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(value: PartDecl) -> Result<Self, Self::Error> {
         let mut part_builder = PartBuilder::new(value.id);
 
@@ -106,7 +106,7 @@ impl TryFrom<PartDecl> for Part {
 }
 
 impl TryFrom<StoryAst> for Story {
-    type Error = StoryError;
+    type Error = ParsingError;
     fn try_from(value: StoryAst) -> Result<Self, Self::Error> {
         let mut builder = StoryBuilder::new();
 
@@ -116,21 +116,21 @@ impl TryFrom<StoryAst> for Story {
         }
 
         let Some(meta) = value.meta else {
-            return Err(StoryError::StartMetadataRequired);
+            return Err(ParsingError::StartMetadataRequired);
         };
 
         let RuntimeValue::Object { properties, .. } = meta
             .properties
             .evaluate(&Environment::new(), &Environment::new())?
         else {
-            return Err(StoryError::StartMetadataRequired);
+            return Err(ParsingError::StartMetadataRequired);
         };
 
         let Some(RuntimeValue::String {
             value: start_value, ..
         }) = properties.get("start")
         else {
-            return Err(StoryError::StartMetadataRequired);
+            return Err(ParsingError::StartMetadataRequired);
         };
 
         builder = builder.set_start(start_value);
