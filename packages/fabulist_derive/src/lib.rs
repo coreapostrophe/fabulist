@@ -37,7 +37,6 @@ pub fn impl_element(input: TokenStream) -> TokenStream {
     result.into()
 }
 
-
 #[proc_macro_derive(ElementInternal)]
 pub fn impl_element_internal(input: TokenStream) -> TokenStream {
     let parsed_input = parse_macro_input!(input as DeriveInput);
