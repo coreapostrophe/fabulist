@@ -449,6 +449,7 @@ impl Evaluable for MemberExpr {
                         injected_env
                     }
                     RuntimeValue::Context { .. } => context.clone(),
+                    RuntimeValue::Module { environment, .. } => environment.clone(),
                     other => return Err(RuntimeError::InvalidMemoryAccess(other.span().clone())),
                 };
 

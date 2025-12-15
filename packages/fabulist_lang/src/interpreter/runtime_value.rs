@@ -1,9 +1,9 @@
 //! Runtime value representation used by the interpreter.
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use crate::{
     error::{OwnedSpan, RuntimeError},
-    interpreter::environment::Environment,
+    interpreter::environment::RuntimeEnvironment,
     parser::ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
 };
 
@@ -37,7 +37,7 @@ pub enum RuntimeValue {
     Object {
         /// Object properties keyed by string.
         properties: HashMap<String, RuntimeValue>,
-        /// Source span of the literal.
+        /// Source span of the primitive.
         span: OwnedSpan,
     },
     /// Lambda defined in source code with captured closure.
@@ -46,9 +46,9 @@ pub enum RuntimeValue {
         parameters: ParameterBodyDfn,
         /// Lambda body.
         body: BlockStmt,
-        /// Captured lexical environment.
-        closure: Rc<RefCell<Environment>>,
-        /// Source span of the literal.
+        /// Captured runtime environment.
+        closure: RuntimeEnvironment,
+        /// Source span of the primitive.
         span: OwnedSpan,
     },
     /// Native (Rust) function exposed to the runtime.
@@ -67,14 +67,21 @@ pub enum RuntimeValue {
     },
     /// Handle to the mutable story context.
     Context {
-        /// Span referencing the `context` literal.
+        /// Span referencing the `context` primitive.
         span: OwnedSpan,
     },
     /// Path literal.
     Path {
         /// Path segments.
         segments: Vec<String>,
-        /// Source span of the literal.
+        /// Source span of the primitive.
+        span: OwnedSpan,
+    },
+    /// Module handle with its own environment.
+    Module {
+        /// Module environment.
+        environment: RuntimeEnvironment,
+        /// Source span of the primitive.
         span: OwnedSpan,
     },
 }
@@ -93,6 +100,7 @@ impl RuntimeValue {
             RuntimeValue::None { .. } => "None".to_string(),
             RuntimeValue::Context { .. } => "Context".to_string(),
             RuntimeValue::Path { .. } => "Path".to_string(),
+            RuntimeValue::Module { .. } => "Module".to_string(),
         }
     }
 }

@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use crate::story::{
-    context::{Context, Contextual},
+    context::{Context, Mappable},
     reference::{DialogueIndex, ListKey},
 };
 
 #[derive(Debug)]
 pub struct State {
-    context: Box<dyn Contextual>,
+    context: Box<dyn Mappable>,
     current_part: Option<ListKey<String>>,
     current_element: Option<usize>,
     decisions: HashMap<DialogueIndex, usize>,
@@ -24,7 +24,7 @@ impl Default for State {
     }
 }
 
-pub type ContextState = Box<dyn Contextual>;
+pub type ContextState = Box<dyn Mappable>;
 
 pub struct StateOptions {
     pub context: Option<ContextState>,

@@ -17,6 +17,7 @@ impl RuntimeValue {
             | RuntimeValue::Lambda { span, .. }
             | RuntimeValue::None { span, .. }
             | RuntimeValue::Context { span, .. }
+            | RuntimeValue::Module { span, .. }
             | RuntimeValue::Path { span, .. } => span.clone(),
             RuntimeValue::NativeFunction(_) => unreachable!("Native functions do not have spans."),
         }

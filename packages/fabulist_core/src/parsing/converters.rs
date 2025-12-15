@@ -15,7 +15,7 @@ use fabulist_lang::{
 use crate::{
     error::{EngineError, EngineResult, ParsingError},
     story::{
-        context::{ContextValue, Contextual},
+        context::{ContextValue, Mappable},
         part::{
             dialogue::Dialogue,
             narration::{Narration, NarrationBuilder},
@@ -118,14 +118,14 @@ impl TryFrom<NarrationElement> for Narration {
             {
                 let parameters = parameters.evaluate(&Environment::new(), &Environment::new())?;
                 if parameters.is_some_and(|p| !p.is_empty()) {
-                    return Err(ParsingError::QueryNextShouldNotHaveParameters);
+                    return Err(ParsingError::QueryNextHasParameters);
                 }
 
                 let body = body.clone();
                 let closure = closure.clone();
 
                 let query_next_closure = Box::new(
-                    move |_context: &dyn Contextual| -> EngineResult<ListKey<String>> {
+                    move |_context: &dyn Mappable| -> EngineResult<ListKey<String>> {
                         let result = body
                             .evaluate(&closure, &Environment::new())
                             .expect("Failed to evaluate `next` closure in narration.");
@@ -138,6 +138,27 @@ impl TryFrom<NarrationElement> for Narration {
                 );
 
                 narration_builder = narration_builder.set_query_next(query_next_closure);
+            }
+
+            if let Some(RuntimeValue::Lambda {
+                parameters,
+                body,
+                closure,
+                ..
+            }) = properties.get("change_context")
+            {
+                let parameters = parameters.evaluate(&Environment::new(), &Environment::new())?;
+                if parameters.is_some_and(|p| !p.is_empty()) {
+                    return Err(ParsingError::QueryChangeContextHasParameters);
+                }
+
+                let _body = body.clone();
+                let _closure = closure.clone();
+
+                let change_context_closure =
+                    Box::new(move |_context: &mut dyn Mappable| -> EngineResult<()> { todo!() });
+
+                narration_builder = narration_builder.set_change_context(change_context_closure);
             }
         }
 

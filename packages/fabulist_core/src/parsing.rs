@@ -7,7 +7,7 @@ use fabulist_lang::interpreter::{
 use crate::{
     error::ParsingResult,
     story::{
-        context::{ContextValue, Contextual},
+        context::{ContextValue, Mappable},
         StoryBuilder,
     },
 };
@@ -25,7 +25,7 @@ impl StoryBuilder {
     }
 }
 
-impl Contextual for RuntimeEnvironment {
+impl Mappable for RuntimeEnvironment {
     fn insert(&mut self, key: String, value: crate::story::context::ContextValue) {
         let runtime_value: RuntimeValue = value.into();
         Environment::insert(self, key, runtime_value);

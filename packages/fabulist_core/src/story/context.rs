@@ -35,7 +35,7 @@ impl From<bool> for ContextValue {
     }
 }
 
-pub trait Contextual: Debug {
+pub trait Mappable: Debug {
     fn insert(&mut self, key: String, value: ContextValue);
     fn get(&self, key: &str) -> Option<&ContextValue>;
     fn assign(&mut self, key: String, new_value: ContextValue) -> bool;
@@ -72,7 +72,7 @@ impl Context {
     }
 }
 
-impl Contextual for Context {
+impl Mappable for Context {
     fn insert(&mut self, key: String, value: ContextValue) {
         self.0.insert(key, value);
     }

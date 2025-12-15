@@ -17,6 +17,23 @@ use crate::{
     interpreter::runtime_value::RuntimeValue,
 };
 
+/// Trait for layered maps with parent/child relationships.
+///
+/// Allows insertion, lookup, and assignment with upward propagation.
+pub trait LayeredMap {
+    /// Inserts a value into the current layer without propagating upward.
+    fn insert_local(&mut self, key: String, value: RuntimeValue);
+    /// Looks up a value in the current layer, falling back to parents.
+    fn get_upwards(&self, key: &str) -> Option<RuntimeValue>;
+    /// Assigns a value to an existing binding, walking up parent layers when needed.
+    fn assign_upwards(&mut self, key: String, new_value: RuntimeValue) -> bool;
+}
+
+/// Weak pointer to an [`Environment`], used for parent links.
+///
+/// Cloning the alias keeps a non-owning reference to the same interior state.
+pub type WeakRuntimeEnvironment = Weak<RefCell<Environment>>;
+
 /// Shared pointer to an [`Environment`], used throughout evaluation.
 ///
 /// Cloning the alias keeps references to the same interior state.
@@ -26,8 +43,8 @@ pub type RuntimeEnvironment = Rc<RefCell<Environment>>;
 #[derive(Debug)]
 pub struct Environment {
     map: HashMap<String, RuntimeValue>,
-    parent: Option<Weak<RefCell<Environment>>>,
-    child: Option<Rc<RefCell<Environment>>>,
+    parent: Option<WeakRuntimeEnvironment>,
+    child: Option<RuntimeEnvironment>,
 }
 
 impl Environment {
@@ -41,19 +58,22 @@ impl Environment {
     /// let env = Environment::new();
     /// assert!(Environment::get_child(&env).is_none());
     /// ```
-    pub fn new() -> Rc<RefCell<Environment>> {
+    pub fn new() -> RuntimeEnvironment {
         Rc::new(RefCell::new(Self {
             map: HashMap::new(),
             parent: None,
             child: None,
         }))
     }
+
     fn mut_map(&mut self) -> &mut HashMap<String, RuntimeValue> {
         &mut self.map
     }
-    fn child(&self) -> Option<&Rc<RefCell<Environment>>> {
+
+    fn child(&self) -> Option<&RuntimeEnvironment> {
         self.child.as_ref()
     }
+
     fn value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
         let key = key.into();
         if let Some(value) = self.map.get(&key) {
@@ -67,11 +87,13 @@ impl Environment {
             None
         }
     }
-    fn set_parent(&mut self, environment: Weak<RefCell<Environment>>) {
+
+    fn set_parent(&mut self, environment: WeakRuntimeEnvironment) {
         self.parent = Some(environment);
     }
+
     /// Links an existing environment as a child of the given parent.
-    pub fn nest_child(parent: &Rc<RefCell<Environment>>, environment: &Rc<RefCell<Environment>>) {
+    pub fn nest_child(parent: &RuntimeEnvironment, environment: &RuntimeEnvironment) {
         environment
             .deref()
             .borrow_mut()
@@ -94,42 +116,38 @@ impl Environment {
     ///     &Environment::get_child(&env).unwrap()
     /// ));
     /// ```
-    pub fn add_empty_child(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
+    pub fn add_empty_child(environment: &RuntimeEnvironment) -> RuntimeEnvironment {
         let child = Environment::new();
         Environment::nest_child(environment, &child);
         child
     }
 
     /// Borrows the environment immutably.
-    pub fn unwrap(environment: &Rc<RefCell<Environment>>) -> Ref<'_, Environment> {
+    pub fn unwrap(environment: &RuntimeEnvironment) -> Ref<'_, Environment> {
         environment.deref().borrow()
     }
 
     /// Borrows the environment mutably.
-    pub fn unwrap_mut(environment: &Rc<RefCell<Environment>>) -> RefMut<'_, Environment> {
+    pub fn unwrap_mut(environment: &RuntimeEnvironment) -> RefMut<'_, Environment> {
         environment.deref().borrow_mut()
     }
 
     /// Inserts a value into the current environment without propagating upward.
-    pub fn insert(
-        environment: &Rc<RefCell<Environment>>,
-        key: impl Into<String>,
-        value: RuntimeValue,
-    ) {
+    pub fn insert(environment: &RuntimeEnvironment, key: impl Into<String>, value: RuntimeValue) {
         Environment::unwrap_mut(environment)
             .mut_map()
             .insert(key.into(), value);
     }
     /// Looks up a value in the current environment, falling back to parents.
     pub fn get_value(
-        environment: &Rc<RefCell<Environment>>,
+        environment: &RuntimeEnvironment,
         key: impl Into<String>,
     ) -> Option<RuntimeValue> {
         Environment::unwrap(environment).value(key)
     }
 
     /// Returns the direct child environment if one exists.
-    pub fn get_child(environment: &Rc<RefCell<Environment>>) -> Option<Rc<RefCell<Environment>>> {
+    pub fn get_child(environment: &RuntimeEnvironment) -> Option<RuntimeEnvironment> {
         Environment::unwrap(environment).child().cloned()
     }
 
@@ -137,7 +155,7 @@ impl Environment {
     ///
     /// Returns an error when the identifier does not exist in any accessible scope.
     pub fn assign(
-        environment: &Rc<RefCell<Environment>>,
+        environment: &RuntimeEnvironment,
         key: impl Into<String>,
         value: RuntimeValue,
     ) -> Result<(), RuntimeError> {
@@ -158,6 +176,25 @@ impl Environment {
                 Err(RuntimeError::IdentifierDoesNotExist(OwnedSpan::default()))
             }
         }
+    }
+
+    /// Extracts a clone of the internal map from the environment.
+    pub fn extract_map(environment: &RuntimeEnvironment) -> HashMap<String, RuntimeValue> {
+        Environment::unwrap(environment).map.clone()
+    }
+}
+
+impl LayeredMap for RuntimeEnvironment {
+    fn insert_local(&mut self, key: String, value: RuntimeValue) {
+        Environment::insert(self, key, value);
+    }
+
+    fn get_upwards(&self, key: &str) -> Option<RuntimeValue> {
+        Environment::get_value(self, key)
+    }
+
+    fn assign_upwards(&mut self, key: String, new_value: RuntimeValue) -> bool {
+        Environment::assign(self, key, new_value).is_ok()
     }
 }
 

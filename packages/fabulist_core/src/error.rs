@@ -39,8 +39,10 @@ pub enum ParsingError {
     MetaEvaluationError(#[from] RuntimeError),
     #[error("Quote properties is not a valid object.")]
     InvalidQuoteProperties,
-    #[error("Query next shouldn't have any parameters.")]
-    QueryNextShouldNotHaveParameters,
+    #[error("Next hook shouldn't have any parameters.")]
+    QueryNextHasParameters,
+    #[error("ChangeContext hook shouldn't have any parameters.")]
+    QueryChangeContextHasParameters,
 }
 
 #[cfg(feature = "parsing")]
