@@ -1,273 +1,372 @@
-//! Runtime environment shared by the interpreter.
+//! Runtime environment stack for interpreter scopes.
 //!
-//! Values are stored in nested environments backed by [`Rc`] + [`RefCell`], allowing
-//! lightweight scoping for expressions and statements.
+//! Environments form a parent/child chain where children hold strong references to their parent
+//! via weak pointers to avoid reference cycles. Values are stored in a per-scope map, and lookups
+//! traverse parents. Typical usage is to create a root, derive children for nested scopes, and
+//! assign or insert values as execution proceeds.
 //!
-//! [`Rc`]: std::rc::Rc
-//! [`RefCell`]: std::cell::RefCell
+//! # Examples
+//!
+//! ```rust
+//! use fabulist_lang::error::OwnedSpan;
+//! use fabulist_lang::interpreter::environment::RuntimeEnvironment;
+//! use fabulist_lang::interpreter::runtime_value::RuntimeValue;
+//!
+//! let root = RuntimeEnvironment::new();
+//! root.insert_env_value(
+//!     "x",
+//!     RuntimeValue::Number {
+//!         value: 1.0,
+//!         span: OwnedSpan::default(),
+//!     },
+//! )
+//! .unwrap();
+//!
+//! let child = root.add_empty_child().unwrap();
+//! let RuntimeValue::Number { value, .. } = child.get_env_value("x").unwrap() else {
+//!     panic!("expected number");
+//! };
+//! assert_eq!(value, 1.0);
+//!
+//! child
+//!     .assign_env_value(
+//!         "x",
+//!         RuntimeValue::Number {
+//!             value: 2.0,
+//!             span: OwnedSpan::default(),
+//!         },
+//!     )
+//!     .unwrap();
+//! let RuntimeValue::Number { value, .. } = root.get_env_value("x").unwrap() else {
+//!     panic!("expected number");
+//! };
+//! assert_eq!(value, 2.0);
+//! ```
+
 use std::{
-    cell::{Ref, RefCell, RefMut},
-    collections::{hash_map::Entry, HashMap},
-    ops::Deref,
+    cell::RefCell,
+    collections::HashMap,
     rc::{Rc, Weak},
 };
 
-use crate::{
-    error::{OwnedSpan, RuntimeError},
-    interpreter::runtime_value::RuntimeValue,
-};
+use crate::interpreter::runtime_value::RuntimeValue;
 
-/// Trait for layered maps with parent/child relationships.
-///
-/// Allows insertion, lookup, and assignment with upward propagation.
-pub trait LayeredMap {
-    /// Inserts a value into the current layer without propagating upward.
-    fn insert_local(&mut self, key: String, value: RuntimeValue);
-    /// Looks up a value in the current layer, falling back to parents.
-    fn get_upwards(&self, key: &str) -> Option<RuntimeValue>;
-    /// Assigns a value to an existing binding, walking up parent layers when needed.
-    fn assign_upwards(&mut self, key: String, new_value: RuntimeValue) -> bool;
+/// Errors that can occur when manipulating runtime environments.
+#[derive(thiserror::Error, Debug)]
+pub enum EnvironmentError {
+    /// Returned when attempting to access an environment that has already been dropped.
+    #[error("RuntimeEnvironment has been dropped")]
+    DroppedEnvironment,
+    /// Returned when trying to set a strong `RuntimeEnvironment` as a parent (parents must be weak).
+    #[error("Cannot set a strong RuntimeEnvironment as parent")]
+    StrongParent,
+    /// Returned when a requested key is not present in the environment chain.
+    #[error("Key `{0}` does not exist in the environment")]
+    KeyDoesNotExist(String),
 }
 
-/// Weak pointer to an [`Environment`], used for parent links.
-///
-/// Cloning the alias keeps a non-owning reference to the same interior state.
-pub type WeakRuntimeEnvironment = Weak<RefCell<Environment>>;
-
-/// Shared pointer to an [`Environment`], used throughout evaluation.
-///
-/// Cloning the alias keeps references to the same interior state.
-pub type RuntimeEnvironment = Rc<RefCell<Environment>>;
-
-/// Runtime environment with optional parent/child links.
 #[derive(Debug)]
+/// Internal storage for a single scope. Prefer interacting through `RuntimeEnvironment`.
 pub struct Environment {
     map: HashMap<String, RuntimeValue>,
-    parent: Option<WeakRuntimeEnvironment>,
+    parent: Option<RuntimeEnvironment>,
     child: Option<RuntimeEnvironment>,
 }
 
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Environment {
-    /// Creates an empty environment with no parent or child.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use fabulist_lang::interpreter::environment::Environment;
-    ///
-    /// let env = Environment::new();
-    /// assert!(Environment::get_child(&env).is_none());
-    /// ```
-    pub fn new() -> RuntimeEnvironment {
-        Rc::new(RefCell::new(Self {
+    /// Create an empty environment with no parent or child.
+    pub fn new() -> Environment {
+        Self {
             map: HashMap::new(),
             parent: None,
             child: None,
-        }))
+        }
     }
 
-    fn mut_map(&mut self) -> &mut HashMap<String, RuntimeValue> {
-        &mut self.map
+    /// Borrow the internal map for read-only inspection.
+    pub fn map(&self) -> &HashMap<String, RuntimeValue> {
+        &self.map
     }
 
-    fn child(&self) -> Option<&RuntimeEnvironment> {
+    /// Get a reference to the parent `RuntimeEnvironment`, if any.
+    pub fn parent(&self) -> Option<&RuntimeEnvironment> {
+        self.parent.as_ref()
+    }
+
+    /// Get a reference to the child `RuntimeEnvironment`, if any.
+    pub fn child(&self) -> Option<&RuntimeEnvironment> {
         self.child.as_ref()
     }
 
-    fn value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
+    /// Look up a value in the current environment without traversing parents.
+    pub fn get_value(&self, key: impl Into<String>) -> Option<&RuntimeValue> {
         let key = key.into();
-        if let Some(value) = self.map.get(&key) {
+        self.map.get(&key)
+    }
+
+    /// Insert or overwrite a value in the current environment only.
+    pub fn set_value(&mut self, key: impl Into<String>, value: RuntimeValue) {
+        let key = key.into();
+        self.map.insert(key, value);
+    }
+
+    /// Set the parent runtime environment. The parent must be weak.
+    pub fn set_parent(
+        &mut self,
+        runtime_environment: RuntimeEnvironment,
+    ) -> Result<(), EnvironmentError> {
+        if !runtime_environment.is_weak() {
+            return Err(EnvironmentError::StrongParent);
+        }
+        self.parent = Some(runtime_environment);
+
+        Ok(())
+    }
+
+    /// Set the child runtime environment using a strong reference.
+    pub fn set_child(
+        &mut self,
+        runtime_environment: RuntimeEnvironment,
+    ) -> Result<(), EnvironmentError> {
+        let Some(runtime_environment) = runtime_environment.upgrade() else {
+            return Err(EnvironmentError::DroppedEnvironment);
+        };
+        self.child = Some(runtime_environment);
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+/// Classification of environment handles for controlling ownership semantics.
+pub enum RuntimeEnvironmentKind {
+    /// A weak handle to an `Environment`, suitable for parent links.
+    Weak(Weak<RefCell<Environment>>),
+    /// A strong handle to an `Environment`, suitable for ownership.
+    Strong(Rc<RefCell<Environment>>),
+}
+
+#[derive(Debug)]
+/// Public handle for interacting with scoped runtime environments.
+pub struct RuntimeEnvironment(RuntimeEnvironmentKind);
+
+impl Default for RuntimeEnvironment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl RuntimeEnvironment {
+    /// Create a new, empty environment wrapped in a strong reference.
+    pub fn new() -> Self {
+        Self(RuntimeEnvironmentKind::Strong(Rc::new(RefCell::new(
+            Environment::default(),
+        ))))
+    }
+
+    /// Access the underlying `Rc<RefCell<Environment>>`, upgrading weak refs when needed.
+    pub fn get(&self) -> Option<Rc<RefCell<Environment>>> {
+        match &self.0 {
+            RuntimeEnvironmentKind::Strong(rc) => Some(rc.clone()),
+            RuntimeEnvironmentKind::Weak(weak) => weak.upgrade(),
+        }
+    }
+
+    /// Retrieve a value by key, walking up through parent environments if necessary.
+    pub fn get_env_value(&self, key: impl Into<String>) -> Option<RuntimeValue> {
+        let key = key.into();
+
+        let env_rc = self.get()?;
+        let env = env_rc.borrow();
+
+        if let Some(value) = env.get_value(&key) {
             Some(value.clone())
+        } else if let Some(parent) = env.parent() {
+            parent.get_env_value(&key)
         } else {
-            if let Some(parent) = self.parent.as_ref() {
-                if let Some(rc_parent) = parent.upgrade() {
-                    return rc_parent.deref().borrow().value(key);
-                }
-            }
             None
         }
     }
 
-    fn set_parent(&mut self, environment: WeakRuntimeEnvironment) {
-        self.parent = Some(environment);
+    /// Insert a value into the current environment without traversing parents.
+    pub fn insert_env_value(
+        &self,
+        key: impl Into<String>,
+        value: RuntimeValue,
+    ) -> Result<(), EnvironmentError> {
+        let key = key.into();
+
+        let Some(env_rc) = self.get() else {
+            return Err(EnvironmentError::DroppedEnvironment);
+        };
+
+        let mut env = env_rc.borrow_mut();
+        env.set_value(key, value);
+
+        Ok(())
     }
 
-    /// Links an existing environment as a child of the given parent.
-    pub fn nest_child(parent: &RuntimeEnvironment, environment: &RuntimeEnvironment) {
-        environment
-            .deref()
-            .borrow_mut()
-            .set_parent(Rc::downgrade(parent));
-        parent.deref().borrow_mut().child = Some(environment.clone());
+    /// Assign a value, replacing it in the nearest scope where it already exists.
+    ///
+    /// Returns an error if the key is not present in any reachable scope.
+    pub fn assign_env_value(
+        &self,
+        key: impl Into<String>,
+        value: RuntimeValue,
+    ) -> Result<(), EnvironmentError> {
+        let key = key.into();
+
+        let Some(env_rc) = self.get() else {
+            return Err(EnvironmentError::DroppedEnvironment);
+        };
+
+        let mut env = env_rc.borrow_mut();
+
+        if env.get_value(&key).is_some() {
+            env.set_value(key, value);
+            Ok(())
+        } else if let Some(parent) = env.parent() {
+            parent.assign_env_value(key, value)
+        } else {
+            Err(EnvironmentError::KeyDoesNotExist(key))
+        }
     }
 
-    /// Attaches a new empty child to the given environment and returns it.
+    /// Check whether this runtime environment holds a weak reference.
+    pub fn is_weak(&self) -> bool {
+        matches!(self.0, RuntimeEnvironmentKind::Weak(_))
+    }
+
+    /// Convert to a strong environment handle if possible.
+    pub fn upgrade(&self) -> Option<RuntimeEnvironment> {
+        match &self.0 {
+            RuntimeEnvironmentKind::Weak(weak) => weak
+                .upgrade()
+                .map(|rc| RuntimeEnvironment(RuntimeEnvironmentKind::Strong(rc))),
+            RuntimeEnvironmentKind::Strong(rc) => Some(RuntimeEnvironment(
+                RuntimeEnvironmentKind::Strong(rc.clone()),
+            )),
+        }
+    }
+
+    /// Convert to a weak environment handle.
+    pub fn downgrade(&self) -> RuntimeEnvironment {
+        match &self.0 {
+            RuntimeEnvironmentKind::Strong(rc) => {
+                RuntimeEnvironment(RuntimeEnvironmentKind::Weak(Rc::downgrade(rc)))
+            }
+            RuntimeEnvironmentKind::Weak(weak) => {
+                RuntimeEnvironment(RuntimeEnvironmentKind::Weak(weak.clone()))
+            }
+        }
+    }
+
+    /// Get the child environment if present.
+    pub fn get_child(&self) -> Option<RuntimeEnvironment> {
+        let env_rc = self.get()?;
+        let env = env_rc.borrow();
+        env.child().cloned()
+    }
+
+    /// Get the parent environment if present.
+    pub fn get_parent(&self) -> Option<RuntimeEnvironment> {
+        let env_rc = self.get()?;
+        let env = env_rc.borrow();
+        env.parent().cloned()
+    }
+
+    /// Set the child environment using a strong handle.
+    pub fn set_child(
+        &self,
+        runtime_environment: RuntimeEnvironment,
+    ) -> Result<(), EnvironmentError> {
+        let Some(env_rc) = self.get() else {
+            return Err(EnvironmentError::DroppedEnvironment);
+        };
+
+        let mut env = env_rc.borrow_mut();
+        env.set_child(runtime_environment)?;
+
+        Ok(())
+    }
+
+    /// Set the parent environment using a weak handle.
+    pub fn set_parent(
+        &self,
+        runtime_environment: RuntimeEnvironment,
+    ) -> Result<(), EnvironmentError> {
+        let Some(env_rc) = self.get() else {
+            return Err(EnvironmentError::DroppedEnvironment);
+        };
+
+        let mut env = env_rc.borrow_mut();
+        env.set_parent(runtime_environment)?;
+
+        Ok(())
+    }
+
+    /// Create an empty child environment, link it to this environment, and return it.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use fabulist_lang::interpreter::environment::Environment;
+    /// use fabulist_lang::error::OwnedSpan;
+    /// use fabulist_lang::interpreter::environment::RuntimeEnvironment;
+    /// use fabulist_lang::interpreter::runtime_value::RuntimeValue;
     ///
-    /// let env = Environment::new();
-    /// let child = Environment::add_empty_child(&env);
-    /// assert!(Environment::get_child(&env).is_some());
-    /// assert!(std::rc::Rc::ptr_eq(
-    ///     &child,
-    ///     &Environment::get_child(&env).unwrap()
-    /// ));
+    /// let root = RuntimeEnvironment::new();
+    /// let child = root.add_empty_child().unwrap();
+    ///
+    /// child
+    ///     .insert_env_value(
+    ///         "x",
+    ///         RuntimeValue::Number {
+    ///             value: 1.0,
+    ///             span: OwnedSpan::default(),
+    ///         },
+    ///     )
+    ///     .unwrap();
+    /// assert!(root.get_env_value("x").is_none());
+    ///
+    /// root
+    ///     .insert_env_value(
+    ///         "y",
+    ///         RuntimeValue::Number {
+    ///             value: 2.0,
+    ///             span: OwnedSpan::default(),
+    ///         },
+    ///     )
+    ///     .unwrap();
+    /// let RuntimeValue::Number { value, .. } = child.get_env_value("y").unwrap() else {
+    ///     panic!("expected number");
+    /// };
+    /// assert_eq!(value, 2.0);
     /// ```
-    pub fn add_empty_child(environment: &RuntimeEnvironment) -> RuntimeEnvironment {
-        let child = Environment::new();
-        Environment::nest_child(environment, &child);
-        child
-    }
+    pub fn add_empty_child(&self) -> Result<RuntimeEnvironment, EnvironmentError> {
+        let child_environment = RuntimeEnvironment::new();
 
-    /// Borrows the environment immutably.
-    pub fn unwrap(environment: &RuntimeEnvironment) -> Ref<'_, Environment> {
-        environment.deref().borrow()
-    }
+        self.set_child(child_environment.clone())?;
+        child_environment.set_parent(self.downgrade())?;
 
-    /// Borrows the environment mutably.
-    pub fn unwrap_mut(environment: &RuntimeEnvironment) -> RefMut<'_, Environment> {
-        environment.deref().borrow_mut()
-    }
-
-    /// Inserts a value into the current environment without propagating upward.
-    pub fn insert(environment: &RuntimeEnvironment, key: impl Into<String>, value: RuntimeValue) {
-        Environment::unwrap_mut(environment)
-            .mut_map()
-            .insert(key.into(), value);
-    }
-    /// Looks up a value in the current environment, falling back to parents.
-    pub fn get_value(
-        environment: &RuntimeEnvironment,
-        key: impl Into<String>,
-    ) -> Option<RuntimeValue> {
-        Environment::unwrap(environment).value(key)
-    }
-
-    /// Returns the direct child environment if one exists.
-    pub fn get_child(environment: &RuntimeEnvironment) -> Option<RuntimeEnvironment> {
-        Environment::unwrap(environment).child().cloned()
-    }
-
-    /// Assigns a value to an existing binding, walking up parent scopes when needed.
-    ///
-    /// Returns an error when the identifier does not exist in any accessible scope.
-    pub fn assign(
-        environment: &RuntimeEnvironment,
-        key: impl Into<String>,
-        value: RuntimeValue,
-    ) -> Result<(), RuntimeError> {
-        let key = key.into();
-        let mut env_ref = environment.deref().borrow_mut();
-
-        match env_ref.map.entry(key.clone()) {
-            Entry::Occupied(mut entry) => {
-                entry.insert(value);
-                Ok(())
-            }
-            Entry::Vacant(_) => {
-                if let Some(parent) = env_ref.parent.as_ref() {
-                    if let Some(rc_parent) = parent.upgrade() {
-                        return Environment::assign(&rc_parent, key, value);
-                    }
-                }
-                Err(RuntimeError::IdentifierDoesNotExist(OwnedSpan::default()))
-            }
-        }
-    }
-
-    /// Extracts a clone of the internal map from the environment.
-    pub fn extract_map(environment: &RuntimeEnvironment) -> HashMap<String, RuntimeValue> {
-        Environment::unwrap(environment).map.clone()
+        Ok(child_environment)
     }
 }
 
-impl LayeredMap for RuntimeEnvironment {
-    fn insert_local(&mut self, key: String, value: RuntimeValue) {
-        Environment::insert(self, key, value);
-    }
-
-    fn get_upwards(&self, key: &str) -> Option<RuntimeValue> {
-        Environment::get_value(self, key)
-    }
-
-    fn assign_upwards(&mut self, key: String, new_value: RuntimeValue) -> bool {
-        Environment::assign(self, key, new_value).is_ok()
-    }
-}
-
-#[cfg(test)]
-mod environment_tests {
-    use super::*;
-
-    #[test]
-    fn nests_child() {
-        let environment = Environment::new();
-        let child = Environment::new();
-        Environment::nest_child(&environment, &child);
-
-        let nested_child = Environment::unwrap(&environment)
-            .child()
-            .expect("Environment does not have a child")
-            .clone();
-
-        assert!(Rc::ptr_eq(&child, &nested_child))
-    }
-
-    #[test]
-    fn propagates_value_downwards() {
-        let environment = Environment::new();
-        Environment::insert(
-            &environment,
-            "number",
-            RuntimeValue::Number {
-                value: 5.0,
-                span: Default::default(),
-            },
-        );
-
-        let child = Environment::add_empty_child(&environment);
-
-        let value = Environment::get_value(&child, "number")
-            .expect("Could not find propagated value from parent environment");
-
-        match value {
-            RuntimeValue::Number { value: num, .. } => assert_eq!(num, 5.0),
-            _ => panic!("Propagated value has incorrect type"),
-        }
-    }
-
-    #[test]
-    fn assigns_value_upwards() {
-        let environment = Environment::new();
-        Environment::insert(
-            &environment,
-            "number",
-            RuntimeValue::Number {
-                value: 5.0,
-                span: Default::default(),
-            },
-        );
-        let child = Environment::add_empty_child(&environment);
-
-        Environment::assign(
-            &child,
-            "number",
-            RuntimeValue::Number {
-                value: 10.0,
-                span: Default::default(),
-            },
-        )
-        .expect("Failed to assign value upwards");
-
-        let value = Environment::get_value(&environment, "number")
-            .expect("Could not find assigned value in parent environment");
-
-        match value {
-            RuntimeValue::Number { value: num, .. } => assert_eq!(num, 10.0),
-            _ => panic!("Assigned value has incorrect type"),
+impl Clone for RuntimeEnvironment {
+    fn clone(&self) -> Self {
+        match &self.0 {
+            RuntimeEnvironmentKind::Strong(rc) => {
+                RuntimeEnvironment(RuntimeEnvironmentKind::Strong(rc.clone()))
+            }
+            RuntimeEnvironmentKind::Weak(weak) => {
+                RuntimeEnvironment(RuntimeEnvironmentKind::Weak(weak.clone()))
+            }
         }
     }
 }

@@ -1,8 +1,5 @@
 #![cfg(feature = "parsing")]
-use fabulist_lang::interpreter::{
-    environment::{Environment, RuntimeEnvironment},
-    runtime_value::RuntimeValue,
-};
+use fabulist_lang::interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue};
 
 use crate::{
     error::ParsingResult,
@@ -28,10 +25,11 @@ impl StoryBuilder {
 impl Mappable for RuntimeEnvironment {
     fn insert(&mut self, key: String, value: crate::story::context::ContextValue) {
         let runtime_value: RuntimeValue = value.into();
-        Environment::insert(self, key, runtime_value);
+        self.insert_env_value(key, runtime_value)
+            .expect("Failed to insert env value");
     }
     fn get(&self, key: &str) -> Option<&crate::story::context::ContextValue> {
-        if let Some(runtime_value) = Environment::get_value(self, key) {
+        if let Some(runtime_value) = self.get_env_value(key) {
             let context_value: ContextValue = runtime_value.clone().into();
             Some(Box::leak(Box::new(context_value)))
         } else {
@@ -40,7 +38,7 @@ impl Mappable for RuntimeEnvironment {
     }
     fn assign(&mut self, key: String, new_value: crate::story::context::ContextValue) -> bool {
         let runtime_value: RuntimeValue = new_value.into();
-        let result = Environment::assign(self, key, runtime_value);
+        let result = self.assign_env_value(key, runtime_value);
         result.is_ok()
     }
 }

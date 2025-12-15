@@ -1,7 +1,7 @@
 //! Expression evaluators that turn AST nodes into runtime values.
 use crate::{
     error::RuntimeError,
-    interpreter::environment::{Environment, RuntimeEnvironment},
+    interpreter::environment::RuntimeEnvironment,
     interpreter::intrinsics::{
         BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics,
     },
@@ -261,7 +261,8 @@ impl Evaluable for StandardUnary {
                     span: self.span.clone(),
                 }),
                 RuntimeValue::Identifier { name, span } => {
-                    let value = Environment::get_value(environment, &name)
+                    let value = environment
+                        .get_env_value(&name)
                         .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
 
                     match value {
@@ -286,7 +287,8 @@ impl Evaluable for StandardUnary {
                     span: self.span.clone(),
                 }),
                 RuntimeValue::Identifier { name, span } => {
-                    let value = Environment::get_value(environment, &name)
+                    let value = environment
+                        .get_env_value(&name)
                         .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
 
                     match value {
@@ -374,11 +376,11 @@ impl Evaluable for CallExpr {
                 closure,
                 ..
             } => {
-                let new_env = Environment::add_empty_child(&closure);
+                let new_env = closure.add_empty_child()?;
 
                 if let Some(params) = parameters.parameters.as_ref() {
                     for (param, arg) in params.iter().zip(args.iter()) {
-                        Environment::insert(&new_env, param.name.clone(), arg.clone());
+                        new_env.insert_env_value(param.name.clone(), arg.clone())?;
                     }
                 }
 
@@ -387,18 +389,18 @@ impl Evaluable for CallExpr {
             }
             RuntimeValue::Identifier {
                 name: ident_name, ..
-            } => match Environment::get_value(environment, &ident_name) {
+            } => match environment.get_env_value(&ident_name) {
                 Some(RuntimeValue::Lambda {
                     parameters,
                     body,
                     closure,
                     ..
                 }) => {
-                    let new_env = Environment::add_empty_child(&closure);
+                    let new_env = closure.add_empty_child()?;
 
                     if let Some(params) = parameters.parameters.as_ref() {
                         for (param, arg) in params.iter().zip(args.iter()) {
-                            Environment::insert(&new_env, param.name.clone(), arg.clone());
+                            new_env.insert_env_value(param.name.clone(), arg.clone())?;
                         }
                     }
 
@@ -440,18 +442,18 @@ impl Evaluable for MemberExpr {
                         properties: obj_map,
                         ..
                     } => {
-                        let injected_env = ObjectIntrinsics::inject_intrinsics(environment);
+                        let injected_env = ObjectIntrinsics::inject_intrinsics(environment)?;
 
                         for (key, value) in obj_map.iter() {
-                            Environment::insert(&injected_env, key.clone(), value.clone());
+                            injected_env.insert_env_value(key, value.clone())?;
                         }
 
-                        injected_env
+                        Ok(injected_env)
                     }
-                    RuntimeValue::Context { .. } => context.clone(),
-                    RuntimeValue::Module { environment, .. } => environment.clone(),
+                    RuntimeValue::Context { .. } => Ok(context.clone()),
+                    RuntimeValue::Module { environment, .. } => Ok(environment.clone()),
                     other => return Err(RuntimeError::InvalidMemoryAccess(other.span().clone())),
-                };
+                }?;
 
                 member.evaluate(&injected_env, context)
             })
@@ -469,7 +471,7 @@ impl Evaluable for BinaryExpr {
         let mut left_value = self.left.evaluate(environment, context)?;
 
         if let RuntimeValue::Identifier { name, span } = &left_value {
-            if let Some(value) = Environment::get_value(environment, name) {
+            if let Some(value) = environment.get_env_value(name) {
                 left_value = value;
             } else {
                 return Err(RuntimeError::InvalidIdentifier(span.clone()));
@@ -487,7 +489,7 @@ impl Evaluable for BinaryExpr {
         let mut right_value = right_expr.evaluate(environment, context)?;
 
         if let RuntimeValue::Identifier { name, span } = &right_value {
-            if let Some(value) = Environment::get_value(environment, name) {
+            if let Some(value) = environment.get_env_value(name) {
                 right_value = value;
             } else {
                 return Err(RuntimeError::InvalidIdentifier(span.clone()));
@@ -554,7 +556,7 @@ impl Evaluable for AssignmentExpr {
         };
 
         let right_value = right.evaluate(environment, context)?;
-        Environment::assign(environment, name, right_value)?;
+        environment.assign_env_value(&name, right_value)?;
 
         Ok(RuntimeValue::None {
             span: self.span.clone(),

@@ -1,7 +1,8 @@
 //! Statement evaluators that execute within a runtime environment.
+
 use crate::{
     error::RuntimeError,
-    interpreter::environment::{Environment, RuntimeEnvironment},
+    interpreter::environment::RuntimeEnvironment,
     interpreter::{runtime_value::RuntimeValue, Evaluable},
     parser::ast::stmt::models::{BlockStmt, ElseClause, ExprStmt, GotoStmt, IfStmt, LetStmt, Stmt},
 };
@@ -14,7 +15,7 @@ impl Evaluable for BlockStmt {
         environment: &RuntimeEnvironment,
         context: &RuntimeEnvironment,
     ) -> Self::Output {
-        let block_environment = Environment::add_empty_child(environment);
+        let block_environment = environment.add_empty_child()?;
 
         for statement in &self.statements {
             statement.evaluate(&block_environment, context)?;
@@ -37,7 +38,7 @@ impl Evaluable for IfStmt {
         let mut condition = self.condition.evaluate(environment, context)?;
 
         if let RuntimeValue::Identifier { name, span } = &condition {
-            if let Some(value) = Environment::get_value(environment, name) {
+            if let Some(value) = environment.get_env_value(name) {
                 condition = value;
             } else {
                 return Err(RuntimeError::IdentifierDoesNotExist(span.clone()));
@@ -76,7 +77,7 @@ impl Evaluable for LetStmt {
             ));
         };
 
-        Environment::insert(environment, key, value);
+        environment.insert_env_value(key, value)?;
 
         Ok(RuntimeValue::None {
             span: self.span.clone(),
@@ -134,20 +135,21 @@ impl Evaluable for Stmt {
 mod stmt_evaluators_tests {
     use crate::{
         error::OwnedSpan,
-        interpreter::environment::Environment,
-        interpreter::runtime_value::RuntimeValue,
-        parser::ast::{
-            stmt::models::{BlockStmt, ExprStmt, LetStmt},
-            AssertEvaluateOptions, AstTestHelper,
+        interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
+        parser::{
+            ast::{
+                stmt::models::{BlockStmt, ExprStmt, LetStmt},
+                AssertEvaluateOptions, AstTestHelper,
+            },
+            Rule,
         },
-        parser::Rule,
     };
 
     #[test]
     fn evaluates_let_stmt() {
         let test_helper = AstTestHelper::<LetStmt>::new(Rule::let_stmt, "LetStmt");
 
-        let environment = Environment::new();
+        let environment = RuntimeEnvironment::new();
 
         let result = test_helper
             .parse_and_evaluate(AssertEvaluateOptions {
@@ -161,8 +163,9 @@ mod stmt_evaluators_tests {
             panic!("Expected RuntimeValue::None, got {:?}", result);
         };
 
-        let RuntimeValue::Number { value, .. } =
-            Environment::get_value(&environment, "x").expect("Variable x not found")
+        let RuntimeValue::Number { value, .. } = environment
+            .get_env_value("x")
+            .expect("Variable x not found")
         else {
             panic!("Expected RuntimeValue::Number for variable x");
         };
@@ -174,7 +177,7 @@ mod stmt_evaluators_tests {
     fn evaluates_block_stmt() {
         let test_helper = AstTestHelper::<BlockStmt>::new(Rule::block_stmt, "BlockStmt");
 
-        let environment = Environment::new();
+        let environment = RuntimeEnvironment::new();
 
         let result = test_helper
             .parse_and_evaluate(AssertEvaluateOptions {
@@ -184,23 +187,26 @@ mod stmt_evaluators_tests {
             })
             .expect("Failed to evaluate BlockStmt");
 
-        let block_environment = Environment::get_child(&environment)
+        let block_environment = environment
+            .get_child()
             .expect("BlockStmt should create a child environment");
 
         let RuntimeValue::None { .. } = result else {
             panic!("Expected RuntimeValue::None, got {:?}", result);
         };
 
-        let RuntimeValue::Number { value: x_value, .. } =
-            Environment::get_value(&block_environment, "x").expect("Variable x not found")
+        let RuntimeValue::Number { value: x_value, .. } = block_environment
+            .get_env_value("x")
+            .expect("Variable x not found")
         else {
             panic!("Expected RuntimeValue::Number for variable x");
         };
 
         assert_eq!(x_value, 10.0);
 
-        let RuntimeValue::Number { value: y_value, .. } =
-            Environment::get_value(&block_environment, "y").expect("Variable y not found")
+        let RuntimeValue::Number { value: y_value, .. } = block_environment
+            .get_env_value("y")
+            .expect("Variable y not found")
         else {
             panic!("Expected RuntimeValue::Number for variable y");
         };
@@ -212,16 +218,17 @@ mod stmt_evaluators_tests {
     fn evaluates_expr_stmt() {
         let test_helper = AstTestHelper::<ExprStmt>::new(Rule::expression_stmt, "ExprStmt");
 
-        let environment = Environment::new();
+        let environment = RuntimeEnvironment::new();
 
-        Environment::insert(
-            &environment,
-            "x",
-            RuntimeValue::Number {
-                value: 30.0,
-                span: OwnedSpan::default(),
-            },
-        );
+        environment
+            .insert_env_value(
+                "x",
+                RuntimeValue::Number {
+                    value: 30.0,
+                    span: OwnedSpan::default(),
+                },
+            )
+            .expect("Failed to insert variable x");
 
         test_helper
             .parse_and_evaluate(AssertEvaluateOptions {
@@ -231,8 +238,9 @@ mod stmt_evaluators_tests {
             })
             .expect("Failed to evaluate ExprStmt");
 
-        let RuntimeValue::Number { value: x_value, .. } =
-            Environment::get_value(&environment, "x").expect("Variable x not found")
+        let RuntimeValue::Number { value: x_value, .. } = environment
+            .get_env_value("x")
+            .expect("Variable x not found")
         else {
             panic!("Expected RuntimeValue::Number for variable x");
         };
@@ -244,7 +252,7 @@ mod stmt_evaluators_tests {
     fn evaluates_if_stmt() {
         let test_helper = AstTestHelper::<BlockStmt>::new(Rule::block_stmt, "BlockStmt");
 
-        let environment = Environment::new();
+        let environment = RuntimeEnvironment::new();
 
         let result = test_helper
             .parse_and_evaluate(AssertEvaluateOptions {
@@ -266,23 +274,26 @@ mod stmt_evaluators_tests {
             })
             .expect("Failed to evaluate IfStmt");
 
-        let block_environment = Environment::get_child(&environment)
+        let block_environment = environment
+            .get_child()
             .expect("BlockStmt should create a child environment");
 
         let RuntimeValue::None { .. } = result else {
             panic!("Expected RuntimeValue::None, got {:?}", result);
         };
 
-        let RuntimeValue::Number { value: x_value, .. } =
-            Environment::get_value(&block_environment, "x").expect("Variable x not found")
+        let RuntimeValue::Number { value: x_value, .. } = block_environment
+            .get_env_value("x")
+            .expect("Variable x not found")
         else {
             panic!("Expected RuntimeValue::Number for variable x");
         };
 
         assert_eq!(x_value, 110.0);
 
-        let RuntimeValue::Number { value: y_value, .. } =
-            Environment::get_value(&block_environment, "y").expect("Variable y not found")
+        let RuntimeValue::Number { value: y_value, .. } = block_environment
+            .get_env_value("y")
+            .expect("Variable y not found")
         else {
             panic!("Expected RuntimeValue::Number for variable y");
         };

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use fabulist_lang::{
     error::OwnedSpan,
-    interpreter::{environment::Environment, runtime_value::RuntimeValue, Evaluable},
+    interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue, Evaluable},
     parser::ast::{
         decl::models::{
             ChoiceElement, DialogueElement, Element, ElementDecl, NarrationElement, PartDecl,
@@ -71,7 +71,7 @@ impl TryFrom<QuoteDecl> for Quote {
         let properties = match value.properties {
             Some(obj_dfn) => {
                 let RuntimeValue::Object { properties, .. } =
-                    obj_dfn.evaluate(&Environment::new(), &Environment::new())?
+                    obj_dfn.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?
                 else {
                     return Err(ParsingError::InvalidQuoteProperties);
                 };
@@ -116,7 +116,7 @@ impl TryFrom<NarrationElement> for Narration {
                 ..
             }) = properties.get("next")
             {
-                let parameters = parameters.evaluate(&Environment::new(), &Environment::new())?;
+                let parameters = parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
                 if parameters.is_some_and(|p| !p.is_empty()) {
                     return Err(ParsingError::QueryNextHasParameters);
                 }
@@ -127,7 +127,7 @@ impl TryFrom<NarrationElement> for Narration {
                 let query_next_closure = Box::new(
                     move |_context: &dyn Mappable| -> EngineResult<ListKey<String>> {
                         let result = body
-                            .evaluate(&closure, &Environment::new())
+                            .evaluate(&closure, &RuntimeEnvironment::new())
                             .expect("Failed to evaluate `next` closure in narration.");
 
                         match result {
@@ -147,7 +147,7 @@ impl TryFrom<NarrationElement> for Narration {
                 ..
             }) = properties.get("change_context")
             {
-                let parameters = parameters.evaluate(&Environment::new(), &Environment::new())?;
+                let parameters = parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
                 if parameters.is_some_and(|p| !p.is_empty()) {
                     return Err(ParsingError::QueryChangeContextHasParameters);
                 }
@@ -216,7 +216,7 @@ impl TryFrom<StoryAst> for Story {
 
         let RuntimeValue::Object { properties, .. } = meta
             .properties
-            .evaluate(&Environment::new(), &Environment::new())?
+            .evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?
         else {
             return Err(ParsingError::StartMetadataRequired);
         };

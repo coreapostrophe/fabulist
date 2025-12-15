@@ -7,8 +7,7 @@ use pest::iterators::Pair;
 
 #[cfg(test)]
 use crate::{
-    interpreter::environment::{Environment, RuntimeEnvironment},
-    interpreter::Evaluable,
+    interpreter::{environment::RuntimeEnvironment, Evaluable},
     parser::Rule,
 };
 
@@ -92,8 +91,8 @@ where
         T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
     {
         let ast = self.assert_parse(options.source);
-        let environment = options.environment.unwrap_or_else(Environment::new);
-        let context = options.context.unwrap_or_else(Environment::new);
+        let environment = options.environment.unwrap_or_default();
+        let context = options.context.unwrap_or_default();
 
         ast.evaluate(&environment, &context)
     }

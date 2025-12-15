@@ -1,10 +1,8 @@
 //! Intrinsic helpers available to runtime values.
-use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     error::{OwnedSpan, RuntimeError},
-    interpreter::environment::Environment,
-    interpreter::runtime_value::RuntimeValue,
+    interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
 };
 
 /// Intrinsics for numeric runtime values.
@@ -44,16 +42,17 @@ impl NumberIntrinsics {
     ///
     /// The returned environment currently exposes [`NumberIntrinsics::to_string`]
     /// under the symbol `to_string`.
-    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
-        let intrinsics_environment = Environment::add_empty_child(environment);
+    pub fn inject_intrinsics(
+        environment: &RuntimeEnvironment,
+    ) -> Result<RuntimeEnvironment, RuntimeError> {
+        let intrinsics_environment = environment.add_empty_child()?;
 
-        Environment::insert(
-            &intrinsics_environment,
+        intrinsics_environment.insert_env_value(
             "to_string".to_string(),
             RuntimeValue::NativeFunction(Self::to_string),
-        );
+        )?;
 
-        intrinsics_environment
+        Ok(intrinsics_environment)
     }
 }
 
@@ -64,8 +63,10 @@ impl BooleanIntrinsics {
     /// Attaches a fresh child environment for boolean intrinsics.
     ///
     /// Placeholder for future helpers.
-    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
-        Environment::add_empty_child(environment)
+    pub fn inject_intrinsics(
+        environment: &RuntimeEnvironment,
+    ) -> Result<RuntimeEnvironment, RuntimeError> {
+        Ok(environment.add_empty_child()?)
     }
 }
 
@@ -76,8 +77,10 @@ impl StringIntrinsics {
     /// Attaches a fresh child environment for string intrinsics.
     ///
     /// Placeholder for future helpers.
-    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
-        Environment::add_empty_child(environment)
+    pub fn inject_intrinsics(
+        environment: &RuntimeEnvironment,
+    ) -> Result<RuntimeEnvironment, RuntimeError> {
+        Ok(environment.add_empty_child()?)
     }
 }
 
@@ -88,7 +91,9 @@ impl ObjectIntrinsics {
     /// Attaches a fresh child environment for object intrinsics.
     ///
     /// Placeholder for future helpers.
-    pub fn inject_intrinsics(environment: &Rc<RefCell<Environment>>) -> Rc<RefCell<Environment>> {
-        Environment::add_empty_child(environment)
+    pub fn inject_intrinsics(
+        environment: &RuntimeEnvironment,
+    ) -> Result<RuntimeEnvironment, RuntimeError> {
+        Ok(environment.add_empty_child()?)
     }
 }

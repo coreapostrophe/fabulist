@@ -3,7 +3,7 @@ use std::ops::Add;
 
 use pest::Span;
 
-use crate::parser::Rule;
+use crate::{interpreter::environment::EnvironmentError, parser::Rule};
 
 /// Span owned by the AST for error reporting.
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -139,4 +139,7 @@ pub enum RuntimeError {
     /// Invalid or unsupported member access was attempted.
     #[error("Invalid memory access.")]
     InvalidMemoryAccess(OwnedSpan),
+    /// Errors originating from the environment.
+    #[error("Environment error: {0}")]
+    EnvironmentError(#[from] EnvironmentError),
 }
