@@ -78,7 +78,7 @@ impl PartBuilder {
         self.quotes.push(dialogue.into());
         self
     }
-    
+
     pub fn build(self) -> Part {
         Part {
             id: self.id,
