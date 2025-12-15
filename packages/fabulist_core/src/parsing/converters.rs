@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use fabulist_lang::{
-    interpreter::environment::Environment,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    error::OwnedSpan,
+    interpreter::{environment::Environment, runtime_value::RuntimeValue, Evaluable},
     parser::ast::{
         decl::models::{
             ChoiceElement, DialogueElement, Element, ElementDecl, NarrationElement, PartDecl,
@@ -13,15 +13,52 @@ use fabulist_lang::{
 };
 
 use crate::{
-    error::ParsingError,
+    error::{EngineError, EngineResult, ParsingError},
     story::{
+        context::{ContextValue, Contextual},
         part::{
-            dialogue::Dialogue, narration::Narration, selection::Selection, Part, PartBuilder,
-            PartElement,
+            dialogue::Dialogue,
+            narration::{Narration, NarrationBuilder},
+            selection::Selection,
+            Part, PartBuilder, PartElement,
         },
+        reference::ListKey,
         Story, StoryBuilder,
     },
 };
+
+impl From<RuntimeValue> for ContextValue {
+    fn from(value: RuntimeValue) -> Self {
+        match value {
+            RuntimeValue::String { value, .. } => ContextValue::String(value),
+            RuntimeValue::Number { value, .. } => ContextValue::Integer(value),
+            RuntimeValue::Boolean { value, .. } => ContextValue::Bool(value),
+            _ => ContextValue::None,
+        }
+    }
+}
+
+impl From<ContextValue> for RuntimeValue {
+    fn from(value: ContextValue) -> Self {
+        match value {
+            ContextValue::String(string_value) => RuntimeValue::String {
+                value: string_value,
+                span: OwnedSpan::default(),
+            },
+            ContextValue::Integer(int_value) => RuntimeValue::Number {
+                value: int_value,
+                span: OwnedSpan::default(),
+            },
+            ContextValue::Bool(bool_value) => RuntimeValue::Boolean {
+                value: bool_value,
+                span: OwnedSpan::default(),
+            },
+            ContextValue::None => RuntimeValue::None {
+                span: OwnedSpan::default(),
+            },
+        }
+    }
+}
 
 pub struct Quote {
     pub text: String,
@@ -66,8 +103,45 @@ impl TryFrom<ChoiceElement> for Selection {
 
 impl TryFrom<NarrationElement> for Narration {
     type Error = ParsingError;
-    fn try_from(_value: NarrationElement) -> Result<Self, Self::Error> {
-        todo!()
+    fn try_from(value: NarrationElement) -> Result<Self, Self::Error> {
+        let quote = Quote::try_from(value.quote)?;
+
+        let mut narration_builder = NarrationBuilder::new(quote.text);
+
+        if let Some(properties) = quote.properties {
+            if let Some(RuntimeValue::Lambda {
+                parameters,
+                body,
+                closure,
+                ..
+            }) = properties.get("next")
+            {
+                let parameters = parameters.evaluate(&Environment::new(), &Environment::new())?;
+                if parameters.is_some_and(|p| !p.is_empty()) {
+                    return Err(ParsingError::QueryNextShouldNotHaveParameters);
+                }
+
+                let body = body.clone();
+                let closure = closure.clone();
+
+                let query_next_closure = Box::new(
+                    move |_context: &dyn Contextual| -> EngineResult<ListKey<String>> {
+                        let result = body
+                            .evaluate(&closure, &Environment::new())
+                            .expect("Failed to evaluate `next` closure in narration.");
+
+                        match result {
+                            RuntimeValue::Path { segments, .. } => Ok(ListKey::from(segments)),
+                            _ => Err(EngineError::EndOfStory),
+                        }
+                    },
+                );
+
+                narration_builder = narration_builder.set_query_next(query_next_closure);
+            }
+        }
+
+        Ok(narration_builder.build())
     }
 }
 

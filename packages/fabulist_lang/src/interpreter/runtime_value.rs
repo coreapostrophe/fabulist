@@ -70,6 +70,13 @@ pub enum RuntimeValue {
         /// Span referencing the `context` literal.
         span: OwnedSpan,
     },
+    /// Path literal.
+    Path {
+        /// Path segments.
+        segments: Vec<String>,
+        /// Source span of the literal.
+        span: OwnedSpan,
+    },
 }
 
 impl RuntimeValue {
@@ -85,6 +92,7 @@ impl RuntimeValue {
             RuntimeValue::NativeFunction(_) => "NativeFunction".to_string(),
             RuntimeValue::None { .. } => "None".to_string(),
             RuntimeValue::Context { .. } => "Context".to_string(),
+            RuntimeValue::Path { .. } => "Path".to_string(),
         }
     }
 }

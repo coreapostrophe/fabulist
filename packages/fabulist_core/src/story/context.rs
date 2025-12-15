@@ -1,10 +1,14 @@
-use std::collections::HashMap;
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    fmt::Debug,
+};
 
 #[derive(Debug)]
 pub enum ContextValue {
     Integer(f32),
     Bool(bool),
     String(String),
+    None,
 }
 
 impl From<&str> for ContextValue {
@@ -31,6 +35,12 @@ impl From<bool> for ContextValue {
     }
 }
 
+pub trait Contextual: Debug {
+    fn insert(&mut self, key: String, value: ContextValue);
+    fn get(&self, key: &str) -> Option<&ContextValue>;
+    fn assign(&mut self, key: String, new_value: ContextValue) -> bool;
+}
+
 #[derive(Debug)]
 pub struct Context(HashMap<String, ContextValue>);
 
@@ -53,11 +63,29 @@ impl Context {
         &mut self.0
     }
 
-    pub fn insert(&mut self, key: impl Into<String>, value: impl Into<ContextValue>) {
-        self.0.insert(key.into(), value.into());
+    pub fn insert(&mut self, key: String, value: ContextValue) {
+        self.0.insert(key, value);
     }
 
     pub fn clear(&mut self) {
         self.0.clear();
+    }
+}
+
+impl Contextual for Context {
+    fn insert(&mut self, key: String, value: ContextValue) {
+        self.0.insert(key, value);
+    }
+    fn get(&self, key: &str) -> Option<&ContextValue> {
+        self.0.get(key)
+    }
+    fn assign(&mut self, key: String, new_value: ContextValue) -> bool {
+        match self.0.entry(key) {
+            Entry::Occupied(mut entry) => {
+                entry.insert(new_value);
+                true
+            }
+            Entry::Vacant(_) => false,
+        }
     }
 }

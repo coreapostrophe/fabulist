@@ -11,12 +11,23 @@ use super::{
     PartElement,
 };
 
-#[derive(ElementInternal, Debug)]
+#[derive(ElementInternal)]
 pub struct Dialogue {
     text: String,
     character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
+}
+
+impl std::fmt::Debug for Dialogue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Dialogue")
+            .field("text", &self.text)
+            .field("character", &self.character)
+            .field("query_next", &self.query_next.is_some())
+            .field("change_context", &self.change_context.is_some())
+            .finish()
+    }
 }
 
 impl Dialogue {
@@ -49,12 +60,22 @@ impl ChangeContext for Dialogue {
     }
 }
 
-#[derive(Debug)]
 pub struct DialogueBuilder {
     text: String,
     character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
+}
+
+impl std::fmt::Debug for DialogueBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DialogueBuilder")
+            .field("text", &self.text)
+            .field("character", &self.character)
+            .field("query_next", &self.query_next.is_some())
+            .field("change_context", &self.change_context.is_some())
+            .finish()
+    }
 }
 
 #[derive(Debug)]
@@ -118,12 +139,16 @@ impl From<DialogueBuilder> for Box<PartElement> {
 impl Progressive for Dialogue {
     type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
-        if let Some(change_context_closure) = self.change_context {
-            change_context_closure(state.mut_context());
+        if let Some(change_context_closure) = self.change_context.as_ref() {
+            change_context_closure(state.mut_context().as_mut())?;
         }
+
         let next_part_key = self
             .query_next
-            .map(|next_closure| next_closure(state.context()));
+            .as_ref()
+            .map(|next_closure| next_closure(state.context().as_ref()))
+            .transpose()?;
+
         Ok(next_part_key)
     }
 }

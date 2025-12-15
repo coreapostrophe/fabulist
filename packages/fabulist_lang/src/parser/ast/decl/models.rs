@@ -13,11 +13,11 @@ pub enum Element {
     Dialogue(DialogueElement),
 
     /// Choice presented to the audience.
-    #[production(span: OwnedSpan, value: QuoteDecl)]
+    #[production(span: OwnedSpan, quote: QuoteDecl)]
     Choice(ChoiceElement),
 
     /// Narration line presented without character attribution.
-    #[production(span: OwnedSpan, value: QuoteDecl)]
+    #[production(span: OwnedSpan, quote: QuoteDecl)]
     Narration(NarrationElement),
 }
 

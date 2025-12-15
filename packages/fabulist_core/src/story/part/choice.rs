@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     error::EngineResult,
     state::State,
@@ -6,12 +8,22 @@ use crate::{
 
 use super::actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure};
 
-#[derive(Debug)]
 pub struct Choice {
     text: String,
     response: Option<String>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
+}
+
+impl Debug for Choice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Choice")
+            .field("text", &self.text)
+            .field("response", &self.response)
+            .field("query_next", &self.query_next.is_some())
+            .field("change_context", &self.change_context.is_some())
+            .finish()
+    }
 }
 
 impl Choice {
@@ -75,12 +87,12 @@ impl ChoiceBuilder {
     }
 
     pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
-        self.query_next = Some(closure);
+        self.query_next = Some(Box::new(closure));
         self
     }
 
     pub fn set_change_context(mut self, closure: ChangeContextClosure) -> Self {
-        self.change_context = Some(closure);
+        self.change_context = Some(Box::new(closure));
         self
     }
 
@@ -108,12 +120,16 @@ impl From<ChoiceBuilder> for Choice {
 impl Progressive for Choice {
     type Output = EngineResult<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
-        if let Some(change_context_closure) = self.change_context {
-            change_context_closure(state.mut_context());
+        if let Some(change_context_closure) = self.change_context.as_ref() {
+            change_context_closure(state.mut_context().as_mut())?;
         }
+
         let next_part_key = self
             .query_next
-            .map(|next_closure| next_closure(state.context()));
+            .as_ref()
+            .map(|next_closure| next_closure(state.context().as_ref()))
+            .transpose()?;
+
         Ok(next_part_key)
     }
 }

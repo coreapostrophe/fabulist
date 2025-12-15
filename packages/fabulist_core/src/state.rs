@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use crate::story::{
-    context::Context,
+    context::{Context, Contextual},
     reference::{DialogueIndex, ListKey},
 };
 
 #[derive(Debug)]
 pub struct State {
-    context: Context,
+    context: Box<dyn Contextual>,
     current_part: Option<ListKey<String>>,
     current_element: Option<usize>,
     decisions: HashMap<DialogueIndex, usize>,
@@ -15,17 +15,35 @@ pub struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self::new()
+        Self {
+            context: Box::new(Context::new()),
+            current_part: None,
+            current_element: None,
+            decisions: HashMap::new(),
+        }
     }
 }
 
+pub type ContextState = Box<dyn Contextual>;
+
+pub struct StateOptions {
+    pub context: Option<ContextState>,
+    pub current_part: Option<ListKey<String>>,
+    pub current_element: Option<usize>,
+    pub decisions: Option<HashMap<DialogueIndex, usize>>,
+}
+
 impl State {
-    pub fn new() -> Self {
-        Self {
-            current_part: None,
-            current_element: None,
-            context: Context::new(),
-            decisions: HashMap::new(),
+    pub fn new(options: Option<StateOptions>) -> Self {
+        if let Some(options) = options {
+            Self {
+                current_part: options.current_part,
+                current_element: options.current_element,
+                context: options.context.unwrap_or_else(|| Box::new(Context::new())),
+                decisions: options.decisions.unwrap_or_else(HashMap::new),
+            }
+        } else {
+            Self::default()
         }
     }
 
@@ -37,11 +55,11 @@ impl State {
         &mut self.decisions
     }
 
-    pub fn context(&self) -> &Context {
+    pub fn context(&self) -> &ContextState {
         &self.context
     }
 
-    pub fn mut_context(&mut self) -> &mut Context {
+    pub fn mut_context(&mut self) -> &mut ContextState {
         &mut self.context
     }
 

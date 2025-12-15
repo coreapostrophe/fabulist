@@ -225,11 +225,11 @@ impl TryFrom<Pair<'_, Rule>> for Element {
             })),
             Rule::choice_decl => Ok(Element::Choice(ChoiceElement {
                 span: value_span.into(),
-                value: QuoteDecl::try_from(value)?,
+                quote: QuoteDecl::try_from(value)?,
             })),
             Rule::narration_decl => Ok(Element::Narration(NarrationElement {
                 span: value_span.into(),
-                value: QuoteDecl::try_from(value)?,
+                quote: QuoteDecl::try_from(value)?,
             })),
             _ => Err(ParsingError::map_custom_error(
                 value_span.into(),

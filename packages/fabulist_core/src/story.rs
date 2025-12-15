@@ -6,9 +6,6 @@ use crate::{
     state::State,
 };
 
-#[cfg(feature = "parsing")]
-use crate::error::{ParsingError, ParsingResult};
-
 use self::{
     part::{Part, PartElement},
     reference::{DialogueIndex, ListKey},
@@ -20,9 +17,6 @@ pub mod context;
 pub mod part;
 pub mod reference;
 pub mod resource;
-
-#[cfg(feature = "parsing")]
-pub mod lang_converters;
 
 #[derive(Debug)]
 pub struct Story {
@@ -176,14 +170,6 @@ impl StoryBuilder {
     {
         self.resources.insert_collection::<T, N>(collection);
         self
-    }
-
-    #[cfg(feature = "parsing")]
-    pub fn parse(source: impl Into<String>) -> ParsingResult<Self> {
-        let _story_ast = fabulist_lang::parser::FabulistParser::parse(source.into())
-            .map_err(|err| ParsingError::from(Box::new(*err)))?;
-
-        todo!()
     }
 
     pub fn build(mut self) -> Story {

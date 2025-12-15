@@ -34,21 +34,26 @@ pub fn engine_runs_basic_story() {
                 }))
                 .add_element(
                     SelectionBuilder::new()
-                        .add_choice(ChoiceBuilder::new("Apple").set_change_context(|context| {
-                            context.insert("favorite_fruit", "Apple");
-                        }))
-                        .add_choice(ChoiceBuilder::new("Banana").set_change_context(|context| {
-                            context.insert("favorite_fruit", "Banana");
-                        })),
+                        .add_choice(ChoiceBuilder::new("Apple").set_change_context(Box::new(
+                            |context| {
+                                context.insert("favorite_fruit".into(), "Apple".into());
+                                Ok(())
+                            },
+                        )))
+                        .add_choice(ChoiceBuilder::new("Banana").set_change_context(Box::new(
+                            |context| {
+                                context.insert("favorite_fruit".into(), "Banana".into());
+                                Ok(())
+                            },
+                        ))),
                 )
                 .add_element(
                     DialogueBuilder::new(DialogueLayout {
                         text: "Oh cool! But that's a bit...",
                         character: "dave",
                     })
-                    .set_query_next(|context| {
+                    .set_query_next(Box::new(|context| {
                         let favorite_fruit = context
-                            .value()
                             .get("favorite_fruit")
                             .expect("Context to have a `favorite_fruit` property");
                         let favorite_fruit = match favorite_fruit {
@@ -56,11 +61,11 @@ pub fn engine_runs_basic_story() {
                             _ => panic!("Context value `favorite_fruit` was not a string."),
                         };
                         if favorite_fruit == "Apple" {
-                            "fail-scene".into()
+                            Ok("fail-scene".into())
                         } else {
-                            "success-scene".into()
+                            Ok("success-scene".into())
                         }
-                    }),
+                    })),
                 ),
         )
         .add_part(
@@ -77,7 +82,7 @@ pub fn engine_runs_basic_story() {
         )
         .build();
 
-    let mut state = State::new();
+    let mut state = State::default();
     let mut engine = Engine::new(story, &mut state);
 
     let result = engine.start().unwrap();
