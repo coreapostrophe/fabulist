@@ -116,7 +116,8 @@ impl TryFrom<NarrationElement> for Narration {
                 ..
             }) = properties.get("next")
             {
-                let parameters = parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
+                let parameters =
+                    parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
                 if parameters.is_some_and(|p| !p.is_empty()) {
                     return Err(ParsingError::QueryNextHasParameters);
                 }
@@ -147,7 +148,8 @@ impl TryFrom<NarrationElement> for Narration {
                 ..
             }) = properties.get("change_context")
             {
-                let parameters = parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
+                let parameters =
+                    parameters.evaluate(&RuntimeEnvironment::new(), &RuntimeEnvironment::new())?;
                 if parameters.is_some_and(|p| !p.is_empty()) {
                     return Err(ParsingError::QueryChangeContextHasParameters);
                 }
