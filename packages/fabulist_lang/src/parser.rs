@@ -3,7 +3,7 @@
 use pest::Parser;
 
 use crate::{
-    error::{SpanSlice, ParsingError},
+    error::{ParsingError, SpanSlice},
     parser::ast::story::StoryAst,
 };
 

@@ -1,7 +1,7 @@
 //! Intrinsic helpers available to runtime values.
 
 use crate::{
-    error::{SpanSlice, RuntimeError},
+    error::{RuntimeError, SpanSlice},
     interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
 };
 

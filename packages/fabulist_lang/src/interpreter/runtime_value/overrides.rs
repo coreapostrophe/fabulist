@@ -2,7 +2,7 @@
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::error::{SpanSlice, RuntimeError};
+use crate::error::{RuntimeError, SpanSlice};
 use crate::interpreter::runtime_value::RuntimeValue;
 
 impl RuntimeValue {

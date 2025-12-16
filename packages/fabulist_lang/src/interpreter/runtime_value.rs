@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::{SpanSlice, RuntimeError},
+    error::{RuntimeError, SpanSlice},
     interpreter::environment::RuntimeEnvironment,
     parser::ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
 };
