@@ -48,6 +48,5 @@
 //! [`FabulistParser`]: crate::parser::FabulistParser
 //! [`fabulist_core`]: https://crates.io/crates/fabulist_core
 
-pub mod error;
 pub mod interpreter;
 pub mod parser;

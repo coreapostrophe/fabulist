@@ -1,11 +1,12 @@
 //! Expression evaluators that turn AST nodes into runtime values.
 use crate::{
-    error::RuntimeError,
-    interpreter::environment::RuntimeEnvironment,
-    interpreter::intrinsics::{
-        BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics,
+    interpreter::{
+        environment::RuntimeEnvironment,
+        error::RuntimeError,
+        intrinsics::{BooleanIntrinsics, NumberIntrinsics, ObjectIntrinsics, StringIntrinsics},
+        runtime_value::RuntimeValue,
+        Evaluable,
     },
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
     parser::ast::expr::models::{
         AssignmentExpr, BinaryExpr, BinaryOperator, BooleanLiteral, CallExpr, ContextPrimitive,
         Expr, GroupingPrimitive, IdentifierPrimitive, LambdaPrimitive, Literal, LiteralPrimary,

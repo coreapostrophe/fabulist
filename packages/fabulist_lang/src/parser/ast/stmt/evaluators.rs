@@ -1,9 +1,10 @@
 //! Statement evaluators that execute within a runtime environment.
 
 use crate::{
-    error::RuntimeError,
-    interpreter::environment::RuntimeEnvironment,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    interpreter::{
+        environment::RuntimeEnvironment, error::RuntimeError, runtime_value::RuntimeValue,
+        Evaluable,
+    },
     parser::ast::stmt::models::{BlockStmt, ElseClause, ExprStmt, GotoStmt, IfStmt, LetStmt, Stmt},
 };
 

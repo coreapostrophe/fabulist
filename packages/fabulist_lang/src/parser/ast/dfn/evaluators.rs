@@ -2,9 +2,10 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::RuntimeError,
-    interpreter::environment::RuntimeEnvironment,
-    interpreter::{runtime_value::RuntimeValue, Evaluable},
+    interpreter::{
+        environment::RuntimeEnvironment, error::RuntimeError, runtime_value::RuntimeValue,
+        Evaluable,
+    },
     parser::ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         expr::models::IdentifierPrimitive,
