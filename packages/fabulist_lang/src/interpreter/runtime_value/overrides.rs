@@ -9,16 +9,36 @@ impl RuntimeValue {
     /// Returns the span associated with the value.
     pub fn span(&self) -> SpanSlice {
         match self {
-            RuntimeValue::Number { span, .. }
-            | RuntimeValue::Boolean { span, .. }
-            | RuntimeValue::String { span, .. }
-            | RuntimeValue::Identifier { span, .. }
-            | RuntimeValue::Object { span, .. }
-            | RuntimeValue::Lambda { span, .. }
-            | RuntimeValue::None { span, .. }
-            | RuntimeValue::Context { span, .. }
-            | RuntimeValue::Module { span, .. }
-            | RuntimeValue::Path { span, .. } => span.clone(),
+            RuntimeValue::Number {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Boolean {
+                span_slice: span, ..
+            }
+            | RuntimeValue::String {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Identifier {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Object {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Lambda {
+                span_slice: span, ..
+            }
+            | RuntimeValue::None {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Context {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Module {
+                span_slice: span, ..
+            }
+            | RuntimeValue::Path {
+                span_slice: span, ..
+            } => span.clone(),
             RuntimeValue::NativeFunction(_) => unreachable!("Native functions do not have spans."),
         }
     }
@@ -40,14 +60,15 @@ impl RuntimeValue {
             RuntimeValue::Number { value, .. } => Ok(*value),
             RuntimeValue::Boolean { value, .. } => Ok(if *value { 1.0 } else { 0.0 }),
             RuntimeValue::None { .. } => Ok(0.0),
-            RuntimeValue::String { span, value } => {
-                value
-                    .parse::<f32>()
-                    .map_err(|_| RuntimeError::CannotParseStringToNumber {
-                        value: value.clone(),
-                        span: span.clone(),
-                    })
-            }
+            RuntimeValue::String {
+                span_slice: span,
+                value,
+            } => value
+                .parse::<f32>()
+                .map_err(|_| RuntimeError::CannotParseStringToNumber {
+                    value: value.clone(),
+                    span: span.clone(),
+                }),
             other => Err(RuntimeError::CannotCastToNumber(other.span())),
         }
     }
@@ -60,31 +81,33 @@ impl Add for RuntimeValue {
         match self {
             RuntimeValue::String {
                 value: addend1_value,
-                span: addend1_span,
+                span_slice: addend1_span,
             } => match rhs {
                 RuntimeValue::Number {
                     value: addend2_value,
-                    span: addend2_span,
+                    span_slice: addend2_span,
                 } => Ok(RuntimeValue::String {
-                    span: addend1_span.clone() + addend2_span,
+                    span_slice: addend1_span.clone() + addend2_span,
                     value: format!("{}{}", addend1_value, addend2_value),
                 }),
                 RuntimeValue::String {
                     value: addend2_value,
-                    span: addend2_span,
+                    span_slice: addend2_span,
                 } => Ok(RuntimeValue::String {
-                    span: addend1_span.clone() + addend2_span,
+                    span_slice: addend1_span.clone() + addend2_span,
                     value: format!("{}{}", addend1_value, addend2_value),
                 }),
                 RuntimeValue::Boolean {
                     value: addend2_value,
-                    span: addend2_span,
+                    span_slice: addend2_span,
                 } => Ok(RuntimeValue::String {
-                    span: addend1_span.clone() + addend2_span,
+                    span_slice: addend1_span.clone() + addend2_span,
                     value: format!("{}{}", addend1_value, addend2_value),
                 }),
-                RuntimeValue::None { span: addend2_span } => Ok(RuntimeValue::String {
-                    span: addend1_span.clone() + addend2_span,
+                RuntimeValue::None {
+                    span_slice: addend2_span,
+                } => Ok(RuntimeValue::String {
+                    span_slice: addend1_span.clone() + addend2_span,
                     value: addend1_value,
                 }),
                 other => Err(RuntimeError::TypeMismatch {
@@ -94,7 +117,7 @@ impl Add for RuntimeValue {
                 }),
             },
             _ => Ok(RuntimeValue::Number {
-                span: self.span() + rhs.span(),
+                span_slice: self.span() + rhs.span(),
                 value: self.to_num()? + rhs.to_num()?,
             }),
         }
@@ -106,17 +129,19 @@ impl Mul for RuntimeValue {
 
     fn mul(self, rhs: Self) -> Self::Output {
         match self {
-            RuntimeValue::None { span } => Err(RuntimeError::InvalidMultiplication {
+            RuntimeValue::None { span_slice: span } => Err(RuntimeError::InvalidMultiplication {
                 message: "Unable to multiply `none` literal".to_string(),
                 span,
             }),
             _ => match rhs {
-                RuntimeValue::None { span } => Err(RuntimeError::InvalidMultiplication {
-                    message: "Unable to multiply `none` literal".to_string(),
-                    span,
-                }),
+                RuntimeValue::None { span_slice: span } => {
+                    Err(RuntimeError::InvalidMultiplication {
+                        message: "Unable to multiply `none` literal".to_string(),
+                        span,
+                    })
+                }
                 _ => Ok(RuntimeValue::Number {
-                    span: self.span() + rhs.span(),
+                    span_slice: self.span() + rhs.span(),
                     value: self.to_num()? * rhs.to_num()?,
                 }),
             },
@@ -129,7 +154,7 @@ impl Sub for RuntimeValue {
 
     fn sub(self, rhs: Self) -> Self::Output {
         Ok(RuntimeValue::Number {
-            span: self.span() + rhs.span(),
+            span_slice: self.span() + rhs.span(),
             value: self.to_num()? - rhs.to_num()?,
         })
     }
@@ -140,17 +165,17 @@ impl Div for RuntimeValue {
 
     fn div(self, rhs: Self) -> Self::Output {
         match self {
-            RuntimeValue::None { span } => Err(RuntimeError::InvalidDivision {
+            RuntimeValue::None { span_slice: span } => Err(RuntimeError::InvalidDivision {
                 message: "Unable to divide `none` literal".to_string(),
                 span,
             }),
             _ => match rhs {
-                RuntimeValue::None { span } => Err(RuntimeError::InvalidDivision {
+                RuntimeValue::None { span_slice: span } => Err(RuntimeError::InvalidDivision {
                     message: "Unable to divide `none` literal".to_string(),
                     span,
                 }),
                 _ => Ok(RuntimeValue::Number {
-                    span: self.span() + rhs.span(),
+                    span_slice: self.span() + rhs.span(),
                     value: self.to_num()? / rhs.to_num()?,
                 }),
             },
@@ -219,7 +244,7 @@ mod expr_overrides_tests {
     impl From<f32> for RuntimeValue {
         fn from(value: f32) -> Self {
             RuntimeValue::Number {
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
                 value,
             }
         }
@@ -228,7 +253,7 @@ mod expr_overrides_tests {
     impl From<bool> for RuntimeValue {
         fn from(value: bool) -> Self {
             RuntimeValue::Boolean {
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
                 value,
             }
         }
@@ -237,7 +262,7 @@ mod expr_overrides_tests {
     impl From<&str> for RuntimeValue {
         fn from(value: &str) -> Self {
             RuntimeValue::String {
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
                 value: value.to_string(),
             }
         }
@@ -246,7 +271,7 @@ mod expr_overrides_tests {
     impl From<()> for RuntimeValue {
         fn from(_: ()) -> Self {
             RuntimeValue::None {
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
             }
         }
     }

@@ -23,7 +23,7 @@ impl Evaluable for BlockStmt {
         }
 
         Ok(RuntimeValue::None {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -38,7 +38,11 @@ impl Evaluable for IfStmt {
     ) -> Self::Output {
         let mut condition = self.condition.evaluate(environment, context)?;
 
-        if let RuntimeValue::Identifier { name, span } = &condition {
+        if let RuntimeValue::Identifier {
+            name,
+            span_slice: span,
+        } = &condition
+        {
             if let Some(value) = environment.get_env_value(name) {
                 condition = value;
             } else {
@@ -55,7 +59,7 @@ impl Evaluable for IfStmt {
             }
         } else {
             Ok(RuntimeValue::None {
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             })
         }
     }
@@ -81,7 +85,7 @@ impl Evaluable for LetStmt {
         environment.insert_env_value(key, value)?;
 
         Ok(RuntimeValue::None {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -109,7 +113,7 @@ impl Evaluable for ExprStmt {
         self.value.evaluate(environment, context)?;
 
         Ok(RuntimeValue::None {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -226,7 +230,7 @@ mod stmt_evaluators_tests {
                 "x",
                 RuntimeValue::Number {
                     value: 30.0,
-                    span: SpanSlice::default(),
+                    span_slice: SpanSlice::default(),
                 },
             )
             .expect("Failed to insert variable x");

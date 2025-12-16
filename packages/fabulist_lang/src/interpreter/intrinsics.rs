@@ -30,7 +30,7 @@ impl NumberIntrinsics {
         match &args[0] {
             RuntimeValue::Number { value: n, .. } => Ok(RuntimeValue::String {
                 value: n.to_string(),
-                span: span.clone(),
+                span_slice: span.clone(),
             }),
             _ => Err(RuntimeError::TypeMismatch {
                 expected: "Number".to_string(),

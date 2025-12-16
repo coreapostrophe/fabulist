@@ -26,7 +26,7 @@ impl Evaluable for NumberLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::Number {
             value: self.value,
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -41,7 +41,7 @@ impl Evaluable for BooleanLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::Boolean {
             value: self.value,
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -56,7 +56,7 @@ impl Evaluable for StringLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::String {
             value: self.value.clone(),
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -70,7 +70,7 @@ impl Evaluable for NoneLiteral {
         _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::None {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -126,7 +126,7 @@ impl Evaluable for IdentifierPrimitive {
     ) -> Self::Output {
         Ok(RuntimeValue::Identifier {
             name: self.name.clone(),
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -143,7 +143,7 @@ impl Evaluable for LambdaPrimitive {
             parameters: self.parameters.clone(),
             body: self.block_stmt.clone(),
             closure: environment.clone(),
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -169,7 +169,7 @@ impl Evaluable for ContextPrimitive {
         _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Context {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -259,9 +259,12 @@ impl Evaluable for StandardUnary {
                     ..
                 } => Ok(RuntimeValue::Number {
                     value: -runtime_value,
-                    span: self.span_slice.clone(),
+                    span_slice: self.span_slice.clone(),
                 }),
-                RuntimeValue::Identifier { name, span } => {
+                RuntimeValue::Identifier {
+                    name,
+                    span_slice: span,
+                } => {
                     let value = environment
                         .get_env_value(&name)
                         .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
@@ -272,7 +275,7 @@ impl Evaluable for StandardUnary {
                             ..
                         } => Ok(RuntimeValue::Number {
                             value: -runtime_value,
-                            span: self.span_slice.clone(),
+                            span_slice: self.span_slice.clone(),
                         }),
                         other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
                     }
@@ -285,9 +288,12 @@ impl Evaluable for StandardUnary {
                     ..
                 } => Ok(RuntimeValue::Boolean {
                     value: !runtime_value,
-                    span: self.span_slice.clone(),
+                    span_slice: self.span_slice.clone(),
                 }),
-                RuntimeValue::Identifier { name, span } => {
+                RuntimeValue::Identifier {
+                    name,
+                    span_slice: span,
+                } => {
                     let value = environment
                         .get_env_value(&name)
                         .ok_or(RuntimeError::InvalidIdentifier(span.clone()))?;
@@ -298,7 +304,7 @@ impl Evaluable for StandardUnary {
                             ..
                         } => Ok(RuntimeValue::Boolean {
                             value: !runtime_value,
-                            span: self.span_slice.clone(),
+                            span_slice: self.span_slice.clone(),
                         }),
                         other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
                     }
@@ -473,7 +479,11 @@ impl Evaluable for BinaryExpr {
     ) -> Self::Output {
         let mut left_value = self.left.evaluate(environment, context)?;
 
-        if let RuntimeValue::Identifier { name, span } = &left_value {
+        if let RuntimeValue::Identifier {
+            name,
+            span_slice: span,
+        } = &left_value
+        {
             if let Some(value) = environment.get_env_value(name) {
                 left_value = value;
             } else {
@@ -491,7 +501,11 @@ impl Evaluable for BinaryExpr {
 
         let mut right_value = right_expr.evaluate(environment, context)?;
 
-        if let RuntimeValue::Identifier { name, span } = &right_value {
+        if let RuntimeValue::Identifier {
+            name,
+            span_slice: span,
+        } = &right_value
+        {
             if let Some(value) = environment.get_env_value(name) {
                 right_value = value;
             } else {
@@ -506,35 +520,35 @@ impl Evaluable for BinaryExpr {
             BinaryOperator::Divide => left_value / right_value,
             BinaryOperator::EqualEqual => Ok(RuntimeValue::Boolean {
                 value: left_value == right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::NotEqual => Ok(RuntimeValue::Boolean {
                 value: left_value != right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::GreaterThan => Ok(RuntimeValue::Boolean {
                 value: left_value > right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::GreaterEqual => Ok(RuntimeValue::Boolean {
                 value: left_value >= right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::LessThan => Ok(RuntimeValue::Boolean {
                 value: left_value < right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::LessEqual => Ok(RuntimeValue::Boolean {
                 value: left_value <= right_value,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::And => Ok(RuntimeValue::Boolean {
                 value: left_value.to_bool()? && right_value.to_bool()?,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
             BinaryOperator::Or => Ok(RuntimeValue::Boolean {
                 value: left_value.to_bool()? || right_value.to_bool()?,
-                span: self.span_slice.clone(),
+                span_slice: self.span_slice.clone(),
             }),
         }
     }
@@ -564,7 +578,7 @@ impl Evaluable for AssignmentExpr {
         environment.assign_env_value(&name, right_value)?;
 
         Ok(RuntimeValue::None {
-            span: self.span_slice.clone(),
+            span_slice: self.span_slice.clone(),
         })
     }
 }
@@ -678,7 +692,7 @@ mod expr_evaluators_tests {
         assert_eq!(
             result,
             RuntimeValue::None {
-                span: result.span().clone(),
+                span_slice: result.span().clone(),
             }
         );
     }
@@ -701,21 +715,21 @@ mod expr_evaluators_tests {
             "a".to_string(),
             RuntimeValue::Number {
                 value: 1.0,
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
             },
         );
         expected_properties.insert(
             "b".to_string(),
             RuntimeValue::Boolean {
                 value: true,
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
             },
         );
         expected_properties.insert(
             "c".to_string(),
             RuntimeValue::String {
                 value: "test".to_string(),
-                span: SpanSlice::default(),
+                span_slice: SpanSlice::default(),
             },
         );
 
