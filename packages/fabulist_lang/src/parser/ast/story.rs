@@ -1,7 +1,7 @@
 //! Root AST node for a Fabulist source file.
 use pest::iterators::Pair;
 
-use crate::parser::Rule;
+use crate::parser::{error::ParserError, Rule};
 
 use super::decl::models::{MetaDecl, ModuleDecl, PartDecl};
 
@@ -17,7 +17,7 @@ pub struct StoryAst {
 }
 
 impl TryFrom<Pair<'_, Rule>> for StoryAst {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         let mut module: Vec<ModuleDecl> = Vec::new();
         let mut meta: Option<MetaDecl> = None;

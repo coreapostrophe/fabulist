@@ -1,10 +1,10 @@
 //! Expression AST nodes and primitives.
-use crate::{
-    error::SpanSlice,
-    parser::ast::{
+use crate::parser::{
+    ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         stmt::models::BlockStmt,
     },
+    error::SpanSlice,
 };
 use fabulist_derive::SyntaxTree;
 
@@ -50,10 +50,10 @@ pub enum UnaryOperator {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Unary {
     /// Unary operator applied to an expression.
-    #[production(span: SpanSlice, operator: UnaryOperator, right: Expr)]
+    #[production(span_slice: SpanSlice, operator: UnaryOperator, right: Expr)]
     Standard(StandardUnary),
     /// Pass-through for already fully parsed member expressions.
-    #[production(span: SpanSlice, expr: Expr)]
+    #[production(span_slice: SpanSlice, expr: Expr)]
     Pass(PassUnary),
 }
 
@@ -61,27 +61,27 @@ pub enum Unary {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Expr {
     /// Leaf literal or primitive.
-    #[production(span: SpanSlice, primary: Primary)]
+    #[production(span_slice: SpanSlice, primary: Primary)]
     Primary(Box<PrimaryExpr>),
 
     /// Unary operator expression.
-    #[production(span: SpanSlice, unary: Unary)]
+    #[production(span_slice: SpanSlice, unary: Unary)]
     Unary(Box<UnaryExpr>),
 
     /// Function call expression.
-    #[production(span: SpanSlice, callee: Expr, argument_body: Option<ArgumentBodyDfn>)]
+    #[production(span_slice: SpanSlice, callee: Expr, argument_body: Option<ArgumentBodyDfn>)]
     Call(Box<CallExpr>),
 
     /// Member access chain.
-    #[production(span: SpanSlice, left: Expr, members: Vec<Expr>)]
+    #[production(span_slice: SpanSlice, left: Expr, members: Vec<Expr>)]
     Member(Box<MemberExpr>),
 
     /// Binary operator expression.
-    #[production(span: SpanSlice, left: Expr, operator: Option<BinaryOperator>, right: Option<Expr>)]
+    #[production(span_slice: SpanSlice, left: Expr, operator: Option<BinaryOperator>, right: Option<Expr>)]
     Binary(Box<BinaryExpr>),
 
     /// Assignment expression.
-    #[production(span: SpanSlice, left: Expr, right: Option<Expr>)]
+    #[production(span_slice: SpanSlice, left: Expr, right: Option<Expr>)]
     Assignment(Box<AssignmentExpr>),
 }
 
@@ -89,11 +89,11 @@ pub enum Expr {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Primary {
     /// Literal (string, number, boolean, none).
-    #[production(span: SpanSlice, literal: Literal)]
+    #[production(span_slice: SpanSlice, literal: Literal)]
     Literal(LiteralPrimary),
 
     /// Primitive (object, grouping, identifier, lambda, path, context).
-    #[production(span: SpanSlice, primitive: Primitive)]
+    #[production(span_slice: SpanSlice, primitive: Primitive)]
     Primitive(PrimitivePrimary),
 }
 
@@ -101,19 +101,19 @@ pub enum Primary {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Literal {
     /// Numeric literal.
-    #[production(span: SpanSlice, value: f32)]
+    #[production(span_slice: SpanSlice, value: f32)]
     Number(NumberLiteral),
 
     /// Boolean literal.
-    #[production(span: SpanSlice, value: bool)]
+    #[production(span_slice: SpanSlice, value: bool)]
     Boolean(BooleanLiteral),
 
     /// String literal.
-    #[production(span: SpanSlice, value: String)]
+    #[production(span_slice: SpanSlice, value: String)]
     String(StringLiteral),
 
     /// `none` literal.
-    #[production(span: SpanSlice)]
+    #[production(span_slice: SpanSlice)]
     None(NoneLiteral),
 }
 
@@ -121,26 +121,26 @@ pub enum Literal {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Primitive {
     /// Object literal primitive.
-    #[production(span: SpanSlice, object: ObjectDfn)]
+    #[production(span_slice: SpanSlice, object: ObjectDfn)]
     Object(ObjectPrimitive),
 
     /// Parenthesized grouping primitive.
-    #[production(span: SpanSlice, expr: Expr)]
+    #[production(span_slice: SpanSlice, expr: Expr)]
     Grouping(GroupingPrimitive),
 
     /// Identifier reference.
-    #[production(span: SpanSlice, name: String)]
+    #[production(span_slice: SpanSlice, name: String)]
     Identifier(IdentifierPrimitive),
 
     /// Lambda primitive.
-    #[production(span: SpanSlice, parameters: ParameterBodyDfn, block_stmt: BlockStmt)]
+    #[production(span_slice: SpanSlice, parameters: ParameterBodyDfn, block_stmt: BlockStmt)]
     Lambda(LambdaPrimitive),
 
     /// Path (module-qualified identifier).
-    #[production(span: SpanSlice, identifiers: Vec<IdentifierPrimitive>)]
+    #[production(span_slice: SpanSlice, identifiers: Vec<IdentifierPrimitive>)]
     Path(PathPrimitive),
 
     /// Current story context handle.
-    #[production(span: SpanSlice)]
+    #[production(span_slice: SpanSlice)]
     Context(ContextPrimitive),
 }

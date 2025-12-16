@@ -8,7 +8,7 @@ use pest::iterators::Pair;
 #[cfg(test)]
 use crate::{
     interpreter::{environment::RuntimeEnvironment, Evaluable},
-    parser::Rule,
+    parser::{error::ParserError, Rule},
 };
 
 pub mod decl;
@@ -42,13 +42,13 @@ where
     /// Parses the source and returns the AST, panicking with a readable message on failure.
     pub fn assert_parse(&self, source: &'a str) -> T
     where
-        T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
+        T: TryFrom<Pair<'a, Rule>, Error = ParserError>,
     {
         use pest::Parser;
 
-        use crate::parser::GrammarParser;
+        use crate::parser::FabulistPestParser;
 
-        match GrammarParser::parse(self.rule_type, source) {
+        match FabulistPestParser::parse(self.rule_type, source) {
             Err(error) => {
                 println!("{}", error);
                 panic!("Failed to parse source string");
@@ -88,7 +88,7 @@ where
     /// Parses the source then evaluates the resulting AST within optional runtime scopes.
     pub fn parse_and_evaluate(&self, options: AssertEvaluateOptions<'a>) -> <T as Evaluable>::Output
     where
-        T: TryFrom<Pair<'a, Rule>, Error = pest::error::Error<Rule>> + Debug + Clone,
+        T: TryFrom<Pair<'a, Rule>, Error = ParserError>,
     {
         let ast = self.assert_parse(options.source);
         let environment = options.environment.unwrap_or_default();

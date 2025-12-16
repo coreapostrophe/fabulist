@@ -3,35 +3,30 @@ use std::collections::HashMap;
 
 use pest::iterators::Pair;
 
-use crate::{
-    error::ParsingError,
-    parser::ast::expr::models::{Expr, IdentifierPrimitive},
-    parser::Rule,
+use crate::parser::{
+    ast::expr::models::{Expr, IdentifierPrimitive},
+    error::{ExtractSpanSlice, ParserError},
+    Rule,
 };
 
 use super::models::{ArgumentBodyDfn, Dfn, ObjectDfn, ParameterBodyDfn};
 
 impl TryFrom<Pair<'_, Rule>> for Dfn {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-
         match value.as_rule() {
             Rule::object => Ok(Dfn::Object(ObjectDfn::try_from(value)?)),
             Rule::argument_body => Ok(Dfn::ArgumentBody(ArgumentBodyDfn::try_from(value)?)),
             Rule::parameter_body => Ok(Dfn::ParameterBody(ParameterBodyDfn::try_from(value)?)),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid definition",
-            )),
+            _ => Err(ParserError::InvalidDefinition(value.extract_span_slice())),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         let mut map = HashMap::<String, Expr>::new();
 
@@ -54,16 +49,16 @@ impl TryFrom<Pair<'_, Rule>> for ObjectDfn {
         }
 
         Ok(ObjectDfn {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             object: map,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         if let Some(arguments) = value
             .into_inner()
@@ -72,14 +67,14 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
             let arg_expr = arguments
                 .into_inner()
                 .map(Expr::try_from)
-                .collect::<Result<Vec<Expr>, pest::error::Error<Rule>>>()?;
+                .collect::<Result<Vec<Expr>, ParserError>>()?;
             Ok(ArgumentBodyDfn {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 arguments: Some(arg_expr),
             })
         } else {
             Ok(ArgumentBodyDfn {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 arguments: None,
             })
         }
@@ -87,9 +82,9 @@ impl TryFrom<Pair<'_, Rule>> for ArgumentBodyDfn {
 }
 
 impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         if let Some(parameters) = value
             .into_inner()
@@ -98,14 +93,14 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
             let param_expr = parameters
                 .into_inner()
                 .map(IdentifierPrimitive::try_from)
-                .collect::<Result<Vec<IdentifierPrimitive>, pest::error::Error<Rule>>>()?;
+                .collect::<Result<Vec<IdentifierPrimitive>, ParserError>>()?;
             Ok(ParameterBodyDfn {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 parameters: Some(param_expr),
             })
         } else {
             Ok(ParameterBodyDfn {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 parameters: None,
             })
         }

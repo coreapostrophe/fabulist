@@ -25,7 +25,7 @@ impl Evaluable for NumberLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::Number {
             value: self.value,
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -40,7 +40,7 @@ impl Evaluable for BooleanLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::Boolean {
             value: self.value,
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -55,7 +55,7 @@ impl Evaluable for StringLiteral {
     ) -> Self::Output {
         Ok(RuntimeValue::String {
             value: self.value.clone(),
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -69,7 +69,7 @@ impl Evaluable for NoneLiteral {
         _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::None {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -125,7 +125,7 @@ impl Evaluable for IdentifierPrimitive {
     ) -> Self::Output {
         Ok(RuntimeValue::Identifier {
             name: self.name.clone(),
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -142,7 +142,7 @@ impl Evaluable for LambdaPrimitive {
             parameters: self.parameters.clone(),
             body: self.block_stmt.clone(),
             closure: environment.clone(),
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -168,7 +168,7 @@ impl Evaluable for ContextPrimitive {
         _context: &RuntimeEnvironment,
     ) -> Self::Output {
         Ok(RuntimeValue::Context {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -258,7 +258,7 @@ impl Evaluable for StandardUnary {
                     ..
                 } => Ok(RuntimeValue::Number {
                     value: -runtime_value,
-                    span: self.span.clone(),
+                    span: self.span_slice.clone(),
                 }),
                 RuntimeValue::Identifier { name, span } => {
                     let value = environment
@@ -271,7 +271,7 @@ impl Evaluable for StandardUnary {
                             ..
                         } => Ok(RuntimeValue::Number {
                             value: -runtime_value,
-                            span: self.span.clone(),
+                            span: self.span_slice.clone(),
                         }),
                         other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
                     }
@@ -284,7 +284,7 @@ impl Evaluable for StandardUnary {
                     ..
                 } => Ok(RuntimeValue::Boolean {
                     value: !runtime_value,
-                    span: self.span.clone(),
+                    span: self.span_slice.clone(),
                 }),
                 RuntimeValue::Identifier { name, span } => {
                     let value = environment
@@ -297,7 +297,7 @@ impl Evaluable for StandardUnary {
                             ..
                         } => Ok(RuntimeValue::Boolean {
                             value: !runtime_value,
-                            span: self.span.clone(),
+                            span: self.span_slice.clone(),
                         }),
                         other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
                     }
@@ -407,10 +407,12 @@ impl Evaluable for CallExpr {
                     let return_value = body.evaluate(&new_env, context)?;
                     Ok(return_value)
                 }
-                Some(RuntimeValue::NativeFunction(func)) => Ok(func(args, self.span.clone())?),
-                _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+                Some(RuntimeValue::NativeFunction(func)) => {
+                    Ok(func(args, self.span_slice.clone())?)
+                }
+                _ => Err(RuntimeError::CallNonCallable(self.span_slice.clone())),
             },
-            _ => Err(RuntimeError::CallNonCallable(self.span.clone())),
+            _ => Err(RuntimeError::CallNonCallable(self.span_slice.clone())),
         }
     }
 }
@@ -503,35 +505,35 @@ impl Evaluable for BinaryExpr {
             BinaryOperator::Divide => left_value / right_value,
             BinaryOperator::EqualEqual => Ok(RuntimeValue::Boolean {
                 value: left_value == right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::NotEqual => Ok(RuntimeValue::Boolean {
                 value: left_value != right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::GreaterThan => Ok(RuntimeValue::Boolean {
                 value: left_value > right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::GreaterEqual => Ok(RuntimeValue::Boolean {
                 value: left_value >= right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::LessThan => Ok(RuntimeValue::Boolean {
                 value: left_value < right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::LessEqual => Ok(RuntimeValue::Boolean {
                 value: left_value <= right_value,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::And => Ok(RuntimeValue::Boolean {
                 value: left_value.to_bool()? && right_value.to_bool()?,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
             BinaryOperator::Or => Ok(RuntimeValue::Boolean {
                 value: left_value.to_bool()? || right_value.to_bool()?,
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             }),
         }
     }
@@ -552,14 +554,16 @@ impl Evaluable for AssignmentExpr {
         };
 
         let RuntimeValue::Identifier { name, .. } = left else {
-            return Err(RuntimeError::AssignmentToNonIdentifier(self.span.clone()));
+            return Err(RuntimeError::AssignmentToNonIdentifier(
+                self.span_slice.clone(),
+            ));
         };
 
         let right_value = right.evaluate(environment, context)?;
         environment.assign_env_value(&name, right_value)?;
 
         Ok(RuntimeValue::None {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -586,10 +590,12 @@ impl Evaluable for Expr {
 #[cfg(test)]
 mod expr_evaluators_tests {
     use crate::{
-        error::SpanSlice,
         interpreter::runtime_value::RuntimeValue,
-        parser::ast::{expr::models::PrimaryExpr, AssertEvaluateOptions, AstTestHelper},
-        parser::Rule,
+        parser::{
+            ast::{expr::models::PrimaryExpr, AssertEvaluateOptions, AstTestHelper},
+            error::SpanSlice,
+            Rule,
+        },
     };
 
     #[test]

@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use fabulist_lang::error::SpanSlice;
+//! use fabulist_lang::parser::error::SpanSlice;
 //! use fabulist_lang::interpreter::environment::RuntimeEnvironment;
 //! use fabulist_lang::interpreter::runtime_value::RuntimeValue;
 //!
@@ -316,7 +316,7 @@ impl RuntimeEnvironment {
     /// # Examples
     ///
     /// ```rust
-    /// use fabulist_lang::error::SpanSlice;
+    /// use fabulist_lang::parser::error::SpanSlice;
     /// use fabulist_lang::interpreter::environment::RuntimeEnvironment;
     /// use fabulist_lang::interpreter::runtime_value::RuntimeValue;
     ///

@@ -1,13 +1,13 @@
 //! Converters from pest parse pairs into declaration AST nodes.
 use pest::iterators::Pair;
 
-use crate::{
-    error::ParsingError,
-    parser::ast::{
+use crate::parser::{
+    ast::{
         dfn::models::ObjectDfn,
         expr::models::{IdentifierPrimitive, Literal, StringLiteral},
     },
-    parser::Rule,
+    error::{ExtractSpanSlice, ParserError},
+    Rule,
 };
 
 use super::models::{
@@ -16,23 +16,27 @@ use super::models::{
 };
 
 impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let text = match inner.find(|pair| pair.as_node_tag() == Some("text")) {
-            Some(text) => Ok(match text.into_inner().next() {
-                Some(text) => Ok(text.as_str().to_string()),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected string value",
-                )),
-            }?),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected text expression",
-            )),
+            Some(text) => {
+                let text_value_span = text.extract_span_slice();
+
+                Ok(match text.into_inner().next() {
+                    Some(text_string) => Ok(text_string.as_str().to_string()),
+                    None => Err(ParserError::ExpectedSymbol {
+                        expected: "text string".to_string(),
+                        span_slice: text_value_span,
+                    }),
+                }?)
+            }
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "quote text".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         let properties = match inner.find(|pair| pair.as_rule() == Rule::object) {
@@ -41,7 +45,7 @@ impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
         };
 
         Ok(QuoteDecl {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             text,
             properties,
         })
@@ -49,32 +53,33 @@ impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
 }
 
 impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
+
         let inner = value.into_inner();
 
         let character = match inner.find_first_tagged("character") {
-            Some(char) => Ok(match char.into_inner().next() {
-                Some(char) => Ok(char.as_str().to_string()),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected string value",
-                )),
+            Some(character) => Ok(match character.into_inner().next() {
+                Some(character_identifier) => Ok(character_identifier.as_str().to_string()),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "character identifier".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             }?),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected character declaration",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "dialogue character".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         let quotes = inner
             .filter(|pair| pair.as_rule() == Rule::quote_decl)
             .map(QuoteDecl::try_from)
-            .collect::<Result<Vec<QuoteDecl>, pest::error::Error<Rule>>>()?;
+            .collect::<Result<Vec<QuoteDecl>, ParserError>>()?;
 
         Ok(DialogueDecl {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             character,
             quotes,
         })
@@ -82,40 +87,41 @@ impl TryFrom<Pair<'_, Rule>> for DialogueDecl {
 }
 
 impl TryFrom<Pair<'_, Rule>> for ElementDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         Ok(ElementDecl {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             value: Element::try_from(value)?,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for MetaDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let span_slice = value.extract_span_slice();
+
         match value
             .into_inner()
             .find(|pair| pair.as_rule() == Rule::object)
         {
             Some(object) => Ok(MetaDecl {
-                span: value_span.into(),
+                span_slice,
                 properties: ObjectDfn::try_from(object)?,
             }),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected object definition",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "object".to_string(),
+                span_slice,
+            }),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for ModuleDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let path = match inner
@@ -124,27 +130,27 @@ impl TryFrom<Pair<'_, Rule>> for ModuleDecl {
         {
             Some(path) => match Literal::try_from(path)? {
                 Literal::String(StringLiteral { value, .. }) => Ok(value),
-                _ => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected string",
-                )),
+                _ => Err(ParserError::ExpectedSymbol {
+                    expected: "path to be a string".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             },
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected string file path",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "string file path".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => IdentifierPrimitive::try_from(identifier),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected identifier",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "module identifier".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(ModuleDecl {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             path,
             identifier,
         })
@@ -152,9 +158,9 @@ impl TryFrom<Pair<'_, Rule>> for ModuleDecl {
 }
 
 impl TryFrom<Pair<'_, Rule>> for PartDecl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let id = match inner.find(|pair| pair.as_node_tag() == Some("id")) {
@@ -163,23 +169,23 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
                 .find(|pair| pair.as_node_tag() == Some("name"))
             {
                 Some(identifier) => Ok(identifier.as_str().to_string()),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected identifier",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "identifier".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             },
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected id declaration",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "id declaration".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
         let elements = inner
             .filter(|pair| pair.as_rule() == Rule::element_decl)
             .map(ElementDecl::try_from)
-            .collect::<Result<Vec<ElementDecl>, pest::error::Error<Rule>>>()?;
+            .collect::<Result<Vec<ElementDecl>, ParserError>>()?;
 
         Ok(PartDecl {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             id,
             elements,
         })
@@ -187,10 +193,8 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
 }
 
 impl TryFrom<Pair<'_, Rule>> for Decl {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-
         match value.as_rule() {
             Rule::quote_decl => Ok(Decl::Quote(QuoteDecl::try_from(value)?)),
             Rule::dialogue_decl => Ok(Decl::Dialogue(DialogueDecl::try_from(value)?)),
@@ -198,43 +202,43 @@ impl TryFrom<Pair<'_, Rule>> for Decl {
             Rule::meta_decl => Ok(Decl::Meta(MetaDecl::try_from(value)?)),
             Rule::mod_decl => Ok(Decl::Module(ModuleDecl::try_from(value)?)),
             Rule::part_decl => Ok(Decl::Part(PartDecl::try_from(value)?)),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid declaration",
-            )),
+            _ => Err(ParserError::ExpectedSymbol {
+                expected: "Invalid declaration".to_string(),
+                span_slice: value.extract_span_slice(),
+            }),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for Element {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::element_decl => match value.into_inner().next() {
                 Some(inner) => Ok(Element::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "Unable to parse token tree interior".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             },
             Rule::dialogue_decl => Ok(Element::Dialogue(DialogueElement {
-                span: value_span.into(),
+                span_slice: value_span_slice.clone(),
                 value: DialogueDecl::try_from(value)?,
             })),
             Rule::choice_decl => Ok(Element::Choice(ChoiceElement {
-                span: value_span.into(),
+                span_slice: value_span_slice.clone(),
                 quote: QuoteDecl::try_from(value)?,
             })),
             Rule::narration_decl => Ok(Element::Narration(NarrationElement {
-                span: value_span.into(),
+                span_slice: value_span_slice.clone(),
                 quote: QuoteDecl::try_from(value)?,
             })),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid declaration",
-            )),
+            _ => Err(ParserError::ExpectedSymbol {
+                expected: "Invalid declaration".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }
     }
 }

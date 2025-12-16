@@ -1,14 +1,14 @@
 //! Converters from pest parse pairs into expression AST nodes.
 use pest::iterators::Pair;
 
-use crate::{
-    error::ParsingError,
-    parser::ast::{
+use crate::parser::{
+    ast::{
         dfn::models::{ArgumentBodyDfn, ObjectDfn, ParameterBodyDfn},
         expr::models::AssignmentExpr,
         stmt::models::BlockStmt,
     },
-    parser::Rule,
+    error::{ExtractSpanSlice, ParserError},
+    Rule,
 };
 
 use super::models::{
@@ -19,9 +19,10 @@ use super::models::{
 };
 
 impl TryFrom<Pair<'_, Rule>> for Unary {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
+
         let mut inner = value.into_inner();
 
         if let Some(member) = inner
@@ -29,37 +30,34 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
             .find(|pair| pair.as_rule() == Rule::member_expr)
         {
             Ok(Unary::Pass(PassUnary {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 expr: Expr::try_from(member)?,
             }))
         } else {
             let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
-                Some(operator) => {
-                    let operator_span = operator.as_span();
-                    match operator.as_str() {
-                        "-" => Ok(UnaryOperator::Negation),
-                        "!" => Ok(UnaryOperator::Not),
-                        _ => Err(ParsingError::map_custom_error(
-                            operator_span.into(),
-                            "Invalid unary operator",
-                        )),
-                    }
-                }
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected unary operator",
-                )),
+                Some(operator) => match operator.as_str() {
+                    "-" => Ok(UnaryOperator::Negation),
+                    "!" => Ok(UnaryOperator::Not),
+                    _ => Err(ParserError::ExpectedSymbol {
+                        expected: "unary operator".to_string(),
+                        span_slice: operator.extract_span_slice(),
+                    }),
+                },
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "unary operator".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             }?;
             let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
                 Some(right) => Ok(Expr::try_from(right)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Expected value expression",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "expression".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             }?;
 
             Ok(Unary::Standard(StandardUnary {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 operator,
                 right,
             }))
@@ -68,17 +66,17 @@ impl TryFrom<Pair<'_, Rule>> for Unary {
 }
 
 impl TryFrom<Pair<'_, Rule>> for Expr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::expression => match value.into_inner().next() {
                 Some(inner) => Ok(Expr::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "expression".to_string(),
+                    span_slice: value_span_slice,
+                }),
             },
 
             Rule::unary_expr => Ok(UnaryExpr::try_from(value)?.into()),
@@ -105,48 +103,44 @@ impl TryFrom<Pair<'_, Rule>> for Expr {
             | Rule::grouping
             | Rule::boolean
             | Rule::none => Ok(PrimaryExpr::try_from(value)?.into()),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid expression",
-            )),
+
+            _ => Err(ParserError::InvalidExpression(value_span_slice)),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for PrimaryExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
         Ok(PrimaryExpr {
-            span: value_span.into(),
+            span_slice: value.extract_span_slice(),
             primary: Primary::try_from(value)?,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for UnaryExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
         Ok(UnaryExpr {
-            span: value_span.into(),
+            span_slice: value.extract_span_slice(),
             unary: Unary::try_from(value)?,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for CallExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let callee = match inner.find(|pair| pair.as_node_tag() == Some("callee")) {
             Some(callee) => Expr::try_from(callee),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected a callee expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "callee expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
         let argument_body = match inner.find(|pair| pair.as_rule() == Rule::argument_body) {
             Some(argument_body) => Some(ArgumentBodyDfn::try_from(argument_body)?),
@@ -154,7 +148,7 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
         };
 
         Ok(CallExpr {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             callee,
             argument_body,
         })
@@ -162,24 +156,24 @@ impl TryFrom<Pair<'_, Rule>> for CallExpr {
 }
 
 impl TryFrom<Pair<'_, Rule>> for MemberExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let left = match inner.next() {
             Some(left) => Expr::try_from(left),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected a value expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "value expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
         let members = inner
             .map(Expr::try_from)
-            .collect::<Result<Vec<Expr>, pest::error::Error<Rule>>>()?;
+            .collect::<Result<Vec<Expr>, ParserError>>()?;
 
         Ok(MemberExpr {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             left,
             members,
         })
@@ -187,49 +181,47 @@ impl TryFrom<Pair<'_, Rule>> for MemberExpr {
 }
 
 impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
             Some(left) => Expr::try_from(left),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected a value expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "value expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
+
         let operator = match inner.find(|pair| pair.as_node_tag() == Some("operator")) {
-            Some(operator) => {
-                let operator_span = operator.as_span();
-                Some(match operator.as_str() {
-                    "/" => Ok(BinaryOperator::Divide),
-                    "*" => Ok(BinaryOperator::Multiply),
-                    "+" => Ok(BinaryOperator::Addition),
-                    "-" => Ok(BinaryOperator::Subtraction),
-                    ">" => Ok(BinaryOperator::GreaterThan),
-                    ">=" => Ok(BinaryOperator::GreaterEqual),
-                    "<" => Ok(BinaryOperator::LessThan),
-                    "<=" => Ok(BinaryOperator::LessEqual),
-                    "==" => Ok(BinaryOperator::EqualEqual),
-                    "!=" => Ok(BinaryOperator::NotEqual),
-                    "&&" => Ok(BinaryOperator::And),
-                    "||" => Ok(BinaryOperator::Or),
-                    _ => Err(ParsingError::map_custom_error(
-                        operator_span.into(),
-                        "Invalid binary operator",
-                    )),
-                }?)
-            }
+            Some(operator) => Some(match operator.as_str() {
+                "/" => Ok(BinaryOperator::Divide),
+                "*" => Ok(BinaryOperator::Multiply),
+                "+" => Ok(BinaryOperator::Addition),
+                "-" => Ok(BinaryOperator::Subtraction),
+                ">" => Ok(BinaryOperator::GreaterThan),
+                ">=" => Ok(BinaryOperator::GreaterEqual),
+                "<" => Ok(BinaryOperator::LessThan),
+                "<=" => Ok(BinaryOperator::LessEqual),
+                "==" => Ok(BinaryOperator::EqualEqual),
+                "!=" => Ok(BinaryOperator::NotEqual),
+                "&&" => Ok(BinaryOperator::And),
+                "||" => Ok(BinaryOperator::Or),
+                _ => Err(ParserError::InvalidBinaryOperator(
+                    operator.extract_span_slice(),
+                )),
+            }?),
             None => None,
         };
+
         let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
             Some(right) => Some(Expr::try_from(right)?),
             None => None,
         };
 
         Ok(BinaryExpr {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             left,
             operator,
             right,
@@ -238,17 +230,17 @@ impl TryFrom<Pair<'_, Rule>> for BinaryExpr {
 }
 
 impl TryFrom<Pair<'_, Rule>> for AssignmentExpr {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let left = match inner.find(|pair| pair.as_node_tag() == Some("left")) {
             Some(left) => Expr::try_from(left),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected a target expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "target expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         let right = match inner.find(|pair| pair.as_node_tag() == Some("right")) {
@@ -257,7 +249,7 @@ impl TryFrom<Pair<'_, Rule>> for AssignmentExpr {
         };
 
         Ok(AssignmentExpr {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             left,
             right,
         })
@@ -313,18 +305,19 @@ impl From<AssignmentExpr> for Expr {
 }
 
 impl TryFrom<Pair<'_, Rule>> for Primary {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::primary_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Primary::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "primary expression".to_string(),
+                    span_slice: value_span_slice.clone(),
+                }),
             },
+
             Rule::primitive_expr
             | Rule::identifier
             | Rule::strict_ident
@@ -333,126 +326,116 @@ impl TryFrom<Pair<'_, Rule>> for Primary {
             | Rule::object
             | Rule::lambda
             | Rule::grouping => Ok(Primary::Primitive(PrimitivePrimary::try_from(value)?)),
+
             Rule::literal_expr
             | Rule::string
             | Rule::raw_string
             | Rule::number
             | Rule::none
             | Rule::boolean => Ok(Primary::Literal(LiteralPrimary::try_from(value)?)),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid primary expression",
-            )),
+
+            _ => Err(ParserError::InvalidPrimaryExpression(value_span_slice)),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for LiteralPrimary {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
         Ok(LiteralPrimary {
-            span: value_span.into(),
+            span_slice: value.extract_span_slice(),
             literal: Literal::try_from(value)?,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for PrimitivePrimary {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
         Ok(PrimitivePrimary {
-            span: value_span.into(),
+            span_slice: value.extract_span_slice(),
             primitive: Primitive::try_from(value)?,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for Literal {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::literal_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "literal expression".to_string(),
+                    span_slice: value_span_slice,
+                }),
             },
             Rule::string => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "string".to_string(),
+                    span_slice: value_span_slice,
+                }),
             },
             Rule::raw_string => match value.into_inner().next() {
                 Some(inner) => Ok(Literal::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Unable to parse token tree interior",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "raw string".to_string(),
+                    span_slice: value_span_slice,
+                }),
             },
             Rule::string_interior => Ok(Literal::String(StringLiteral {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 value: value.as_str().to_string(),
             })),
             Rule::raw_string_interior => Ok(Literal::String(StringLiteral {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 value: value.as_str().to_string(),
             })),
             Rule::number => {
-                let parsed_number = value.as_str().parse::<f32>().map_err(|_| {
-                    ParsingError::map_custom_error(
-                        value_span.into(),
-                        format!("Unable to parse `{}` to number", value.as_str()),
-                    )
-                })?;
+                let parsed_number = value
+                    .as_str()
+                    .parse::<f32>()
+                    .map_err(|_| ParserError::UnableToCastNumber(value_span_slice.clone()))?;
+
                 Ok(Literal::Number(NumberLiteral {
-                    span: value_span.into(),
+                    span_slice: value_span_slice,
                     value: parsed_number,
                 }))
             }
             Rule::boolean => match value.as_str() {
                 "true" => Ok(Literal::Boolean(BooleanLiteral {
-                    span: value_span.into(),
+                    span_slice: value_span_slice,
                     value: true,
                 })),
                 "false" => Ok(Literal::Boolean(BooleanLiteral {
-                    span: value_span.into(),
+                    span_slice: value_span_slice,
                     value: false,
                 })),
-                _ => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Invalid boolean value",
-                )),
+                _ => Err(ParserError::InvalidBooleanLiteral(value_span_slice.clone())),
             },
             Rule::none => Ok(Literal::None(NoneLiteral {
-                span: value_span.into(),
+                span_slice: value_span_slice,
             })),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid literal expression",
-            )),
+            _ => Err(ParserError::InvalidLiteral(value_span_slice)),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for Primitive {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::primitive_expr => match value.into_inner().next() {
                 Some(inner) => Ok(Primitive::try_from(inner)?),
-                None => Err(ParsingError::map_custom_error(
-                    value_span.into(),
-                    "Invalid primitive expression",
-                )),
+                None => Err(ParserError::ExpectedSymbol {
+                    expected: "primitive".to_string(),
+                    span_slice: value_span_slice,
+                }),
             },
             Rule::grouping => Ok(Primitive::Grouping(GroupingPrimitive::try_from(value)?)),
             Rule::identifier | Rule::strict_ident | Rule::raw_ident => {
@@ -460,25 +443,22 @@ impl TryFrom<Pair<'_, Rule>> for Primitive {
             }
             Rule::path => Ok(Primitive::Path(PathPrimitive::try_from(value)?)),
             Rule::object => Ok(Primitive::Object(ObjectPrimitive {
-                span: value_span.into(),
+                span_slice: value_span_slice,
                 object: ObjectDfn::try_from(value)?,
             })),
             Rule::lambda => Ok(Primitive::Lambda(LambdaPrimitive::try_from(value)?)),
             Rule::context => Ok(Primitive::Context(ContextPrimitive {
-                span: value_span.into(),
+                span_slice: value_span_slice,
             })),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid primitive expression",
-            )),
+            _ => Err(ParserError::InvalidPrimitive(value_span_slice)),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         match value.as_rule() {
             Rule::identifier => match value.into_inner().next() {
@@ -494,77 +474,75 @@ impl TryFrom<Pair<'_, Rule>> for IdentifierPrimitive {
                 None => unreachable!(),
             },
             Rule::ident_interior => Ok(IdentifierPrimitive {
-                span: value_span.into(),
+                span_slice: value_span_slice.clone(),
                 name: value.as_str().to_string(),
             }),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid identifier primitive",
-            )),
+            _ => Err(ParserError::InvalidIdentifierPrimitive(value_span_slice)),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for GroupingPrimitive {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         let expr = match value.into_inner().next() {
             Some(expr) => Ok(Expr::try_from(expr)?),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(GroupingPrimitive {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             expr,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for PathPrimitive {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
+
         let identifiers = value
             .into_inner()
             .map(IdentifierPrimitive::try_from)
-            .collect::<Result<Vec<IdentifierPrimitive>, pest::error::Error<Rule>>>()?;
+            .collect::<Result<Vec<IdentifierPrimitive>, ParserError>>()?;
 
         Ok(PathPrimitive {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             identifiers,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let parameters = match inner.find(|pair| pair.as_rule() == Rule::parameter_body) {
             Some(parameter_body_dfn) => ParameterBodyDfn::try_from(parameter_body_dfn),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected parameter body",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "parameter body".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         let block_stmt = match inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected a block statement",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "block statement".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(LambdaPrimitive {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             block_stmt,
             parameters,
         })

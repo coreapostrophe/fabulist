@@ -2,9 +2,12 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::{RuntimeError, SpanSlice},
+    error::RuntimeError,
     interpreter::environment::RuntimeEnvironment,
-    parser::ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
+    parser::{
+        ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
+        error::SpanSlice,
+    },
 };
 
 pub mod overrides;

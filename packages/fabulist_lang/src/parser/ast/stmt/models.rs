@@ -1,7 +1,7 @@
 //! Statement AST nodes (blocks, conditionals, bindings, jumps, and expression statements).
-use crate::{
+use crate::parser::{
+    ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
     error::SpanSlice,
-    parser::ast::expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
 };
 use fabulist_derive::SyntaxTree;
 
@@ -18,22 +18,22 @@ pub enum ElseClause {
 #[derive(SyntaxTree, Debug, Clone)]
 pub enum Stmt {
     /// `{ ... }` scoped block of statements.
-    #[production(span: SpanSlice, statements: Vec<Stmt>)]
+    #[production(span_slice: SpanSlice, statements: Vec<Stmt>)]
     Block(Box<BlockStmt>),
 
     /// `if` expression with optional `else` branch.
-    #[production(span: SpanSlice, condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
+    #[production(span_slice: SpanSlice, condition: Expr, block_stmt: BlockStmt, else_stmt: Option<Box<ElseClause>>)]
     If(Box<IfStmt>),
 
     /// `let` binding statement.
-    #[production(span: SpanSlice, identifier: IdentifierPrimitive, value: Expr)]
+    #[production(span_slice: SpanSlice, identifier: IdentifierPrimitive, value: Expr)]
     Let(Box<LetStmt>),
 
     /// Story navigation command (`goto module::part`).
-    #[production(span: SpanSlice, path: PathPrimitive)]
+    #[production(span_slice: SpanSlice, path: PathPrimitive)]
     Goto(Box<GotoStmt>),
 
     /// Standalone expression terminated with a semicolon.
-    #[production(span: SpanSlice, value: Expr)]
+    #[production(span_slice: SpanSlice, value: Expr)]
     Expr(Box<ExprStmt>),
 }

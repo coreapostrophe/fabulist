@@ -1,21 +1,21 @@
 //! Converters from pest parse pairs into statement AST nodes.
 use pest::iterators::Pair;
 
-use crate::{
-    error::ParsingError,
-    parser::ast::{
+use crate::parser::{
+    ast::{
         expr::models::{Expr, IdentifierPrimitive, PathPrimitive},
         stmt::models::ExprStmt,
     },
-    parser::Rule,
+    error::{ExtractSpanSlice, ParserError},
+    Rule,
 };
 
 use super::models::{BlockStmt, ElseClause, GotoStmt, IfStmt, LetStmt, Stmt};
 
 impl TryFrom<Pair<'_, Rule>> for ElseClause {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         if let Some(if_stmt) = inner.clone().find(|pair| pair.as_rule() == Rule::if_stmt) {
@@ -23,10 +23,10 @@ impl TryFrom<Pair<'_, Rule>> for ElseClause {
         } else if let Some(block_stmt) = inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Ok(ElseClause::Block(BlockStmt::try_from(block_stmt)?))
         } else {
-            Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected an `if` or `block` statement",
-            ))
+            Err(ParserError::ExpectedSymbol {
+                expected: "an `if` or `block` statement".to_string(),
+                span_slice: value_span_slice,
+            })
         }
     }
 }
@@ -62,9 +62,8 @@ impl From<ExprStmt> for Stmt {
 }
 
 impl TryFrom<Pair<'_, Rule>> for Stmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let stmt_span = value.as_span();
         match value.as_rule() {
             Rule::statement => match value.into_inner().next() {
                 Some(inner) => Ok(Stmt::try_from(inner)?),
@@ -75,78 +74,78 @@ impl TryFrom<Pair<'_, Rule>> for Stmt {
             Rule::let_stmt => Ok(LetStmt::try_from(value)?.into()),
             Rule::goto_stmt => Ok(GotoStmt::try_from(value)?.into()),
             Rule::expression_stmt => Ok(ExprStmt::try_from(value)?.into()),
-            _ => Err(ParsingError::map_custom_error(
-                stmt_span.into(),
-                "Invalid statement",
-            )),
+            _ => Err(ParserError::InvalidStatement(value.extract_span_slice())),
         }
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for ExprStmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let expr = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
             Some(expression) => Expr::try_from(expression),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(ExprStmt {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             value: expr,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for BlockStmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
+
         let statements = value
             .into_inner()
             .map(Stmt::try_from)
-            .collect::<Result<Vec<Stmt>, pest::error::Error<Rule>>>()?;
+            .collect::<Result<Vec<Stmt>, ParserError>>()?;
 
         Ok(BlockStmt {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             statements,
         })
     }
 }
 
 impl TryFrom<Pair<'_, Rule>> for IfStmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let condition = match inner.find(|pair| pair.as_node_tag() == Some("condition")) {
             Some(condition) => Expr::try_from(condition),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected condition expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "condition expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
+
         let block_stmt = match inner.find(|pair| pair.as_rule() == Rule::block_stmt) {
             Some(block_stmt) => BlockStmt::try_from(block_stmt),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected block statement",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "block statement".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
+
         let else_stmt = match inner.find(|pair| pair.as_rule() == Rule::else_stmt) {
             Some(else_stmt) => Some(Box::new(ElseClause::try_from(else_stmt)?)),
             None => None,
         };
 
         Ok(IfStmt {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             condition,
             block_stmt,
             else_stmt,
@@ -155,28 +154,29 @@ impl TryFrom<Pair<'_, Rule>> for IfStmt {
 }
 
 impl TryFrom<Pair<'_, Rule>> for LetStmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
         let mut inner = value.into_inner();
 
         let identifier = match inner.find(|pair| pair.as_rule() == Rule::identifier) {
             Some(identifier) => IdentifierPrimitive::try_from(identifier),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected an identifier",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "identifier".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
+
         let value = match inner.find(|pair| pair.as_node_tag() == Some("value")) {
             Some(expression) => Expr::try_from(expression),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected value expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "value expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(LetStmt {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             identifier,
             value,
         })
@@ -184,20 +184,20 @@ impl TryFrom<Pair<'_, Rule>> for LetStmt {
 }
 
 impl TryFrom<Pair<'_, Rule>> for GotoStmt {
-    type Error = pest::error::Error<Rule>;
+    type Error = ParserError;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
+        let value_span_slice = value.extract_span_slice();
 
         let path = match value.into_inner().find(|pair| pair.as_rule() == Rule::path) {
             Some(path) => PathPrimitive::try_from(path),
-            None => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Expected path expression",
-            )),
+            None => Err(ParserError::ExpectedSymbol {
+                expected: "path expression".to_string(),
+                span_slice: value_span_slice.clone(),
+            }),
         }?;
 
         Ok(GotoStmt {
-            span: value_span.into(),
+            span_slice: value_span_slice,
             path,
         })
     }

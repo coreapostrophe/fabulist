@@ -2,8 +2,9 @@
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::error::{RuntimeError, SpanSlice};
+use crate::error::RuntimeError;
 use crate::interpreter::runtime_value::RuntimeValue;
+use crate::parser::error::SpanSlice;
 
 impl RuntimeValue {
     /// Returns the span associated with the value.
@@ -214,7 +215,7 @@ impl PartialOrd for RuntimeValue {
 
 #[cfg(test)]
 mod expr_overrides_tests {
-    use crate::{error::SpanSlice, interpreter::runtime_value::RuntimeValue};
+    use crate::{interpreter::runtime_value::RuntimeValue, parser::error::SpanSlice};
 
     impl From<f32> for RuntimeValue {
         fn from(value: f32) -> Self {

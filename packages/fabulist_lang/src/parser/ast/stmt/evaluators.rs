@@ -22,7 +22,7 @@ impl Evaluable for BlockStmt {
         }
 
         Ok(RuntimeValue::None {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -54,7 +54,7 @@ impl Evaluable for IfStmt {
             }
         } else {
             Ok(RuntimeValue::None {
-                span: self.span.clone(),
+                span: self.span_slice.clone(),
             })
         }
     }
@@ -73,14 +73,14 @@ impl Evaluable for LetStmt {
 
         let RuntimeValue::Identifier { name: key, .. } = identifier else {
             return Err(RuntimeError::InvalidIdentifier(
-                self.identifier.span.clone(),
+                self.identifier.span_slice.clone(),
             ));
         };
 
         environment.insert_env_value(key, value)?;
 
         Ok(RuntimeValue::None {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -108,7 +108,7 @@ impl Evaluable for ExprStmt {
         self.value.evaluate(environment, context)?;
 
         Ok(RuntimeValue::None {
-            span: self.span.clone(),
+            span: self.span_slice.clone(),
         })
     }
 }
@@ -134,13 +134,13 @@ impl Evaluable for Stmt {
 #[cfg(test)]
 mod stmt_evaluators_tests {
     use crate::{
-        error::SpanSlice,
         interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
         parser::{
             ast::{
                 stmt::models::{BlockStmt, ExprStmt, LetStmt},
                 AssertEvaluateOptions, AstTestHelper,
             },
+            error::SpanSlice,
             Rule,
         },
     };
