@@ -1,10 +1,11 @@
 //! Pest-based parser entry points for Fabulist source code.
+#![allow(missing_docs)]
 
 use pest::Parser;
 
-use crate::{
-    error::{ParsingError, SpanSlice},
-    parser::{ast::story::StoryAst, error::ParserResult},
+use crate::parser::{
+    ast::story::StoryAst,
+    error::{ParserError, ParserResult, SpanSlice},
 };
 
 pub mod ast;
@@ -42,15 +43,13 @@ impl FabulistParser {
         let mut pairs = FabulistPestParser::parse(Rule::story, &source).map_err(Box::new)?;
 
         let story_pair = pairs.next().ok_or_else(|| {
-            let owned_span = SpanSlice {
-                slice: source.to_string(),
+            let full_span_slice = SpanSlice {
+                slice: source.clone(),
+                line_col: Default::default(),
                 input_start: 0,
                 input_end: source.len(),
             };
-            Box::new(ParsingError::map_custom_error(
-                owned_span,
-                "Expected story rule to produce a pair",
-            ))
+            ParserError::UnableToParseStory(full_span_slice)
         })?;
 
         StoryAst::try_from(story_pair)

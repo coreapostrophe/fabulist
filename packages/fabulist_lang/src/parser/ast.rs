@@ -1,4 +1,7 @@
 //! Abstract syntax tree modules for the Fabulist language.
+
+#![warn(missing_docs)]
+
 #[cfg(test)]
 use std::{fmt::Debug, marker::PhantomData};
 

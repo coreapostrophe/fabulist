@@ -1,13 +1,19 @@
-//! Error types used by the parser and interpreter.
+//! Parser error types and utilities for the Fabulist language.
+
+#![warn(missing_docs)]
+
 use std::{fmt::Display, ops::Add};
 
 use pest::iterators::Pair;
 
 use crate::parser::Rule;
 
+/// Represents a line and column position in the source code.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct LineCol {
+    /// The line number (1-based).
     pub line: usize,
+    /// The column number (1-based).
     pub column: usize,
 }
 
@@ -17,15 +23,22 @@ impl Display for LineCol {
     }
 }
 
+/// A slice of the source code along with its position information.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct SpanSlice {
-    slice: String,
-    line_col: LineCol,
-    input_start: usize,
-    input_end: usize,
+    /// The actual slice of source code.
+    pub slice: String,
+    /// The line and column information.
+    pub line_col: LineCol,
+    /// The starting byte index in the original input.
+    pub input_start: usize,
+    /// The ending byte index in the original input.
+    pub input_end: usize,
 }
 
+/// Trait for extracting a `SpanSlice` from a pest `Pair`.
 pub trait ExtractSpanSlice {
+    /// Extracts a `SpanSlice` from the implementing type.
     fn extract_span_slice(&self) -> SpanSlice;
 }
 
@@ -67,50 +80,57 @@ impl Add for SpanSlice {
     }
 }
 
+/// Errors produced during parsing of Fabulist source code.
 #[derive(thiserror::Error, Debug)]
 pub enum ParserError {
+    /// Expected a specific symbol but found something else.
     #[error("Expected {expected:?}")]
     ExpectedSymbol {
+        /// The expected symbol.
         expected: String,
+        /// Span covering the unexpected symbol.
         span_slice: SpanSlice,
     },
+    /// Invalid number literal.
     #[error("Invalid boolean literal.")]
     InvalidBooleanLiteral(SpanSlice),
+    /// Couldn't cast a number literal.
     #[error("Unable to cast number literal.")]
     UnableToCastNumber(SpanSlice),
+    /// Invalid primary expression.
     #[error("Invalid primary expression.")]
     InvalidPrimaryExpression(SpanSlice),
+    /// Invalid binary operator.
     #[error("Invalid binary operator.")]
     InvalidBinaryOperator(SpanSlice),
+    /// Invalid identifier primitive.
     #[error("Invalid identifier primitive.")]
     InvalidIdentifierPrimitive(SpanSlice),
+    /// Invalid primitive value.
     #[error("Invalid primitive.")]
     InvalidPrimitive(SpanSlice),
+    /// Invalid literal.
     #[error("Invalid literal.")]
     InvalidLiteral(SpanSlice),
+    /// Invalid statement.
     #[error("Invalid statement.")]
     InvalidStatement(SpanSlice),
+    /// Invalid expression.
     #[error("Invalid expression.")]
     InvalidExpression(SpanSlice),
+    /// Invalid definition.
     #[error("Invalid definition.")]
     InvalidDefinition(SpanSlice),
+    /// Invalid declaration.
     #[error("Invalid declaration.")]
     InvalidDeclaration(SpanSlice),
+    /// Unable to parse story.
     #[error("Unable to parse story.")]
     UnableToParseStory(SpanSlice),
+    /// Failed pest parsing.
     #[error("Failed pest parsing: {0}")]
     PestParsing(#[from] Box<pest::error::Error<Rule>>),
 }
 
-impl ParserError {
-    pub fn span_slice(&self) -> &SpanSlice {
-        match self {
-            ParserError::InvalidDeclaration(span_slice)
-            | ParserError::UnableToParseStory(span_slice) => span_slice,
-            ParserError::ExpectedSymbol { span_slice, .. } => span_slice,
-            _ => panic!("No span slice available for this error type"),
-        }
-    }
-}
-
+/// Result type for parser operations.
 pub type ParserResult<T> = Result<T, ParserError>;
