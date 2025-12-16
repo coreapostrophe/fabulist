@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::{OwnedSpan, RuntimeError},
+    error::{SpanSlice, RuntimeError},
     interpreter::environment::RuntimeEnvironment,
     parser::ast::{dfn::models::ParameterBodyDfn, stmt::models::BlockStmt},
 };
@@ -17,28 +17,28 @@ pub enum RuntimeValue {
         /// Numeric payload.
         value: f32,
         /// Source span of the literal.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Boolean literal.
     Boolean {
         /// Boolean payload.
         value: bool,
         /// Source span of the literal.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// UTF-8 string literal.
     String {
         /// String payload.
         value: String,
         /// Source span of the literal.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Object literal with string keys and runtime values.
     Object {
         /// Object properties keyed by string.
         properties: HashMap<String, RuntimeValue>,
         /// Source span of the primitive.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Lambda defined in source code with captured closure.
     Lambda {
@@ -49,40 +49,40 @@ pub enum RuntimeValue {
         /// Captured runtime environment.
         closure: RuntimeEnvironment,
         /// Source span of the primitive.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Native (Rust) function exposed to the runtime.
-    NativeFunction(fn(Vec<RuntimeValue>, OwnedSpan) -> Result<RuntimeValue, RuntimeError>),
+    NativeFunction(fn(Vec<RuntimeValue>, SpanSlice) -> Result<RuntimeValue, RuntimeError>),
     /// Identifier pending resolution in an environment.
     Identifier {
         /// Identifier text.
         name: String,
         /// Source span of the identifier.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Marker for the absence of a value.
     None {
         /// Source span of the literal.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Handle to the mutable story context.
     Context {
         /// Span referencing the `context` primitive.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Path literal.
     Path {
         /// Path segments.
         segments: Vec<String>,
         /// Source span of the primitive.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
     /// Module handle with its own environment.
     Module {
         /// Module environment.
         environment: RuntimeEnvironment,
         /// Source span of the primitive.
-        span: OwnedSpan,
+        span: SpanSlice,
     },
 }
 

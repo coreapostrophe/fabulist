@@ -3,7 +3,7 @@
 use pest::Parser;
 
 use crate::{
-    error::{OwnedSpan, ParsingError},
+    error::{SpanSlice, ParsingError},
     parser::ast::story::StoryAst,
 };
 
@@ -43,10 +43,10 @@ impl FabulistParser {
         let mut pairs = GrammarParser::parse(Rule::story, &source).map_err(Box::new)?;
 
         let story_pair = pairs.next().ok_or_else(|| {
-            let owned_span = OwnedSpan {
-                input: source.to_string(),
-                start: 0,
-                end: source.len(),
+            let owned_span = SpanSlice {
+                slice: source.to_string(),
+                input_start: 0,
+                input_end: source.len(),
             };
             Box::new(ParsingError::map_custom_error(
                 owned_span,

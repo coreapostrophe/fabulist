@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use fabulist_lang::{
-    error::OwnedSpan,
+    error::SpanSlice,
     interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue, Evaluable},
     parser::ast::{
         decl::models::{
@@ -43,18 +43,18 @@ impl From<ContextValue> for RuntimeValue {
         match value {
             ContextValue::String(string_value) => RuntimeValue::String {
                 value: string_value,
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
             ContextValue::Integer(int_value) => RuntimeValue::Number {
                 value: int_value,
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
             ContextValue::Bool(bool_value) => RuntimeValue::Boolean {
                 value: bool_value,
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
             ContextValue::None => RuntimeValue::None {
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
         }
     }

@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use fabulist_lang::error::OwnedSpan;
+//! use fabulist_lang::error::SpanSlice;
 //! use fabulist_lang::interpreter::environment::RuntimeEnvironment;
 //! use fabulist_lang::interpreter::runtime_value::RuntimeValue;
 //!
@@ -17,7 +17,7 @@
 //!     "x",
 //!     RuntimeValue::Number {
 //!         value: 1.0,
-//!         span: OwnedSpan::default(),
+//!         span: SpanSlice::default(),
 //!     },
 //! )
 //! .unwrap();
@@ -33,7 +33,7 @@
 //!         "x",
 //!         RuntimeValue::Number {
 //!             value: 2.0,
-//!             span: OwnedSpan::default(),
+//!             span: SpanSlice::default(),
 //!         },
 //!     )
 //!     .unwrap();
@@ -316,7 +316,7 @@ impl RuntimeEnvironment {
     /// # Examples
     ///
     /// ```rust
-    /// use fabulist_lang::error::OwnedSpan;
+    /// use fabulist_lang::error::SpanSlice;
     /// use fabulist_lang::interpreter::environment::RuntimeEnvironment;
     /// use fabulist_lang::interpreter::runtime_value::RuntimeValue;
     ///
@@ -328,7 +328,7 @@ impl RuntimeEnvironment {
     ///         "x",
     ///         RuntimeValue::Number {
     ///             value: 1.0,
-    ///             span: OwnedSpan::default(),
+    ///             span: SpanSlice::default(),
     ///         },
     ///     )
     ///     .unwrap();
@@ -339,7 +339,7 @@ impl RuntimeEnvironment {
     ///         "y",
     ///         RuntimeValue::Number {
     ///             value: 2.0,
-    ///             span: OwnedSpan::default(),
+    ///             span: SpanSlice::default(),
     ///         },
     ///     )
     ///     .unwrap();

@@ -2,12 +2,12 @@
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::error::{OwnedSpan, RuntimeError};
+use crate::error::{SpanSlice, RuntimeError};
 use crate::interpreter::runtime_value::RuntimeValue;
 
 impl RuntimeValue {
     /// Returns the span associated with the value.
-    pub fn span(&self) -> OwnedSpan {
+    pub fn span(&self) -> SpanSlice {
         match self {
             RuntimeValue::Number { span, .. }
             | RuntimeValue::Boolean { span, .. }
@@ -214,12 +214,12 @@ impl PartialOrd for RuntimeValue {
 
 #[cfg(test)]
 mod expr_overrides_tests {
-    use crate::{error::OwnedSpan, interpreter::runtime_value::RuntimeValue};
+    use crate::{error::SpanSlice, interpreter::runtime_value::RuntimeValue};
 
     impl From<f32> for RuntimeValue {
         fn from(value: f32) -> Self {
             RuntimeValue::Number {
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
                 value,
             }
         }
@@ -228,7 +228,7 @@ mod expr_overrides_tests {
     impl From<bool> for RuntimeValue {
         fn from(value: bool) -> Self {
             RuntimeValue::Boolean {
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
                 value,
             }
         }
@@ -237,7 +237,7 @@ mod expr_overrides_tests {
     impl From<&str> for RuntimeValue {
         fn from(value: &str) -> Self {
             RuntimeValue::String {
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
                 value: value.to_string(),
             }
         }
@@ -246,7 +246,7 @@ mod expr_overrides_tests {
     impl From<()> for RuntimeValue {
         fn from(_: ()) -> Self {
             RuntimeValue::None {
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             }
         }
     }

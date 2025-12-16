@@ -586,7 +586,7 @@ impl Evaluable for Expr {
 #[cfg(test)]
 mod expr_evaluators_tests {
     use crate::{
-        error::OwnedSpan,
+        error::SpanSlice,
         interpreter::runtime_value::RuntimeValue,
         parser::ast::{expr::models::PrimaryExpr, AssertEvaluateOptions, AstTestHelper},
         parser::Rule,
@@ -694,21 +694,21 @@ mod expr_evaluators_tests {
             "a".to_string(),
             RuntimeValue::Number {
                 value: 1.0,
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
         );
         expected_properties.insert(
             "b".to_string(),
             RuntimeValue::Boolean {
                 value: true,
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
         );
         expected_properties.insert(
             "c".to_string(),
             RuntimeValue::String {
                 value: "test".to_string(),
-                span: OwnedSpan::default(),
+                span: SpanSlice::default(),
             },
         );
 

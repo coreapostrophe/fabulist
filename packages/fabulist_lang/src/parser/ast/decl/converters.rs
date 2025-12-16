@@ -15,26 +15,6 @@ use super::models::{
     NarrationElement, PartDecl, QuoteDecl,
 };
 
-impl TryFrom<Pair<'_, Rule>> for Decl {
-    type Error = pest::error::Error<Rule>;
-    fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        let value_span = value.as_span();
-
-        match value.as_rule() {
-            Rule::quote_decl => Ok(Decl::Quote(QuoteDecl::try_from(value)?)),
-            Rule::dialogue_decl => Ok(Decl::Dialogue(DialogueDecl::try_from(value)?)),
-            Rule::element_decl => Ok(Decl::Element(ElementDecl::try_from(value)?)),
-            Rule::meta_decl => Ok(Decl::Meta(MetaDecl::try_from(value)?)),
-            Rule::mod_decl => Ok(Decl::Module(ModuleDecl::try_from(value)?)),
-            Rule::part_decl => Ok(Decl::Part(PartDecl::try_from(value)?)),
-            _ => Err(ParsingError::map_custom_error(
-                value_span.into(),
-                "Invalid declaration",
-            )),
-        }
-    }
-}
-
 impl TryFrom<Pair<'_, Rule>> for QuoteDecl {
     type Error = pest::error::Error<Rule>;
     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
@@ -203,6 +183,26 @@ impl TryFrom<Pair<'_, Rule>> for PartDecl {
             id,
             elements,
         })
+    }
+}
+
+impl TryFrom<Pair<'_, Rule>> for Decl {
+    type Error = pest::error::Error<Rule>;
+    fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        let value_span = value.as_span();
+
+        match value.as_rule() {
+            Rule::quote_decl => Ok(Decl::Quote(QuoteDecl::try_from(value)?)),
+            Rule::dialogue_decl => Ok(Decl::Dialogue(DialogueDecl::try_from(value)?)),
+            Rule::element_decl => Ok(Decl::Element(ElementDecl::try_from(value)?)),
+            Rule::meta_decl => Ok(Decl::Meta(MetaDecl::try_from(value)?)),
+            Rule::mod_decl => Ok(Decl::Module(ModuleDecl::try_from(value)?)),
+            Rule::part_decl => Ok(Decl::Part(PartDecl::try_from(value)?)),
+            _ => Err(ParsingError::map_custom_error(
+                value_span.into(),
+                "Invalid declaration",
+            )),
+        }
     }
 }
 

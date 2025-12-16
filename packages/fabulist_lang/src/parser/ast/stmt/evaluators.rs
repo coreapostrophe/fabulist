@@ -134,7 +134,7 @@ impl Evaluable for Stmt {
 #[cfg(test)]
 mod stmt_evaluators_tests {
     use crate::{
-        error::OwnedSpan,
+        error::SpanSlice,
         interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
         parser::{
             ast::{
@@ -225,7 +225,7 @@ mod stmt_evaluators_tests {
                 "x",
                 RuntimeValue::Number {
                     value: 30.0,
-                    span: OwnedSpan::default(),
+                    span: SpanSlice::default(),
                 },
             )
             .expect("Failed to insert variable x");

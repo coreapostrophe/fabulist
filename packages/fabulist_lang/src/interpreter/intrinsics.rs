@@ -1,7 +1,7 @@
 //! Intrinsic helpers available to runtime values.
 
 use crate::{
-    error::{OwnedSpan, RuntimeError},
+    error::{SpanSlice, RuntimeError},
     interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
 };
 
@@ -15,7 +15,7 @@ impl NumberIntrinsics {
     /// arity or [`RuntimeError::TypeMismatch`] if the argument is not a number.
     pub fn to_string(
         args: Vec<RuntimeValue>,
-        span: OwnedSpan,
+        span: SpanSlice,
     ) -> Result<RuntimeValue, RuntimeError> {
         if args.len() != 1 {
             return Err(RuntimeError::InvalidArgumentsCount {
