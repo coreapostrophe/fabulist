@@ -1,5 +1,5 @@
 use crate::{
-    error::{EngineError, EngineResult},
+    error::{Error, Result},
     state::State,
 };
 
@@ -18,7 +18,7 @@ pub mod selection;
 
 pub trait Element: Progressive + InterpInset {}
 
-pub type PartElement = dyn Element<Output = EngineResult<Option<ListKey<String>>>>;
+pub type PartElement = dyn Element<Output = Result<Option<ListKey<String>>>>;
 
 #[derive(Debug)]
 pub struct Part {
@@ -30,29 +30,25 @@ impl Part {
     pub fn id(&self) -> &String {
         &self.id
     }
-
     pub fn elements(&self) -> &Vec<Box<PartElement>> {
         &self.elements
     }
-
     pub fn mut_elements(&mut self) -> &mut Vec<Box<PartElement>> {
         &mut self.elements
     }
-
-    pub fn element(&self, index: usize) -> EngineResult<&PartElement> {
+    pub fn element(&self, index: usize) -> Result<&PartElement> {
         match self.elements.get(index) {
             Some(element) => Ok(element.as_ref()),
-            None => Err(EngineError::ElementDoesNotExist {
+            None => Err(Error::ElementDoesNotExist {
                 dialogue_index: index,
                 part_key: self.id.clone(),
             }),
         }
     }
-
-    pub fn mut_element(&mut self, index: usize) -> EngineResult<&mut Box<PartElement>> {
+    pub fn mut_element(&mut self, index: usize) -> Result<&mut Box<PartElement>> {
         match self.elements.get_mut(index) {
             Some(element) => Ok(element),
-            None => Err(EngineError::ElementDoesNotExist {
+            None => Err(Error::ElementDoesNotExist {
                 dialogue_index: index,
                 part_key: self.id.clone(),
             }),
@@ -73,12 +69,10 @@ impl PartBuilder {
             quotes: Vec::new(),
         }
     }
-
     pub fn add_element(mut self, dialogue: impl Into<Box<PartElement>>) -> Self {
         self.quotes.push(dialogue.into());
         self
     }
-
     pub fn build(self) -> Part {
         Part {
             id: self.id,
@@ -105,7 +99,7 @@ impl InterpInset for Part {
 }
 
 impl Progressive for Part {
-    type Output = EngineResult<DialogueIndex>;
+    type Output = Result<DialogueIndex>;
     fn next(&self, state: &mut State, choice_index: Option<usize>) -> Self::Output {
         if state.current_element().is_none() {
             if !self.elements.is_empty() {
@@ -144,6 +138,6 @@ impl Progressive for Part {
             }
         }
         state.reset();
-        Err(EngineError::EndOfStory)
+        Err(Error::EndOfStory)
     }
 }

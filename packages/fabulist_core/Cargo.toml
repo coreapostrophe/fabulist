@@ -14,7 +14,7 @@ authors = ["Daveren Cordero <daverencordero@gmail.com>"]
 thiserror.workspace = true
 
 fabulist_derive = { path = "../fabulist_derive" }
-fabulist_lang = { path = "../fabulist_lang", optional = true }
+fabulist_lang = { path = "../fabulist_lang" }
 
 [features]
 default = ["selection", "actions", "dialogue", "narration"]
@@ -22,4 +22,3 @@ selection = ["actions"]
 dialogue = ["actions"]
 narration = ["actions"]
 actions = []
-parsing = ["dep:fabulist_lang", "selection", "actions", "dialogue", "narration"]

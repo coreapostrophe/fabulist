@@ -1,7 +1,7 @@
 use fabulist_derive::ElementInternal;
 
 use crate::{
-    error::EngineResult,
+    error::Result,
     state::State,
     story::{character::Character, reference::ListKey, resource::Inset, Progressive},
 };
@@ -11,7 +11,7 @@ use super::{
     PartElement,
 };
 
-#[derive(ElementInternal)]
+#[derive(ElementInternal, Debug)]
 pub struct Dialogue {
     text: String,
     character: Inset<Character>,
@@ -19,22 +19,10 @@ pub struct Dialogue {
     change_context: Option<ChangeContextClosure>,
 }
 
-impl std::fmt::Debug for Dialogue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Dialogue")
-            .field("text", &self.text)
-            .field("character", &self.character)
-            .field("query_next", &self.query_next.is_some())
-            .field("change_context", &self.change_context.is_some())
-            .finish()
-    }
-}
-
 impl Dialogue {
     pub fn text(&self) -> &String {
         &self.text
     }
-
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
@@ -44,7 +32,6 @@ impl QueryNext for Dialogue {
     fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
     }
-
     fn set_query_next(&mut self, closure: QueryNextClosure) {
         self.query_next = Some(closure);
     }
@@ -54,28 +41,17 @@ impl ChangeContext for Dialogue {
     fn change_context(&self) -> Option<&ChangeContextClosure> {
         self.change_context.as_ref()
     }
-
     fn set_change_context(&mut self, closure: ChangeContextClosure) {
         self.change_context = Some(closure);
     }
 }
 
+#[derive(Debug)]
 pub struct DialogueBuilder {
     text: String,
     character: Inset<Character>,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
-}
-
-impl std::fmt::Debug for DialogueBuilder {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DialogueBuilder")
-            .field("text", &self.text)
-            .field("character", &self.character)
-            .field("query_next", &self.query_next.is_some())
-            .field("change_context", &self.change_context.is_some())
-            .finish()
-    }
 }
 
 #[derive(Debug)]
@@ -93,17 +69,14 @@ impl DialogueBuilder {
             change_context: None,
         }
     }
-
     pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
         self.query_next = Some(closure);
         self
     }
-
     pub fn set_change_context(mut self, closure: ChangeContextClosure) -> Self {
         self.change_context = Some(closure);
         self
     }
-
     pub fn build(self) -> Dialogue {
         Dialogue {
             text: self.text,
@@ -137,18 +110,14 @@ impl From<DialogueBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Dialogue {
-    type Output = EngineResult<Option<ListKey<String>>>;
+    type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
-        if let Some(change_context_closure) = self.change_context.as_ref() {
-            change_context_closure(state.mut_context().as_mut())?;
+        if let Some(change_context_closure) = self.change_context {
+            change_context_closure(state.mut_context());
         }
-
         let next_part_key = self
             .query_next
-            .as_ref()
-            .map(|next_closure| next_closure(state.context().as_ref()))
-            .transpose()?;
-
+            .map(|next_closure| next_closure(state.context()));
         Ok(next_part_key)
     }
 }

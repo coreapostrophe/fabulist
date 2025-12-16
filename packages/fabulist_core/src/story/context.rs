@@ -1,14 +1,10 @@
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    fmt::Debug,
-};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum ContextValue {
-    Integer(f32),
+    Integer(i32),
     Bool(bool),
     String(String),
-    None,
 }
 
 impl From<&str> for ContextValue {
@@ -23,8 +19,8 @@ impl From<String> for ContextValue {
     }
 }
 
-impl From<f32> for ContextValue {
-    fn from(value: f32) -> Self {
+impl From<i32> for ContextValue {
+    fn from(value: i32) -> Self {
         Self::Integer(value)
     }
 }
@@ -33,12 +29,6 @@ impl From<bool> for ContextValue {
     fn from(value: bool) -> Self {
         Self::Bool(value)
     }
-}
-
-pub trait Mappable: Debug {
-    fn insert(&mut self, key: String, value: ContextValue);
-    fn get(&self, key: &str) -> Option<&ContextValue>;
-    fn assign(&mut self, key: String, new_value: ContextValue) -> bool;
 }
 
 #[derive(Debug)]
@@ -54,38 +44,16 @@ impl Context {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
-
     pub fn value(&self) -> &HashMap<String, ContextValue> {
         &self.0
     }
-
     pub fn mut_value(&mut self) -> &mut HashMap<String, ContextValue> {
         &mut self.0
     }
-
-    pub fn insert(&mut self, key: String, value: ContextValue) {
-        self.0.insert(key, value);
+    pub fn insert(&mut self, key: impl Into<String>, value: impl Into<ContextValue>) {
+        self.0.insert(key.into(), value.into());
     }
-
     pub fn clear(&mut self) {
         self.0.clear();
-    }
-}
-
-impl Mappable for Context {
-    fn insert(&mut self, key: String, value: ContextValue) {
-        self.0.insert(key, value);
-    }
-    fn get(&self, key: &str) -> Option<&ContextValue> {
-        self.0.get(key)
-    }
-    fn assign(&mut self, key: String, new_value: ContextValue) -> bool {
-        match self.0.entry(key) {
-            Entry::Occupied(mut entry) => {
-                entry.insert(new_value);
-                true
-            }
-            Entry::Vacant(_) => false,
-        }
     }
 }

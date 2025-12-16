@@ -1,34 +1,23 @@
 use fabulist_derive::ElementInternal;
 
-use crate::{engine::Progressive, error::EngineResult, state::State, story::reference::ListKey};
+use crate::{engine::Progressive, error::Result, state::State, story::reference::ListKey};
 
 use super::{
     actions::{ChangeContext, ChangeContextClosure, QueryNext, QueryNextClosure},
     PartElement,
 };
 
-#[derive(ElementInternal)]
+#[derive(ElementInternal, Debug)]
 pub struct Narration {
     text: String,
     query_next: Option<QueryNextClosure>,
     change_context: Option<ChangeContextClosure>,
 }
 
-impl std::fmt::Debug for Narration {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Narration")
-            .field("text", &self.text)
-            .field("query_next", &self.query_next.is_some())
-            .field("change_context", &self.change_context.is_some())
-            .finish()
-    }
-}
-
 impl Narration {
     pub fn text(&self) -> &String {
         &self.text
     }
-
     pub fn set_text(&mut self, text: impl Into<String>) {
         self.text = text.into();
     }
@@ -38,7 +27,6 @@ impl QueryNext for Narration {
     fn query_next(&self) -> Option<&QueryNextClosure> {
         self.query_next.as_ref()
     }
-
     fn set_query_next(&mut self, closure: QueryNextClosure) {
         self.query_next = Some(closure);
     }
@@ -48,7 +36,6 @@ impl ChangeContext for Narration {
     fn change_context(&self) -> Option<&ChangeContextClosure> {
         self.change_context.as_ref()
     }
-
     fn set_change_context(&mut self, closure: ChangeContextClosure) {
         self.change_context = Some(closure);
     }
@@ -68,17 +55,14 @@ impl NarrationBuilder {
             change_context: None,
         }
     }
-
     pub fn set_query_next(mut self, closure: QueryNextClosure) -> Self {
         self.query_next = Some(closure);
         self
     }
-
     pub fn set_change_context(mut self, closure: ChangeContextClosure) -> Self {
         self.change_context = Some(closure);
         self
     }
-
     pub fn build(self) -> Narration {
         Narration {
             text: self.text,
@@ -109,18 +93,14 @@ impl From<NarrationBuilder> for Box<PartElement> {
 }
 
 impl Progressive for Narration {
-    type Output = EngineResult<Option<ListKey<String>>>;
+    type Output = Result<Option<ListKey<String>>>;
     fn next(&self, state: &mut State, _choice_index: Option<usize>) -> Self::Output {
-        if let Some(change_context_closure) = self.change_context.as_ref() {
-            change_context_closure(state.mut_context().as_mut())?;
+        if let Some(change_context_closure) = self.change_context {
+            change_context_closure(state.mut_context());
         }
-
         let next_part_key = self
             .query_next
-            .as_ref()
-            .map(|next_closure| next_closure(state.context().as_ref()))
-            .transpose()?;
-
+            .map(|next_closure| next_closure(state.context()));
         Ok(next_part_key)
     }
 }
