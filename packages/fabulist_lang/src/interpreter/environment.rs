@@ -17,7 +17,7 @@
 //!     "x",
 //!     RuntimeValue::Number {
 //!         value: 1.0,
-//!         span: SpanSlice::default(),
+//!         span_slice: SpanSlice::default(),
 //!     },
 //! )
 //! .unwrap();
@@ -33,7 +33,7 @@
 //!         "x",
 //!         RuntimeValue::Number {
 //!             value: 2.0,
-//!             span: SpanSlice::default(),
+//!             span_slice: SpanSlice::default(),
 //!         },
 //!     )
 //!     .unwrap();
@@ -130,6 +130,8 @@ impl Environment {
     }
 
     /// Set the child runtime environment using a strong reference.
+    ///
+    /// Returns an error if the provided environment has been dropped.
     pub fn set_child(
         &mut self,
         runtime_environment: RuntimeEnvironment,
@@ -195,6 +197,8 @@ impl RuntimeEnvironment {
     }
 
     /// Insert a value into the current environment without traversing parents.
+    ///
+    /// Returns an error if the environment has been dropped.
     pub fn insert_env_value(
         &self,
         key: impl Into<String>,
@@ -214,7 +218,8 @@ impl RuntimeEnvironment {
 
     /// Assign a value, replacing it in the nearest scope where it already exists.
     ///
-    /// Returns an error if the key is not present in any reachable scope.
+    /// Returns an error if the key is not present in any reachable scope or
+    /// if the environment has been dropped.
     pub fn assign_env_value(
         &self,
         key: impl Into<String>,
@@ -282,6 +287,8 @@ impl RuntimeEnvironment {
     }
 
     /// Set the child environment using a strong handle.
+    ///
+    /// Returns an error if the provided environment has been dropped.
     pub fn set_child(
         &self,
         runtime_environment: RuntimeEnvironment,
@@ -297,6 +304,8 @@ impl RuntimeEnvironment {
     }
 
     /// Set the parent environment using a weak handle.
+    ///
+    /// Returns an error if the provided environment has been dropped.
     pub fn set_parent(
         &self,
         runtime_environment: RuntimeEnvironment,
@@ -313,6 +322,8 @@ impl RuntimeEnvironment {
 
     /// Create an empty child environment, link it to this environment, and return it.
     ///
+    /// Returns an error if the environment has been dropped.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -328,7 +339,7 @@ impl RuntimeEnvironment {
     ///         "x",
     ///         RuntimeValue::Number {
     ///             value: 1.0,
-    ///             span: SpanSlice::default(),
+    ///             span_slice: SpanSlice::default(),
     ///         },
     ///     )
     ///     .unwrap();
@@ -339,7 +350,7 @@ impl RuntimeEnvironment {
     ///         "y",
     ///         RuntimeValue::Number {
     ///             value: 2.0,
-    ///             span: SpanSlice::default(),
+    ///             span_slice: SpanSlice::default(),
     ///         },
     ///     )
     ///     .unwrap();

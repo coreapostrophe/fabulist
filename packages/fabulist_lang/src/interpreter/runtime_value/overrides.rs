@@ -7,38 +7,18 @@ use crate::parser::error::SpanSlice;
 
 impl RuntimeValue {
     /// Returns the span associated with the value.
-    pub fn span(&self) -> SpanSlice {
+    pub fn span_slice(&self) -> SpanSlice {
         match self {
-            RuntimeValue::Number {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Boolean {
-                span_slice: span, ..
-            }
-            | RuntimeValue::String {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Identifier {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Object {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Lambda {
-                span_slice: span, ..
-            }
-            | RuntimeValue::None {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Context {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Module {
-                span_slice: span, ..
-            }
-            | RuntimeValue::Path {
-                span_slice: span, ..
-            } => span.clone(),
+            RuntimeValue::Number { span_slice, .. }
+            | RuntimeValue::Boolean { span_slice, .. }
+            | RuntimeValue::String { span_slice, .. }
+            | RuntimeValue::Identifier { span_slice, .. }
+            | RuntimeValue::Object { span_slice, .. }
+            | RuntimeValue::Lambda { span_slice, .. }
+            | RuntimeValue::None { span_slice, .. }
+            | RuntimeValue::Context { span_slice, .. }
+            | RuntimeValue::Module { span_slice, .. }
+            | RuntimeValue::Path { span_slice, .. } => span_slice.clone(),
             RuntimeValue::NativeFunction(_) => unreachable!("Native functions do not have spans."),
         }
     }
@@ -50,7 +30,7 @@ impl RuntimeValue {
             RuntimeValue::Number { value, .. } => Ok(*value != 0.0),
             RuntimeValue::String { value, .. } => Ok(!value.is_empty()),
             RuntimeValue::None { .. } => Ok(false),
-            other => Err(RuntimeError::CannotCastToBoolean(other.span())),
+            other => Err(RuntimeError::CannotCastToBoolean(other.span_slice())),
         }
     }
 
@@ -69,7 +49,7 @@ impl RuntimeValue {
                     value: value.clone(),
                     span: span.clone(),
                 }),
-            other => Err(RuntimeError::CannotCastToNumber(other.span())),
+            other => Err(RuntimeError::CannotCastToNumber(other.span_slice())),
         }
     }
 }
@@ -113,11 +93,11 @@ impl Add for RuntimeValue {
                 other => Err(RuntimeError::TypeMismatch {
                     expected: "Number | Boolean | String | None".to_string(),
                     got: other.type_name(),
-                    span: other.span(),
+                    span: other.span_slice(),
                 }),
             },
             _ => Ok(RuntimeValue::Number {
-                span_slice: self.span() + rhs.span(),
+                span_slice: self.span_slice() + rhs.span_slice(),
                 value: self.to_num()? + rhs.to_num()?,
             }),
         }
@@ -141,7 +121,7 @@ impl Mul for RuntimeValue {
                     })
                 }
                 _ => Ok(RuntimeValue::Number {
-                    span_slice: self.span() + rhs.span(),
+                    span_slice: self.span_slice() + rhs.span_slice(),
                     value: self.to_num()? * rhs.to_num()?,
                 }),
             },
@@ -154,7 +134,7 @@ impl Sub for RuntimeValue {
 
     fn sub(self, rhs: Self) -> Self::Output {
         Ok(RuntimeValue::Number {
-            span_slice: self.span() + rhs.span(),
+            span_slice: self.span_slice() + rhs.span_slice(),
             value: self.to_num()? - rhs.to_num()?,
         })
     }
@@ -175,7 +155,7 @@ impl Div for RuntimeValue {
                     span,
                 }),
                 _ => Ok(RuntimeValue::Number {
-                    span_slice: self.span() + rhs.span(),
+                    span_slice: self.span_slice() + rhs.span_slice(),
                     value: self.to_num()? / rhs.to_num()?,
                 }),
             },

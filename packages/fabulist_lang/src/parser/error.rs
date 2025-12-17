@@ -126,7 +126,7 @@ pub enum ParserError {
     InvalidDeclaration(SpanSlice),
     /// Unable to parse story.
     #[error("Unable to parse story.")]
-    UnableToParseStory(SpanSlice),
+    UnableToParseStory,
     /// Failed pest parsing.
     #[error("Failed pest parsing: {0}")]
     PestParsing(#[from] Box<pest::error::Error<Rule>>),

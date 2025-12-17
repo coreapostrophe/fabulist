@@ -277,10 +277,14 @@ impl Evaluable for StandardUnary {
                             value: -runtime_value,
                             span_slice: self.span_slice.clone(),
                         }),
-                        other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
+                        other => Err(RuntimeError::UnaryNegationNonNumber(
+                            other.span_slice().clone(),
+                        )),
                     }
                 }
-                other => Err(RuntimeError::UnaryNegationNonNumber(other.span().clone())),
+                other => Err(RuntimeError::UnaryNegationNonNumber(
+                    other.span_slice().clone(),
+                )),
             },
             UnaryOperator::Not => match self.right.evaluate(environment, context)? {
                 RuntimeValue::Boolean {
@@ -306,10 +310,10 @@ impl Evaluable for StandardUnary {
                             value: !runtime_value,
                             span_slice: self.span_slice.clone(),
                         }),
-                        other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
+                        other => Err(RuntimeError::UnaryNotNonBoolean(other.span_slice().clone())),
                     }
                 }
-                other => Err(RuntimeError::UnaryNotNonBoolean(other.span().clone())),
+                other => Err(RuntimeError::UnaryNotNonBoolean(other.span_slice().clone())),
             },
         }
     }
@@ -461,7 +465,11 @@ impl Evaluable for MemberExpr {
                     }
                     RuntimeValue::Context { .. } => Ok(context.clone()),
                     RuntimeValue::Module { environment, .. } => Ok(environment.clone()),
-                    other => return Err(RuntimeError::InvalidMemoryAccess(other.span().clone())),
+                    other => {
+                        return Err(RuntimeError::InvalidMemoryAccess(
+                            other.span_slice().clone(),
+                        ))
+                    }
                 }?;
 
                 member.evaluate(&injected_env, context)
@@ -692,7 +700,7 @@ mod expr_evaluators_tests {
         assert_eq!(
             result,
             RuntimeValue::None {
-                span_slice: result.span().clone(),
+                span_slice: result.span_slice().clone(),
             }
         );
     }

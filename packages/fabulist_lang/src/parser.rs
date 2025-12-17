@@ -5,7 +5,7 @@ use pest::Parser;
 
 use crate::parser::{
     ast::story::StoryAst,
-    error::{ParserError, ParserResult, SpanSlice},
+    error::{ParserError, ParserResult},
 };
 
 pub mod ast;
@@ -40,17 +40,9 @@ impl FabulistParser {
     /// ```
     pub fn parse(source: impl Into<String>) -> ParserResult<StoryAst> {
         let source = source.into();
-        let mut pairs = FabulistPestParser::parse(Rule::story, &source).map_err(Box::new)?;
 
-        let story_pair = pairs.next().ok_or_else(|| {
-            let full_span_slice = SpanSlice {
-                slice: source.clone(),
-                line_col: Default::default(),
-                input_start: 0,
-                input_end: source.len(),
-            };
-            ParserError::UnableToParseStory(full_span_slice)
-        })?;
+        let mut pairs = FabulistPestParser::parse(Rule::story, &source).map_err(Box::new)?;
+        let story_pair = pairs.next().ok_or(ParserError::UnableToParseStory)?;
 
         StoryAst::try_from(story_pair)
     }
