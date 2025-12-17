@@ -193,7 +193,7 @@ mod stmt_evaluators_tests {
             .expect("Failed to evaluate BlockStmt");
 
         let block_environment = environment
-            .get_child()
+            .get_child(0)
             .expect("BlockStmt should create a child environment");
 
         let RuntimeValue::None { .. } = result else {
@@ -280,7 +280,7 @@ mod stmt_evaluators_tests {
             .expect("Failed to evaluate IfStmt");
 
         let block_environment = environment
-            .get_child()
+            .get_child(0)
             .expect("BlockStmt should create a child environment");
 
         let RuntimeValue::None { .. } = result else {

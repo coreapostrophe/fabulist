@@ -70,7 +70,8 @@ pub enum EnvironmentError {
 pub struct Environment {
     map: HashMap<String, RuntimeValue>,
     parent: Option<RuntimeEnvironment>,
-    child: Option<RuntimeEnvironment>,
+    #[cfg(test)]
+    children: Vec<RuntimeEnvironment>,
 }
 
 impl Default for Environment {
@@ -85,7 +86,8 @@ impl Environment {
         Self {
             map: HashMap::new(),
             parent: None,
-            child: None,
+            #[cfg(test)]
+            children: Vec::new(),
         }
     }
 
@@ -100,8 +102,9 @@ impl Environment {
     }
 
     /// Get a reference to the child `RuntimeEnvironment`, if any.
-    pub fn child(&self) -> Option<&RuntimeEnvironment> {
-        self.child.as_ref()
+    #[cfg(test)]
+    pub fn children(&self) -> &Vec<RuntimeEnvironment> {
+        &self.children
     }
 
     /// Look up a value in the current environment without traversing parents.
@@ -132,14 +135,15 @@ impl Environment {
     /// Set the child runtime environment using a strong reference.
     ///
     /// Returns an error if the provided environment has been dropped.
-    pub fn set_child(
+    #[cfg(test)]
+    pub fn push_child(
         &mut self,
         runtime_environment: RuntimeEnvironment,
     ) -> Result<(), EnvironmentError> {
         let Some(runtime_environment) = runtime_environment.upgrade() else {
             return Err(EnvironmentError::DroppedEnvironment);
         };
-        self.child = Some(runtime_environment);
+        self.children.push(runtime_environment);
 
         Ok(())
     }
@@ -273,10 +277,11 @@ impl RuntimeEnvironment {
     }
 
     /// Get the child environment if present.
-    pub fn get_child(&self) -> Option<RuntimeEnvironment> {
+    #[cfg(test)]
+    pub fn get_child(&self, idx: usize) -> Option<RuntimeEnvironment> {
         let env_rc = self.get()?;
         let env = env_rc.borrow();
-        env.child().cloned()
+        env.children().get(idx).cloned()
     }
 
     /// Get the parent environment if present.
@@ -289,6 +294,7 @@ impl RuntimeEnvironment {
     /// Set the child environment using a strong handle.
     ///
     /// Returns an error if the provided environment has been dropped.
+    #[cfg(test)]
     pub fn set_child(
         &self,
         runtime_environment: RuntimeEnvironment,
@@ -298,7 +304,7 @@ impl RuntimeEnvironment {
         };
 
         let mut env = env_rc.borrow_mut();
-        env.set_child(runtime_environment)?;
+        env.push_child(runtime_environment)?;
 
         Ok(())
     }
@@ -362,7 +368,9 @@ impl RuntimeEnvironment {
     pub fn add_empty_child(&self) -> Result<RuntimeEnvironment, EnvironmentError> {
         let child_environment = RuntimeEnvironment::new();
 
+        #[cfg(test)]
         self.set_child(child_environment.clone())?;
+
         child_environment.set_parent(self.downgrade())?;
 
         Ok(child_environment)
