@@ -51,5 +51,3 @@
 pub mod interpreter;
 pub mod parser;
 
-#[allow(missing_docs)]
-pub mod compiler;
