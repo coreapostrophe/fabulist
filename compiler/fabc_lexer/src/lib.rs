@@ -53,6 +53,7 @@ impl<'a> Lexer<'a> {
             '-' => self.tokens.push(Token::Minus),
             '+' => self.tokens.push(Token::Plus),
             '*' => self.tokens.push(Token::Asterisk),
+            ':' => self.tokens.push(Token::Colon),
             ';' => self.tokens.push(Token::Semicolon),
 
             // Double-character tokens.
@@ -66,6 +67,8 @@ impl<'a> Lexer<'a> {
             '=' => {
                 if self.r#match('=')? {
                     self.tokens.push(Token::EqualEqual)
+                } else if self.r#match('>')? {
+                    self.tokens.push(Token::ArrowRight)
                 } else {
                     self.tokens.push(Token::Equal)
                 }
@@ -263,7 +266,7 @@ mod lexer_tests {
 
     #[test]
     fn test_simple_tokens() {
-        let source = "( ) { } , . - + * ; ! != = == < <= > >= /";
+        let source = "( ) { } , . - + * : ; ! != = == < <= > >= / =>";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
@@ -276,6 +279,7 @@ mod lexer_tests {
             Token::Minus,
             Token::Plus,
             Token::Asterisk,
+            Token::Colon,
             Token::Semicolon,
             Token::Bang,
             Token::BangEqual,
@@ -286,6 +290,7 @@ mod lexer_tests {
             Token::Greater,
             Token::GreaterEqual,
             Token::Slash,
+            Token::ArrowRight,
             Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);

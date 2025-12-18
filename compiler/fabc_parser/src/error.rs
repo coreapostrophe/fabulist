@@ -18,6 +18,6 @@ pub enum Error {
     InvalidUnaryOperator,
     #[error("Invalid binary operator")]
     InvalidBinaryOperator,
-    #[error("Expected `{0}`, found `{1}`")]
-    ExpectedFound(String, String),
+    #[error("Expected `{expected}`, found `{found}`")]
+    ExpectedFound { expected: String, found: String },
 }

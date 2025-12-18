@@ -19,10 +19,10 @@ impl Parsable for FunctionStmt {
 
         let name = match parser.advance() {
             Token::Identifier(ident) => Ok(ident.to_string()),
-            _ => Err(Error::ExpectedFound(
-                "identifier".to_string(),
-                parser.peek().to_string(),
-            )),
+            _ => Err(Error::ExpectedFound {
+                expected: "identifier".to_string(),
+                found: parser.peek().to_string(),
+            }),
         }?;
 
         let parameters = ParameterBodyDecl::parse(parser)?;

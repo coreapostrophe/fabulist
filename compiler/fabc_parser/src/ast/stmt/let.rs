@@ -15,10 +15,10 @@ impl Parsable for LetStmt {
         let name = if let Token::Identifier(ident) = parser.advance() {
             ident.clone()
         } else {
-            return Err(Error::ExpectedFound(
-                "identifier".to_string(),
-                parser.peek().to_string(),
-            ));
+            return Err(Error::ExpectedFound {
+                expected: "identifier".to_string(),
+                found: parser.peek().to_string(),
+            });
         };
 
         parser.consume(Token::Equal)?;

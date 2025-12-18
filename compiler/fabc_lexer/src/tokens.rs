@@ -15,6 +15,7 @@ pub enum Token {
     Plus,
     Asterisk,
     Slash,
+    Colon,
     Semicolon,
 
     // One or two character tokens
@@ -26,6 +27,7 @@ pub enum Token {
     GreaterEqual,
     Less,
     LessEqual,
+    ArrowRight,
 
     // Literals
     Identifier(String),
@@ -50,6 +52,7 @@ impl Display for Token {
             Token::Plus => write!(f, "+"),
             Token::Asterisk => write!(f, "*"),
             Token::Slash => write!(f, "/"),
+            Token::Colon => write!(f, ":"),
             Token::Semicolon => write!(f, ";"),
             Token::Bang => write!(f, "!"),
             Token::BangEqual => write!(f, "!="),
@@ -59,6 +62,7 @@ impl Display for Token {
             Token::GreaterEqual => write!(f, ">="),
             Token::Less => write!(f, "<"),
             Token::LessEqual => write!(f, "<="),
+            Token::ArrowRight => write!(f, "=>"),
             Token::Identifier(name) => write!(f, "identifier `{}`", name),
             Token::String(value) => write!(f, "string `{}`", value),
             Token::Number(value) => write!(f, "number `{}`", value),

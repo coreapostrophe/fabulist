@@ -13,12 +13,11 @@ impl Parsable for GotoStmt {
 
         let path = match parser.advance() {
             Token::Path(segments) => Ok(segments.clone()),
-            _ => Err(Error::ExpectedFound(
-                "path".to_string(),
-                parser.peek().to_string(),
-            )),
+            _ => Err(Error::ExpectedFound {
+                expected: "path".to_string(),
+                found: parser.peek().to_string(),
+            }),
         }?;
-
         parser.consume(Token::Semicolon)?;
 
         Ok(GotoStmt {

@@ -17,13 +17,15 @@ impl Parsable for ParameterBodyDecl {
                 if let Token::Identifier(param) = parser.advance() {
                     parameters.push(param.to_string());
                 } else {
-                    return Err(Error::ExpectedFound(
-                        "parameter name".to_string(),
-                        parser.peek().to_string(),
-                    ));
+                    return Err(Error::ExpectedFound {
+                        expected: "identifier".to_string(),
+                        found: parser.peek().to_string(),
+                    });
                 }
 
-                if !parser.r#match(vec![Token::Comma]) {
+                if let Token::Comma = parser.peek() {
+                    parser.consume(Token::Comma)?;
+                } else {
                     break;
                 }
             }

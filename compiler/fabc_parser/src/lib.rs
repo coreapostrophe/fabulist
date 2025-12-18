@@ -57,10 +57,10 @@ impl<'a> Parser<'a> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
-            Err(Error::ExpectedFound(
-                expected.to_string(),
-                self.peek().to_string(),
-            ))
+            Err(Error::ExpectedFound {
+                expected: expected.to_string(),
+                found: self.peek().to_string(),
+            })
         }
     }
 
