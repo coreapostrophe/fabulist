@@ -1,7 +1,7 @@
 use crate::keywords::KeywordKind;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Tokens {
+pub enum Token {
     // Single-character tokens
     LeftParen,
     RightParen,

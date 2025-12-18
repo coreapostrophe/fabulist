@@ -71,6 +71,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabc_parser"
+version = "0.1.0"
+dependencies = [
+ "fabc_derive",
+ "fabc_lexer",
+ "thiserror",
+]
+
+[[package]]
 name = "fabulist_core"
 version = "0.2.0"
 dependencies = [

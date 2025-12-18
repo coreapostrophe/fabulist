@@ -1,0 +1,12 @@
+[package]
+name = "fabc_parser"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+
+fabc_lexer = { path = "../fabc_lexer" }
+fabc_derive = { path = "../fabc_derive" }

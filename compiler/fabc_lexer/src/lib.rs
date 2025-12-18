@@ -1,18 +1,18 @@
-use crate::{error::Error, keywords::KeywordKind, tokens::Tokens};
+use crate::{error::Error, keywords::KeywordKind, tokens::Token};
 
 pub mod error;
 pub mod keywords;
 pub mod tokens;
 
-pub struct FabCLexer<'a> {
+pub struct Lexer<'a> {
     source: &'a str,
-    tokens: Vec<Tokens>,
+    tokens: Vec<Token>,
     start: usize,
     current: usize,
     line: usize,
 }
 
-impl<'a> FabCLexer<'a> {
+impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             source: input,
@@ -23,7 +23,7 @@ impl<'a> FabCLexer<'a> {
         }
     }
 
-    pub fn tokenize(&mut self) -> Result<&Vec<Tokens>, Error> {
+    pub fn tokenize(&mut self) -> Result<&Vec<Token>, Error> {
         self.scan_tokens()?;
         Ok(&self.tokens)
     }
@@ -34,7 +34,7 @@ impl<'a> FabCLexer<'a> {
             self.scan_token()?;
         }
 
-        self.tokens.push(Tokens::EoF);
+        self.tokens.push(Token::EoF);
 
         Ok(())
     }
@@ -44,44 +44,44 @@ impl<'a> FabCLexer<'a> {
 
         match c {
             // Single-character tokens.
-            '(' => self.tokens.push(Tokens::LeftParen),
-            ')' => self.tokens.push(Tokens::RightParen),
-            '{' => self.tokens.push(Tokens::LeftBrace),
-            '}' => self.tokens.push(Tokens::RightBrace),
-            ',' => self.tokens.push(Tokens::Comma),
-            '.' => self.tokens.push(Tokens::Dot),
-            '-' => self.tokens.push(Tokens::Minus),
-            '+' => self.tokens.push(Tokens::Plus),
-            '*' => self.tokens.push(Tokens::Star),
-            ';' => self.tokens.push(Tokens::Semicolon),
+            '(' => self.tokens.push(Token::LeftParen),
+            ')' => self.tokens.push(Token::RightParen),
+            '{' => self.tokens.push(Token::LeftBrace),
+            '}' => self.tokens.push(Token::RightBrace),
+            ',' => self.tokens.push(Token::Comma),
+            '.' => self.tokens.push(Token::Dot),
+            '-' => self.tokens.push(Token::Minus),
+            '+' => self.tokens.push(Token::Plus),
+            '*' => self.tokens.push(Token::Star),
+            ';' => self.tokens.push(Token::Semicolon),
 
             // Double-character tokens.
             '!' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Tokens::BangEqual)
+                    self.tokens.push(Token::BangEqual)
                 } else {
-                    self.tokens.push(Tokens::Bang)
+                    self.tokens.push(Token::Bang)
                 }
             }
             '=' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Tokens::EqualEqual)
+                    self.tokens.push(Token::EqualEqual)
                 } else {
-                    self.tokens.push(Tokens::Equal)
+                    self.tokens.push(Token::Equal)
                 }
             }
             '<' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Tokens::LessEqual)
+                    self.tokens.push(Token::LessEqual)
                 } else {
-                    self.tokens.push(Tokens::Less)
+                    self.tokens.push(Token::Less)
                 }
             }
             '>' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Tokens::GreaterEqual)
+                    self.tokens.push(Token::GreaterEqual)
                 } else {
-                    self.tokens.push(Tokens::Greater)
+                    self.tokens.push(Token::Greater)
                 }
             }
 
@@ -92,7 +92,7 @@ impl<'a> FabCLexer<'a> {
                         self.advance()?;
                     }
                 } else {
-                    self.tokens.push(Tokens::Slash)
+                    self.tokens.push(Token::Slash)
                 }
             }
             ' ' | '\r' | '\t' => {}
@@ -125,9 +125,9 @@ impl<'a> FabCLexer<'a> {
         let keyword_kind = KeywordKind::get(text);
 
         if let Some(keyword_kind) = keyword_kind {
-            self.tokens.push(Tokens::Keyword(keyword_kind));
+            self.tokens.push(Token::Keyword(keyword_kind));
         } else {
-            self.tokens.push(Tokens::Identifier(text.to_string()));
+            self.tokens.push(Token::Identifier(text.to_string()));
         }
 
         Ok(())
@@ -147,7 +147,7 @@ impl<'a> FabCLexer<'a> {
         }
 
         let number_str = &self.source[self.start..self.current];
-        self.tokens.push(Tokens::Number(
+        self.tokens.push(Token::Number(
             number_str.parse().map_err(|_| Error::UnableToParseNumber)?,
         ));
 
@@ -179,7 +179,7 @@ impl<'a> FabCLexer<'a> {
         self.advance()?;
 
         let value = &self.source[self.start + 1..self.current - 1];
-        self.tokens.push(Tokens::String(value.to_string()));
+        self.tokens.push(Token::String(value.to_string()));
 
         Ok(())
     }
@@ -234,29 +234,29 @@ mod lexer_tests {
     #[test]
     fn test_simple_tokens() {
         let source = "( ) { } , . - + * ; ! != = == < <= > >= /";
-        let mut lexer = FabCLexer::new(source);
+        let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Tokens::LeftParen,
-            Tokens::RightParen,
-            Tokens::LeftBrace,
-            Tokens::RightBrace,
-            Tokens::Comma,
-            Tokens::Dot,
-            Tokens::Minus,
-            Tokens::Plus,
-            Tokens::Star,
-            Tokens::Semicolon,
-            Tokens::Bang,
-            Tokens::BangEqual,
-            Tokens::Equal,
-            Tokens::EqualEqual,
-            Tokens::Less,
-            Tokens::LessEqual,
-            Tokens::Greater,
-            Tokens::GreaterEqual,
-            Tokens::Slash,
-            Tokens::EoF,
+            Token::LeftParen,
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::RightBrace,
+            Token::Comma,
+            Token::Dot,
+            Token::Minus,
+            Token::Plus,
+            Token::Star,
+            Token::Semicolon,
+            Token::Bang,
+            Token::BangEqual,
+            Token::Equal,
+            Token::EqualEqual,
+            Token::Less,
+            Token::LessEqual,
+            Token::Greater,
+            Token::GreaterEqual,
+            Token::Slash,
+            Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);
     }
@@ -264,24 +264,24 @@ mod lexer_tests {
     #[test]
     fn test_keywords_and_identifiers() {
         let source = "let fn if else return goto true false none while for and or myVar";
-        let mut lexer = FabCLexer::new(source);
+        let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Tokens::Keyword(KeywordKind::Let),
-            Tokens::Keyword(KeywordKind::Fn),
-            Tokens::Keyword(KeywordKind::If),
-            Tokens::Keyword(KeywordKind::Else),
-            Tokens::Keyword(KeywordKind::Return),
-            Tokens::Keyword(KeywordKind::Goto),
-            Tokens::Keyword(KeywordKind::True),
-            Tokens::Keyword(KeywordKind::False),
-            Tokens::Keyword(KeywordKind::None),
-            Tokens::Keyword(KeywordKind::While),
-            Tokens::Keyword(KeywordKind::For),
-            Tokens::Keyword(KeywordKind::And),
-            Tokens::Keyword(KeywordKind::Or),
-            Tokens::Identifier("myVar".to_string()),
-            Tokens::EoF,
+            Token::Keyword(KeywordKind::Let),
+            Token::Keyword(KeywordKind::Fn),
+            Token::Keyword(KeywordKind::If),
+            Token::Keyword(KeywordKind::Else),
+            Token::Keyword(KeywordKind::Return),
+            Token::Keyword(KeywordKind::Goto),
+            Token::Keyword(KeywordKind::True),
+            Token::Keyword(KeywordKind::False),
+            Token::Keyword(KeywordKind::None),
+            Token::Keyword(KeywordKind::While),
+            Token::Keyword(KeywordKind::For),
+            Token::Keyword(KeywordKind::And),
+            Token::Keyword(KeywordKind::Or),
+            Token::Identifier("myVar".to_string()),
+            Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);
     }
@@ -289,13 +289,13 @@ mod lexer_tests {
     #[test]
     fn test_string_and_number_literals() {
         let source = r#""hello" 123 45.67"#;
-        let mut lexer = FabCLexer::new(source);
+        let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Tokens::String("hello".to_string()),
-            Tokens::Number(123.0),
-            Tokens::Number(45.67),
-            Tokens::EoF,
+            Token::String("hello".to_string()),
+            Token::Number(123.0),
+            Token::Number(45.67),
+            Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);
     }
