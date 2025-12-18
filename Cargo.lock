@@ -53,6 +53,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
+name = "fabc_derive"
+version = "0.1.0"
+dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "trybuild",
+]
+
+[[package]]
 name = "fabc_lexer"
 version = "0.1.0"
 dependencies = [
@@ -73,7 +84,6 @@ name = "fabulist_derive"
 version = "0.1.0"
 dependencies = [
  "fabulist_core",
- "pest",
  "prettyplease",
  "proc-macro2",
  "quote",
