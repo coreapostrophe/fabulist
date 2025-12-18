@@ -15,11 +15,16 @@ where
 pub struct Parser<'a> {
     tokens: &'a Vec<Token>,
     current: usize,
+    save: Option<usize>,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a Vec<Token>) -> Self {
-        Self { tokens, current: 0 }
+        Self {
+            tokens,
+            current: 0,
+            save: None,
+        }
     }
 
     pub fn parse(&mut self) -> Result<Stmt, Error> {
@@ -43,6 +48,9 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&self) -> &Token {
+        if self.is_at_end() {
+            return &Token::EoF;
+        }
         &self.tokens[self.current]
     }
 
@@ -51,6 +59,16 @@ impl<'a> Parser<'a> {
             self.current += 1;
         }
         self.previous()
+    }
+
+    fn enclosed<F, T>(&mut self, start: Token, end: Token, parser_fn: F) -> Result<T, Error>
+    where
+        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+    {
+        self.consume(start)?;
+        let result = parser_fn(self)?;
+        self.consume(end)?;
+        Ok(result)
     }
 
     fn punctuated<F, T>(
@@ -63,18 +81,36 @@ impl<'a> Parser<'a> {
     where
         F: Fn(&mut Parser<'a>) -> Result<T, Error>,
     {
-        self.consume(start)?;
-        let mut items = Vec::new();
+        self.enclosed(start, end.clone(), |parser| {
+            let mut items = Vec::new();
 
-        while !self.is_at_end() && self.peek() != &end {
-            items.push(parser_fn(self)?);
-            if !self.r#match(vec![delimiter.clone()]) {
-                break;
+            while !parser.is_at_end() && parser.peek() != &end {
+                items.push(parser_fn(parser)?);
+                if !parser.r#match(vec![delimiter.clone()]) {
+                    break;
+                }
             }
-        }
 
-        self.consume(end)?;
-        Ok(items)
+            Ok(items)
+        })
+    }
+
+    fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
+    where
+        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+    {
+        self.save = Some(self.current);
+
+        if let Ok(result) = parser_fn(self) {
+            self.save = None;
+            Some(result)
+        } else {
+            if let Some(saved_position) = self.save {
+                self.current = saved_position;
+            }
+            self.save = None;
+            None
+        }
     }
 
     fn consume(&mut self, expected: Token) -> Result<&Token, Error> {

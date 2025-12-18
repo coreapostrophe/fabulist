@@ -22,9 +22,9 @@ impl Parsable for IfStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         parser.consume(Token::Keyword(KeywordKind::If))?;
 
-        parser.consume(Token::LeftParen)?;
-        let condition = Expr::parse(parser)?;
-        parser.consume(Token::RightParen)?;
+        let condition = parser.enclosed(Token::LeftParen, Token::RightParen, |parser| {
+            Expr::parse(parser)
+        })?;
 
         let then_branch = Box::new(BlockStmt::parse(parser)?);
 

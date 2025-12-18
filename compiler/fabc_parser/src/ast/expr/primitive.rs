@@ -60,14 +60,14 @@ impl Parsable for Primitive {
                 Ok(Primitive::Context)
             }
             Token::LeftParen => {
-                let expr_tuple = parser.punctuated(
-                    Token::LeftParen,
-                    Token::RightParen,
-                    Token::Comma,
-                    |parser| Expr::parse(parser),
-                )?;
+                if let Some(closure) = parser.rollbacking(|parser| {
+                    let expr_tuple = parser.punctuated(
+                        Token::LeftParen,
+                        Token::RightParen,
+                        Token::Comma,
+                        |parser| Expr::parse(parser),
+                    )?;
 
-                if !parser.is_at_end() && parser.peek() == &Token::ArrowRight {
                     parser.consume(Token::ArrowRight)?;
 
                     let body = Box::new(BlockStmt::parse(parser)?);
@@ -89,43 +89,42 @@ impl Parsable for Primitive {
                         params,
                         body: *body,
                     })
-                } else if expr_tuple.len() == 1 {
-                    Ok(Primitive::Grouping(Box::new(
-                        expr_tuple.into_iter().next().ok_or(Error::ExpectedFound {
-                            expected: "expression".to_string(),
-                            found: "empty group".to_string(),
-                        })?,
-                    )))
+                }) {
+                    Ok(closure)
                 } else {
-                    Err(Error::UnhandledPrimitive)
+                    let expr = parser.enclosed(Token::LeftParen, Token::RightParen, |parser| {
+                        Expr::parse(parser)
+                    })?;
+                    Ok(Primitive::Grouping(Box::new(expr)))
                 }
             }
             Token::LeftBrace => {
-                parser.consume(Token::LeftBrace)?;
+                let map_vec = parser.punctuated(
+                    Token::LeftBrace,
+                    Token::RightBrace,
+                    Token::Comma,
+                    |parser| {
+                        let key = match parser.advance() {
+                            Token::Identifier(ident) => ident.to_string(),
+                            _ => {
+                                return Err(Error::ExpectedFound {
+                                    expected: "identifier".to_string(),
+                                    found: parser.peek().to_string(),
+                                })
+                            }
+                        };
+
+                        parser.consume(Token::Colon)?;
+
+                        let value = Expr::parse(parser)?;
+                        Ok((key, value))
+                    },
+                )?;
 
                 let mut map = HashMap::new();
-                while parser.peek() != &Token::RightBrace {
-                    let key = match parser.advance() {
-                        Token::Identifier(ident) => ident.to_string(),
-                        _ => {
-                            return Err(Error::ExpectedFound {
-                                expected: "identifier".to_string(),
-                                found: parser.peek().to_string(),
-                            })
-                        }
-                    };
-
-                    parser.consume(Token::Colon)?;
-
-                    let value = Expr::parse(parser)?;
+                for (key, value) in map_vec {
                     map.insert(key, value);
-
-                    if !parser.r#match(vec![Token::Comma]) {
-                        break;
-                    }
                 }
-
-                parser.consume(Token::RightBrace)?;
 
                 Ok(Primitive::Object(map))
             }
