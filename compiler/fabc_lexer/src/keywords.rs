@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum KeywordKind {
     // Declarations
@@ -22,6 +24,26 @@ pub enum KeywordKind {
     // Logical
     And,
     Or,
+}
+
+impl Display for KeywordKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            KeywordKind::Let => write!(f, "let"),
+            KeywordKind::Fn => write!(f, "fn"),
+            KeywordKind::If => write!(f, "if"),
+            KeywordKind::Else => write!(f, "else"),
+            KeywordKind::Return => write!(f, "return"),
+            KeywordKind::Goto => write!(f, "goto"),
+            KeywordKind::True => write!(f, "true"),
+            KeywordKind::False => write!(f, "false"),
+            KeywordKind::None => write!(f, "none"),
+            KeywordKind::While => write!(f, "while"),
+            KeywordKind::For => write!(f, "for"),
+            KeywordKind::And => write!(f, "and"),
+            KeywordKind::Or => write!(f, "or"),
+        }
+    }
 }
 
 impl KeywordKind {

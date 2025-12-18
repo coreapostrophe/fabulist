@@ -6,6 +6,8 @@ pub enum Error {
     UnhandledKeywordLiteral,
     #[error("Unexpected primary expression")]
     UnhandledPrimaryExpression,
-    #[error("Expected `{0}` in expression")]
-    UnclosedDelimiter(String),
+    #[error("Expected `{0}`, found `{1}`")]
+    ExpectedFound(String, String),
+    #[error("Missing semicolon")]
+    MissingSemicolon,
 }

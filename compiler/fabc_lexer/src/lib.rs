@@ -121,6 +121,10 @@ impl<'a> Lexer<'a> {
             self.advance()?;
         }
 
+        if self.peek()? == ':' && self.peek_next()? == ':' {
+            return self.path();
+        }
+
         let text = &self.source[self.start..self.current];
         let keyword_kind = KeywordKind::get(text);
 
@@ -129,6 +133,32 @@ impl<'a> Lexer<'a> {
         } else {
             self.tokens.push(Token::Identifier(text.to_string()));
         }
+
+        Ok(())
+    }
+
+    fn path(&mut self) -> Result<(), Error> {
+        let mut segments = Vec::new();
+
+        loop {
+            while self.peek()?.is_ascii_alphanumeric() || self.peek()? == '_' {
+                self.advance()?;
+            }
+
+            let segment = &self.source[self.start..self.current];
+            segments.push(segment.to_string());
+
+            if self.peek()? != ':' {
+                break;
+            }
+
+            self.advance()?;
+            self.advance()?;
+
+            self.start = self.current;
+        }
+
+        self.tokens.push(Token::Path(segments));
 
         Ok(())
     }
@@ -263,7 +293,8 @@ mod lexer_tests {
 
     #[test]
     fn test_keywords_and_identifiers() {
-        let source = "let fn if else return goto true false none while for and or myVar";
+        let source =
+            "let fn if else return goto true false none while for and or myVar path::to::value";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
@@ -281,6 +312,11 @@ mod lexer_tests {
             Token::Keyword(KeywordKind::And),
             Token::Keyword(KeywordKind::Or),
             Token::Identifier("myVar".to_string()),
+            Token::Path(vec![
+                "path".to_string(),
+                "to".to_string(),
+                "value".to_string(),
+            ]),
             Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);
