@@ -8,6 +8,4 @@ pub enum Error {
     UnhandledPrimaryExpression,
     #[error("Expected `{0}`, found `{1}`")]
     ExpectedFound(String, String),
-    #[error("Missing semicolon")]
-    MissingSemicolon,
 }

@@ -1,4 +1,20 @@
-use crate::ast::{expr::Expr, primitive::Primitive};
+use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+
+use crate::{
+    ast::stmt::{
+        block::BlockStmt, expr::ExprStmt, function::FunctionStmt, goto::GotoStmt, r#if::IfStmt,
+        r#let::LetStmt,
+    },
+    error::Error,
+    Parsable, Parser,
+};
+
+pub mod block;
+pub mod expr;
+pub mod function;
+pub mod goto;
+pub mod r#if;
+pub mod r#let;
 
 #[derive(Debug, PartialEq)]
 pub enum ElseClause {
@@ -8,23 +24,27 @@ pub enum ElseClause {
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
-    Expr(Expr),
-    Block(Vec<Stmt>),
-    Let {
-        name: String,
-        initializer: Expr,
-    },
-    Goto {
-        path: Primitive,
-    },
-    If {
-        condition: Expr,
-        then_branch: Box<Stmt>,
-        else_branch: Option<ElseClause>,
-    },
-    Function {
-        name: String,
-        parameters: Vec<String>,
-        body: Box<Stmt>,
-    },
+    Expr(ExprStmt),
+    Block(BlockStmt),
+    Let(LetStmt),
+    Goto(GotoStmt),
+    If(IfStmt),
+    Function(FunctionStmt),
+}
+
+impl Parsable for Stmt {
+    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+        if parser.is_at_end() {
+            return Err(Error::UnexpectedEndOfInput);
+        }
+
+        match parser.peek() {
+            Token::Keyword(KeywordKind::Fn) => Ok(Stmt::Function(FunctionStmt::parse(parser)?)),
+            Token::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),
+            Token::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),
+            Token::LeftBrace => Ok(Stmt::Block(BlockStmt::parse(parser)?)),
+            Token::Keyword(KeywordKind::Let) => Ok(Stmt::Let(LetStmt::parse(parser)?)),
+            _ => Ok(Stmt::Expr(ExprStmt::parse(parser)?)),
+        }
+    }
 }

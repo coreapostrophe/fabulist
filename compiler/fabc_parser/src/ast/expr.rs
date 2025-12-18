@@ -1,6 +1,15 @@
 use fabc_lexer::tokens::Token;
 
-use crate::ast::{literal::Literal, primitive::Primitive};
+use crate::{
+    ast::{literal::Literal, primitive::Primitive},
+    error::Error,
+    Parsable, Parser,
+};
+
+pub mod binary;
+pub mod grouping;
+pub mod primary;
+pub mod unary;
 
 #[derive(Debug, PartialEq)]
 pub enum Primary {
@@ -21,4 +30,10 @@ pub enum Expr {
     },
     Primary(Primary),
     Grouping(Box<Expr>),
+}
+
+impl Parsable for Expr {
+    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+        parser.equality()
+    }
 }

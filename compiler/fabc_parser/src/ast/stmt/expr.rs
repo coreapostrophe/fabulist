@@ -1,0 +1,55 @@
+use fabc_lexer::tokens::Token;
+
+use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
+
+#[derive(Debug, PartialEq)]
+pub struct ExprStmt {
+    pub expr: Expr,
+}
+
+impl Parsable for ExprStmt {
+    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+        let expr = Expr::parse(parser)?;
+        parser.consume(
+            Token::Semicolon,
+            Error::ExpectedFound(";".to_string(), parser.peek().to_string()),
+        )?;
+        Ok(ExprStmt { expr })
+    }
+}
+
+#[cfg(test)]
+mod expr_stmt_tests {
+    use fabc_lexer::{tokens::Token, Lexer};
+
+    use crate::{
+        ast::{
+            expr::{Expr, Primary},
+            literal::Literal,
+            primitive::Primitive,
+            stmt::expr::ExprStmt,
+        },
+        Parsable, Parser,
+    };
+
+    #[test]
+    fn parses_expression_statements() {
+        let source = "x + 1;";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let stmt = ExprStmt::parse(&mut parser).expect("Failed to parse");
+        let expected = ExprStmt {
+            expr: Expr::Binary {
+                left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "x".to_string(),
+                )))),
+                operator: Token::Plus,
+                right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
+            },
+        };
+
+        assert_eq!(stmt, expected);
+    }
+}
