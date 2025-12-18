@@ -9,7 +9,7 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub struct FunctionStmt {
     pub name: String,
-    pub parameters: Vec<String>,
+    pub parameters: ParameterBodyDecl,
     pub body: Box<BlockStmt>,
 }
 
@@ -25,7 +25,7 @@ impl Parsable for FunctionStmt {
             )),
         }?;
 
-        let parameters = ParameterBodyDecl::parse(parser)?.parameters;
+        let parameters = ParameterBodyDecl::parse(parser)?;
         let body = Box::new(BlockStmt::parse(parser)?);
 
         Ok(FunctionStmt {
@@ -40,6 +40,7 @@ impl Parsable for FunctionStmt {
 mod function_stmt_tests {
     use crate::{
         ast::{
+            decl::parameter_body::ParameterBodyDecl,
             expr::{primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, function::FunctionStmt, Stmt},
         },
@@ -60,7 +61,9 @@ mod function_stmt_tests {
             function_stmt,
             FunctionStmt {
                 name: "add".to_string(),
-                parameters: vec!["a".to_string(), "b".to_string()],
+                parameters: ParameterBodyDecl {
+                    parameters: vec!["a".to_string(), "b".to_string(),],
+                },
                 body: Box::new(BlockStmt {
                     statements: vec![Stmt::Expr(ExprStmt {
                         expr: Expr::Binary {

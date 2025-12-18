@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{error::Error, Parsable};
 
@@ -6,6 +6,7 @@ use crate::{error::Error, Parsable};
 pub enum Primitive {
     Identifier(String),
     Path(Vec<String>),
+    Context,
 }
 
 impl Parsable for Primitive {
@@ -15,6 +16,7 @@ impl Parsable for Primitive {
         match token {
             Token::Identifier(name) => Ok(Primitive::Identifier(name.clone())),
             Token::Path(segments) => Ok(Primitive::Path(segments.clone())),
+            Token::Keyword(KeywordKind::Context) => Ok(Primitive::Context),
             _ => Err(Error::UnhandledPrimitive),
         }
     }

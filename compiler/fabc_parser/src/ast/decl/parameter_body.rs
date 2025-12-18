@@ -12,7 +12,7 @@ impl Parsable for ParameterBodyDecl {
         parser.consume(Token::LeftParen)?;
 
         let mut parameters = Vec::new();
-        if *parser.peek() != Token::RightParen {
+        if parser.peek() != &Token::RightParen {
             loop {
                 if let Token::Identifier(param) = parser.advance() {
                     parameters.push(param.to_string());

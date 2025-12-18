@@ -1,7 +1,10 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
-    ast::expr::{literal::Literal, primitive::Primitive},
+    ast::{
+        decl::argument_body::ArgumentBodyDecl,
+        expr::{literal::Literal, primitive::Primitive},
+    },
     error::Error,
     Parsable, Parser,
 };
@@ -101,6 +104,14 @@ pub enum Expr {
     Assignment {
         name: Box<Expr>,
         value: Box<Expr>,
+    },
+    MemberAccess {
+        left: Box<Expr>,
+        members: Vec<Expr>,
+    },
+    Call {
+        callee: Box<Expr>,
+        arguments: ArgumentBodyDecl,
     },
     Primary(Primary),
     Grouping(Box<Expr>),
@@ -222,7 +233,45 @@ impl Expr {
             });
         }
 
-        Self::primary(parser)
+        Self::member_access(parser)
+    }
+
+    fn member_access(parser: &mut Parser) -> Result<Expr, Error> {
+        let mut expr = Self::call(parser)?;
+
+        if parser.r#match(vec![Token::Dot]) {
+            let mut members = Vec::new();
+
+            loop {
+                let member = Self::call(parser)?;
+                members.push(member);
+
+                if !parser.r#match(vec![Token::Dot]) {
+                    break;
+                }
+            }
+
+            expr = Expr::MemberAccess {
+                left: Box::new(expr),
+                members,
+            };
+        }
+
+        Ok(expr)
+    }
+
+    fn call(parser: &mut Parser) -> Result<Expr, Error> {
+        let mut expr = Self::primary(parser)?;
+
+        if parser.peek() == &Token::LeftParen {
+            let arguments = ArgumentBodyDecl::parse(parser)?;
+            expr = Expr::Call {
+                callee: Box::new(expr),
+                arguments,
+            };
+        }
+
+        Ok(expr)
     }
 
     fn primary(parser: &mut Parser) -> Result<Expr, Error> {
@@ -231,16 +280,21 @@ impl Expr {
         }
 
         match parser.peek() {
+            // Literals
             Token::String(_)
             | Token::Number(_)
             | Token::Keyword(KeywordKind::True | KeywordKind::False | KeywordKind::None) => {
                 let literal = Literal::parse(parser)?;
                 Ok(Expr::Primary(Primary::Literal(literal)))
             }
-            Token::Identifier(_) | Token::Path(_) => {
+
+            // Primitives
+            Token::Identifier(_) | Token::Path(_) | Token::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
                 Ok(Expr::Primary(Primary::Primitive(primitive)))
             }
+
+            // Grouping
             Token::LeftParen => {
                 parser.consume(Token::LeftParen)?;
                 let expr = Expr::parse(parser)?;
@@ -263,8 +317,12 @@ mod expr_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::expr::{
-            literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
+        ast::{
+            decl::argument_body::ArgumentBodyDecl,
+            expr::{
+                literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary,
+                UnaryOperator,
+            },
         },
         Parsable, Parser,
     };
@@ -342,6 +400,60 @@ mod expr_tests {
             }),
             operator: BinaryOperator::LessEqual,
             right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(10.0)))),
+        };
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn parses_call_expr() {
+        let source = "func(arg1, arg2)";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Expr::Call {
+            callee: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                "func".to_string(),
+            )))),
+            arguments: ArgumentBodyDecl {
+                arguments: vec![
+                    Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                        "arg1".to_string(),
+                    ))),
+                    Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                        "arg2".to_string(),
+                    ))),
+                ],
+            },
+        };
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn parses_member_access_expr() {
+        let source = "obj.prop1.prop2";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Expr::MemberAccess {
+            left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                "obj".to_string(),
+            )))),
+            members: vec![
+                Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "prop1".to_string(),
+                ))),
+                Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "prop2".to_string(),
+                ))),
+            ],
         };
 
         assert_eq!(expr, expected);

@@ -17,6 +17,9 @@ pub enum KeywordKind {
     False,
     None,
 
+    // Primitive
+    Context,
+
     // Iteration
     While,
     For,
@@ -42,6 +45,7 @@ impl Display for KeywordKind {
             KeywordKind::For => write!(f, "for"),
             KeywordKind::And => write!(f, "and"),
             KeywordKind::Or => write!(f, "or"),
+            KeywordKind::Context => write!(f, "context"),
         }
     }
 }
@@ -62,6 +66,7 @@ impl KeywordKind {
             "for" => Some(KeywordKind::For),
             "and" => Some(KeywordKind::And),
             "or" => Some(KeywordKind::Or),
+            "context" => Some(KeywordKind::Context),
             _ => None,
         }
     }
