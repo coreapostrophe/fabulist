@@ -22,4 +22,9 @@ pub enum Stmt {
         then_branch: Box<Stmt>,
         else_branch: Option<ElseClause>,
     },
+    Function {
+        name: String,
+        parameters: Vec<String>,
+        body: Box<Stmt>,
+    },
 }

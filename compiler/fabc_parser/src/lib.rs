@@ -96,12 +96,65 @@ impl<'a> Parser<'a> {
         }
 
         match self.peek() {
+            Token::Keyword(KeywordKind::Fn) => self.function_statement(),
             Token::Keyword(KeywordKind::Goto) => self.goto_statement(),
             Token::Keyword(KeywordKind::If) => self.if_statement(),
             Token::LeftBrace => self.block_statement(),
             Token::Keyword(KeywordKind::Let) => self.let_statement(),
             _ => self.expr_statement(),
         }
+    }
+
+    fn function_statement(&mut self) -> Result<Stmt, Error> {
+        self.advance();
+
+        let name = if let Token::Identifier(ident) = self.peek() {
+            ident.clone()
+        } else {
+            return Err(Error::ExpectedFound(
+                "function name".to_string(),
+                self.peek().to_string(),
+            ));
+        };
+
+        self.advance();
+
+        self.consume(
+            Token::LeftParen,
+            Error::ExpectedFound("(".to_string(), self.peek().to_string()),
+        )?;
+
+        let mut parameters = Vec::new();
+        if self.peek() != &Token::RightParen {
+            loop {
+                if let Token::Identifier(param_name) = self.peek() {
+                    parameters.push(param_name.clone());
+                } else {
+                    return Err(Error::ExpectedFound(
+                        "parameter name".to_string(),
+                        self.peek().to_string(),
+                    ));
+                }
+                self.advance();
+
+                if !self.r#match(vec![Token::Comma]) {
+                    break;
+                }
+            }
+        }
+
+        self.consume(
+            Token::RightParen,
+            Error::ExpectedFound(")".to_string(), self.peek().to_string()),
+        )?;
+
+        let body = Box::new(self.statement()?);
+
+        Ok(Stmt::Function {
+            name,
+            parameters,
+            body,
+        })
     }
 
     fn goto_statement(&mut self) -> Result<Stmt, Error> {
@@ -408,6 +461,29 @@ mod parser_tests {
                 "module".to_string(),
                 "label".to_string(),
             ]),
+        };
+
+        assert_eq!(stmt, expected);
+    }
+
+    #[test]
+    fn parses_fn_statements() {
+        let source = "fn myFunction(param1, param2) { let x = 10; }";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let stmt = parser.statement().expect("Failed to parse");
+
+        let expected = crate::ast::stmt::Stmt::Function {
+            name: "myFunction".to_string(),
+            parameters: vec!["param1".to_string(), "param2".to_string()],
+            body: Box::new(crate::ast::stmt::Stmt::Block(vec![
+                crate::ast::stmt::Stmt::Let {
+                    name: "x".to_string(),
+                    initializer: Expr::Primary(Primary::Literal(Literal::Number(10.0))),
+                },
+            ])),
         };
 
         assert_eq!(stmt, expected);
