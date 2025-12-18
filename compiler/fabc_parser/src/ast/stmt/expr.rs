@@ -10,10 +10,7 @@ pub struct ExprStmt {
 impl Parsable for ExprStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         let expr = Expr::parse(parser)?;
-        parser.consume(
-            Token::Semicolon,
-            Error::ExpectedFound(";".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Semicolon)?;
         Ok(ExprStmt { expr })
     }
 }
@@ -33,7 +30,7 @@ mod expr_stmt_tests {
     };
 
     #[test]
-    fn parses_expression_statements() {
+    fn parses_expr_statements() {
         let source = "x + 1;";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");

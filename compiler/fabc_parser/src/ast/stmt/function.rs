@@ -1,6 +1,10 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{ast::stmt::block::BlockStmt, error::Error, Parsable};
+use crate::{
+    ast::{decl::parameter_body::ParameterBodyDecl, stmt::block::BlockStmt},
+    error::Error,
+    Parsable,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct FunctionStmt {
@@ -11,48 +15,17 @@ pub struct FunctionStmt {
 
 impl Parsable for FunctionStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(
-            Token::Keyword(KeywordKind::Fn),
-            Error::ExpectedFound("fn".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Keyword(KeywordKind::Fn))?;
 
-        let name = if let Token::Identifier(ident) = parser.advance() {
-            ident.to_string()
-        } else {
-            return Err(Error::ExpectedFound(
-                "function name".to_string(),
+        let name = match parser.advance() {
+            Token::Identifier(ident) => Ok(ident.to_string()),
+            _ => Err(Error::ExpectedFound(
+                "identifier".to_string(),
                 parser.peek().to_string(),
-            ));
-        };
+            )),
+        }?;
 
-        parser.consume(
-            Token::LeftParen,
-            Error::ExpectedFound("(".to_string(), parser.peek().to_string()),
-        )?;
-
-        let mut parameters = Vec::new();
-        if *parser.peek() != Token::RightParen {
-            loop {
-                if let Token::Identifier(param) = parser.advance() {
-                    parameters.push(param.to_string());
-                } else {
-                    return Err(Error::ExpectedFound(
-                        "parameter name".to_string(),
-                        parser.peek().to_string(),
-                    ));
-                }
-
-                if !parser.r#match(vec![Token::Comma]) {
-                    break;
-                }
-            }
-        }
-
-        parser.consume(
-            Token::RightParen,
-            Error::ExpectedFound(")".to_string(), parser.peek().to_string()),
-        )?;
-
+        let parameters = ParameterBodyDecl::parse(parser)?.parameters;
         let body = Box::new(BlockStmt::parse(parser)?);
 
         Ok(FunctionStmt {
@@ -76,7 +49,7 @@ mod function_stmt_tests {
     };
     use fabc_lexer::{tokens::Token, Lexer};
     #[test]
-    fn parse_function_stmt() {
+    fn parses_function_stmt() {
         let source = "fn add(a, b) { a + b; }";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");

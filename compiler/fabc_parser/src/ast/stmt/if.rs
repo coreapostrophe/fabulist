@@ -2,7 +2,6 @@ use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
     ast::{expr::Expr, stmt::block::BlockStmt},
-    error::Error,
     Parsable,
 };
 
@@ -21,24 +20,14 @@ pub struct IfStmt {
 
 impl Parsable for IfStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(
-            Token::Keyword(KeywordKind::If),
-            Error::ExpectedFound("if".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Keyword(KeywordKind::If))?;
 
-        parser.consume(
-            Token::LeftParen,
-            Error::ExpectedFound("(".to_string(), parser.peek().to_string()),
-        )?;
-
+        parser.consume(Token::LeftParen)?;
         let condition = Expr::parse(parser)?;
-
-        parser.consume(
-            Token::RightParen,
-            Error::ExpectedFound(")".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::RightParen)?;
 
         let then_branch = Box::new(BlockStmt::parse(parser)?);
+
         let else_branch = if parser.r#match(vec![Token::Keyword(KeywordKind::Else)]) {
             if parser.r#match(vec![Token::Keyword(KeywordKind::If)]) {
                 Some(ElseClause::If(Box::new(IfStmt::parse(parser)?)))
@@ -74,7 +63,7 @@ mod if_stmt_tests {
     };
 
     #[test]
-    fn parse_if_stmt_without_else() {
+    fn parses_if_stmt_without_else() {
         let source = "if (true) { }";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
@@ -93,7 +82,7 @@ mod if_stmt_tests {
     }
 
     #[test]
-    fn parse_if_stmt_with_else_block() {
+    fn parses_if_stmt_with_else_block() {
         let source = "if (false) { } else { }";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");

@@ -59,11 +59,11 @@ impl Display for Token {
             Token::GreaterEqual => write!(f, ">="),
             Token::Less => write!(f, "<"),
             Token::LessEqual => write!(f, "<="),
-            Token::Identifier(name) => write!(f, "Identifier({})", name),
-            Token::String(value) => write!(f, "String({})", value),
-            Token::Number(value) => write!(f, "Number({})", value),
-            Token::Keyword(kind) => write!(f, "Keyword({})", kind),
-            Token::Path(segments) => write!(f, "Path({})", segments.join("::")),
+            Token::Identifier(name) => write!(f, "identifier `{}`", name),
+            Token::String(value) => write!(f, "string `{}`", value),
+            Token::Number(value) => write!(f, "number `{}`", value),
+            Token::Keyword(kind) => write!(f, "keyword `{}`", kind),
+            Token::Path(segments) => write!(f, "path `{}`", segments.join("::")),
             Token::EoF => write!(f, "EOF"),
         }
     }

@@ -61,11 +61,14 @@ impl<'a> Parser<'a> {
         self.previous()
     }
 
-    fn consume(&mut self, expected: Token, error: Error) -> Result<&Token, Error> {
+    fn consume(&mut self, expected: Token) -> Result<&Token, Error> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
-            Err(error)
+            Err(Error::ExpectedFound(
+                expected.to_string(),
+                self.peek().to_string(),
+            ))
         }
     }
 
@@ -229,10 +232,7 @@ impl<'a> Parser<'a> {
             Token::LeftParen => {
                 self.advance();
                 let expr = self.expression()?;
-                self.consume(
-                    Token::RightParen,
-                    Error::ExpectedFound(")".to_string(), self.peek().to_string()),
-                )?;
+                self.consume(Token::RightParen)?;
                 Ok(Expr::Grouping(Box::new(expr)))
             }
             _ => Err(Error::UnhandledPrimaryExpression),
@@ -250,57 +250,6 @@ mod parser_tests {
     };
 
     use super::Parser;
-
-    // #[test]
-    // fn parses_fn_statements() {
-    //     let source = "fn myFunction(param1, param2) { let x = 10; }";
-    //     let mut lexer = Lexer::new(source);
-    //     let tokens = lexer.tokenize().expect("Failed to tokenize");
-
-    //     let mut parser = Parser::new(tokens);
-    //     let stmt = Stmt::parse(&mut parser).expect("Failed to parse");
-
-    //     let expected = crate::ast::stmt::Stmt::Function {
-    //         name: "myFunction".to_string(),
-    //         parameters: vec!["param1".to_string(), "param2".to_string()],
-    //         body: Box::new(crate::ast::stmt::Stmt::Block(vec![
-    //             crate::ast::stmt::Stmt::Let {
-    //                 name: "x".to_string(),
-    //                 initializer: Expr::Primary(Primary::Literal(Literal::Number(10.0))),
-    //             },
-    //         ])),
-    //     };
-
-    //     assert_eq!(stmt, expected);
-    // }
-
-    // #[test]
-    // fn parses_if_statements() {
-    //     let source = "if true { let y = 10; } else { let y = 20; }";
-    //     let mut lexer = Lexer::new(source);
-    //     let tokens = lexer.tokenize().expect("Failed to tokenize");
-
-    //     let mut parser = Parser::new(tokens);
-    //     let stmt = Stmt::parse(&mut parser).expect("Failed to parse");
-
-    //     let expected = crate::ast::stmt::Stmt::If {
-    //         condition: Expr::Primary(Primary::Literal(Literal::Boolean(true))),
-    //         then_branch: Box::new(crate::ast::stmt::Stmt::Block(vec![
-    //             crate::ast::stmt::Stmt::Let {
-    //                 name: "y".to_string(),
-    //                 initializer: Expr::Primary(Primary::Literal(Literal::Number(10.0))),
-    //             },
-    //         ])),
-    //         else_branch: Some(crate::ast::stmt::ElseClause::Block(Box::new(
-    //             crate::ast::stmt::Stmt::Block(vec![crate::ast::stmt::Stmt::Let {
-    //                 name: "y".to_string(),
-    //                 initializer: Expr::Primary(Primary::Literal(Literal::Number(20.0))),
-    //             }]),
-    //         ))),
-    //     };
-
-    //     assert_eq!(stmt, expected);
-    // }
 
     #[test]
     fn parses_binary_expression() {

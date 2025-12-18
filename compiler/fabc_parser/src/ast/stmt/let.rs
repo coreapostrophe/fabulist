@@ -10,12 +10,9 @@ pub struct LetStmt {
 
 impl Parsable for LetStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
-        parser.consume(
-            Token::Keyword(KeywordKind::Let),
-            Error::ExpectedFound(";".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Keyword(KeywordKind::Let))?;
 
-        let name = if let Token::Identifier(ident) = parser.peek() {
+        let name = if let Token::Identifier(ident) = parser.advance() {
             ident.clone()
         } else {
             return Err(Error::ExpectedFound(
@@ -24,19 +21,11 @@ impl Parsable for LetStmt {
             ));
         };
 
-        parser.advance();
-
-        parser.consume(
-            Token::Equal,
-            Error::ExpectedFound("=".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Equal)?;
 
         let initializer = parser.expression()?;
 
-        parser.consume(
-            Token::Semicolon,
-            Error::ExpectedFound(";".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Semicolon)?;
 
         Ok(LetStmt { name, initializer })
     }

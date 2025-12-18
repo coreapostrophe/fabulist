@@ -11,20 +11,14 @@ impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         let mut statements = Vec::new();
 
-        parser.consume(
-            Token::LeftBrace,
-            Error::ExpectedFound("{".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::LeftBrace)?;
 
         while !parser.is_at_end() && parser.peek() != &Token::RightBrace {
             let stmt = Stmt::parse(parser)?;
             statements.push(stmt);
         }
 
-        parser.consume(
-            Token::RightBrace,
-            Error::ExpectedFound("}".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::RightBrace)?;
 
         Ok(BlockStmt { statements })
     }

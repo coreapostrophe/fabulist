@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{ast::primitive::Primitive, error::Error, Parsable, Parser};
 
@@ -9,23 +9,17 @@ pub struct GotoStmt {
 
 impl Parsable for GotoStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
-        parser.advance();
+        parser.consume(Token::Keyword(KeywordKind::Goto))?;
 
-        let path = if let Token::Path(segments) = parser.peek() {
-            segments.clone()
-        } else {
-            return Err(Error::ExpectedFound(
+        let path = match parser.advance() {
+            Token::Path(segments) => Ok(segments.clone()),
+            _ => Err(Error::ExpectedFound(
                 "path".to_string(),
                 parser.peek().to_string(),
-            ));
-        };
+            )),
+        }?;
 
-        parser.advance();
-
-        parser.consume(
-            Token::Semicolon,
-            Error::ExpectedFound(";".to_string(), parser.peek().to_string()),
-        )?;
+        parser.consume(Token::Semicolon)?;
 
         Ok(GotoStmt {
             label: Primitive::Path(path),
