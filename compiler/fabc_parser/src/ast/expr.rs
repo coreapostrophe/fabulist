@@ -10,6 +10,78 @@ pub mod literal;
 pub mod primitive;
 
 #[derive(Debug, PartialEq)]
+pub enum BinaryOperator {
+    EqualEqual,
+    NotEqual,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+    Add,
+    Subtraction,
+    Multiply,
+    Divide,
+    And,
+    Or,
+}
+
+impl TryFrom<&Token> for BinaryOperator {
+    type Error = Error;
+
+    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+        match token {
+            Token::EqualEqual => Ok(BinaryOperator::EqualEqual),
+            Token::BangEqual => Ok(BinaryOperator::NotEqual),
+            Token::Greater => Ok(BinaryOperator::Greater),
+            Token::GreaterEqual => Ok(BinaryOperator::GreaterEqual),
+            Token::Less => Ok(BinaryOperator::Less),
+            Token::LessEqual => Ok(BinaryOperator::LessEqual),
+            Token::Plus => Ok(BinaryOperator::Add),
+            Token::Minus => Ok(BinaryOperator::Subtraction),
+            Token::Asterisk => Ok(BinaryOperator::Multiply),
+            Token::Slash => Ok(BinaryOperator::Divide),
+            _ => Err(Error::InvalidBinaryOperator),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum UnaryOperator {
+    Not,
+    Negate,
+}
+
+impl TryFrom<&Token> for UnaryOperator {
+    type Error = Error;
+
+    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+        match token {
+            Token::Bang => Ok(UnaryOperator::Not),
+            Token::Minus => Ok(UnaryOperator::Negate),
+            _ => Err(Error::InvalidUnaryOperator),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum LogicalOperator {
+    And,
+    Or,
+}
+
+impl TryFrom<&Token> for LogicalOperator {
+    type Error = Error;
+
+    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+        match token {
+            Token::Keyword(KeywordKind::And) => Ok(LogicalOperator::And),
+            Token::Keyword(KeywordKind::Or) => Ok(LogicalOperator::Or),
+            _ => Err(Error::InvalidLogicalOperator),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Primary {
     Literal(Literal),
     Primitive(Primitive),
@@ -19,23 +91,63 @@ pub enum Primary {
 pub enum Expr {
     Binary {
         left: Box<Expr>,
-        operator: Token,
+        operator: BinaryOperator,
         right: Box<Expr>,
     },
     Unary {
-        operator: Token,
+        operator: UnaryOperator,
         right: Box<Expr>,
+    },
+    Assignment {
+        name: Box<Expr>,
+        value: Box<Expr>,
     },
     Primary(Primary),
     Grouping(Box<Expr>),
 }
 
 impl Expr {
-    pub fn equality(parser: &mut Parser) -> Result<Expr, Error> {
+    pub fn assignment(parser: &mut Parser) -> Result<Expr, Error> {
+        let mut expr = Self::logical(parser)?;
+
+        if parser.r#match(vec![Token::Equal]) {
+            let value = Self::assignment(parser)?;
+            expr = Expr::Assignment {
+                name: Box::new(expr),
+                value: Box::new(value),
+            }
+        }
+
+        Ok(expr)
+    }
+
+    fn logical(parser: &mut Parser) -> Result<Expr, Error> {
+        let mut expr = Self::equality(parser)?;
+
+        while parser.r#match(vec![
+            Token::Keyword(KeywordKind::And),
+            Token::Keyword(KeywordKind::Or),
+        ]) {
+            let operator = LogicalOperator::try_from(parser.previous())?;
+            let right = Self::equality(parser)?;
+            expr = Expr::Binary {
+                left: Box::new(expr),
+                operator: match operator {
+                    LogicalOperator::And => BinaryOperator::And,
+                    LogicalOperator::Or => BinaryOperator::Or,
+                },
+                right: Box::new(right),
+            };
+        }
+
+        Ok(expr)
+    }
+
+    fn equality(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::comparison(parser)?;
 
         while parser.r#match(vec![Token::BangEqual, Token::EqualEqual]) {
-            let operator = parser.previous().clone();
+            let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::comparison(parser)?;
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -56,7 +168,7 @@ impl Expr {
             Token::Less,
             Token::LessEqual,
         ]) {
-            let operator = parser.previous().clone();
+            let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::term(parser)?;
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -72,7 +184,7 @@ impl Expr {
         let mut expr = Self::factor(parser)?;
 
         while parser.r#match(vec![Token::Minus, Token::Plus]) {
-            let operator = parser.previous().clone();
+            let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::factor(parser)?;
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -88,7 +200,7 @@ impl Expr {
         let mut expr = Self::unary(parser)?;
 
         while parser.r#match(vec![Token::Slash, Token::Asterisk]) {
-            let operator = parser.previous().clone();
+            let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             expr = Expr::Binary {
                 left: Box::new(expr),
@@ -102,7 +214,7 @@ impl Expr {
 
     fn unary(parser: &mut Parser) -> Result<Expr, Error> {
         if parser.r#match(vec![Token::Bang, Token::Minus]) {
-            let operator = parser.previous().clone();
+            let operator = UnaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             return Ok(Expr::Unary {
                 operator,
@@ -142,16 +254,18 @@ impl Expr {
 
 impl Parsable for Expr {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
-        Self::equality(parser)
+        Self::assignment(parser)
     }
 }
 
 #[cfg(test)]
 mod expr_tests {
-    use fabc_lexer::{tokens::Token, Lexer};
+    use fabc_lexer::Lexer;
 
     use crate::{
-        ast::expr::{literal::Literal, Expr, Primary},
+        ast::expr::{
+            literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
+        },
         Parsable, Parser,
     };
 
@@ -166,14 +280,14 @@ mod expr_tests {
 
         let expected = Expr::Binary {
             left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
-            operator: Token::Plus,
+            operator: BinaryOperator::Add,
             right: Box::new(Expr::Binary {
                 left: Box::new(Expr::Binary {
                     left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(2.0)))),
-                    operator: Token::Asterisk,
+                    operator: BinaryOperator::Multiply,
                     right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(3.0)))),
                 }),
-                operator: Token::Slash,
+                operator: BinaryOperator::Divide,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(4.0)))),
             }),
         };
@@ -193,10 +307,10 @@ mod expr_tests {
         let expected = Expr::Binary {
             left: Box::new(Expr::Binary {
                 left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(10.0)))),
-                operator: Token::EqualEqual,
+                operator: BinaryOperator::EqualEqual,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(20.0)))),
             }),
-            operator: Token::BangEqual,
+            operator: BinaryOperator::NotEqual,
             right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(30.0)))),
         };
 
@@ -217,16 +331,16 @@ mod expr_tests {
                 left: Box::new(Expr::Binary {
                     left: Box::new(Expr::Binary {
                         left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(5.0)))),
-                        operator: Token::Greater,
+                        operator: BinaryOperator::Greater,
                         right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(3.0)))),
                     }),
-                    operator: Token::Less,
+                    operator: BinaryOperator::Less,
                     right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(9.0)))),
                 }),
-                operator: Token::GreaterEqual,
+                operator: BinaryOperator::GreaterEqual,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(2.0)))),
             }),
-            operator: Token::LessEqual,
+            operator: BinaryOperator::LessEqual,
             right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(10.0)))),
         };
 
@@ -243,10 +357,77 @@ mod expr_tests {
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Unary {
-            operator: Token::Minus,
+            operator: UnaryOperator::Negate,
             right: Box::new(Expr::Unary {
-                operator: Token::Bang,
+                operator: UnaryOperator::Not,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(42.0)))),
+            }),
+        };
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn parses_grouping_expr() {
+        let source = "(1 + 2) * 3";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Expr::Binary {
+            left: Box::new(Expr::Grouping(Box::new(Expr::Binary {
+                left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
+                operator: BinaryOperator::Add,
+                right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(2.0)))),
+            }))),
+            operator: BinaryOperator::Multiply,
+            right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(3.0)))),
+        };
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn parses_logical_expr() {
+        let source = "true and false or true";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Expr::Binary {
+            left: Box::new(Expr::Binary {
+                left: Box::new(Expr::Primary(Primary::Literal(Literal::Boolean(true)))),
+                operator: BinaryOperator::And,
+                right: Box::new(Expr::Primary(Primary::Literal(Literal::Boolean(false)))),
+            }),
+            operator: BinaryOperator::Or,
+            right: Box::new(Expr::Primary(Primary::Literal(Literal::Boolean(true)))),
+        };
+
+        assert_eq!(expr, expected);
+    }
+
+    #[test]
+    fn parses_assignment_expr() {
+        let source = "x = 10 + 20";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Expr::Assignment {
+            name: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                "x".to_string(),
+            )))),
+            value: Box::new(Expr::Binary {
+                left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(10.0)))),
+                operator: BinaryOperator::Add,
+                right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(20.0)))),
             }),
         };
 

@@ -12,6 +12,8 @@ pub enum Error {
     UnhandledLiteral,
     #[error("Unexpected primary expression")]
     UnhandledPrimaryExpression,
+    #[error("Invalid logical operator")]
+    InvalidLogicalOperator,
     #[error("Invalid unary operator")]
     InvalidUnaryOperator,
     #[error("Invalid binary operator")]

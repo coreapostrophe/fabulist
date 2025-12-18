@@ -17,11 +17,11 @@ impl Parsable for ExprStmt {
 
 #[cfg(test)]
 mod expr_stmt_tests {
-    use fabc_lexer::{tokens::Token, Lexer};
+    use fabc_lexer::Lexer;
 
     use crate::{
         ast::{
-            expr::{literal::Literal, primitive::Primitive, Expr, Primary},
+            expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::expr::ExprStmt,
         },
         Parsable, Parser,
@@ -40,7 +40,7 @@ mod expr_stmt_tests {
                 left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
                     "x".to_string(),
                 )))),
-                operator: Token::Plus,
+                operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
             },
         };

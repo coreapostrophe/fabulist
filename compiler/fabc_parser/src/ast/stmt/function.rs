@@ -38,15 +38,15 @@ impl Parsable for FunctionStmt {
 
 #[cfg(test)]
 mod function_stmt_tests {
-
     use crate::{
         ast::{
-            expr::{primitive::Primitive, Expr, Primary},
+            expr::{primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, function::FunctionStmt, Stmt},
         },
         Parsable, Parser,
     };
-    use fabc_lexer::{tokens::Token, Lexer};
+    use fabc_lexer::Lexer;
+
     #[test]
     fn parses_function_stmt() {
         let source = "fn add(a, b) { a + b; }";
@@ -67,7 +67,7 @@ mod function_stmt_tests {
                             left: Box::new(Expr::Primary(Primary::Primitive(
                                 Primitive::Identifier("a".to_string())
                             ))),
-                            operator: Token::Plus,
+                            operator: BinaryOperator::Add,
                             right: Box::new(Expr::Primary(Primary::Primitive(
                                 Primitive::Identifier("b".to_string())
                             ))),
