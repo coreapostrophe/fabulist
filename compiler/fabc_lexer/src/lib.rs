@@ -294,7 +294,7 @@ mod lexer_tests {
     #[test]
     fn test_keywords_and_identifiers() {
         let source =
-            "let fn if else return goto true false none while for and or myVar path::to::value";
+            "let fn if else return goto true false none while for and or context myVar path::to::value";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
@@ -311,6 +311,7 @@ mod lexer_tests {
             Token::Keyword(KeywordKind::For),
             Token::Keyword(KeywordKind::And),
             Token::Keyword(KeywordKind::Or),
+            Token::Keyword(KeywordKind::Context),
             Token::Identifier("myVar".to_string()),
             Token::Path(vec![
                 "path".to_string(),

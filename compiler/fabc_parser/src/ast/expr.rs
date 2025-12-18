@@ -289,17 +289,12 @@ impl Expr {
             }
 
             // Primitives
-            Token::Identifier(_) | Token::Path(_) | Token::Keyword(KeywordKind::Context) => {
+            Token::LeftParen
+            | Token::Identifier(_)
+            | Token::Path(_)
+            | Token::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
                 Ok(Expr::Primary(Primary::Primitive(primitive)))
-            }
-
-            // Grouping
-            Token::LeftParen => {
-                parser.consume(Token::LeftParen)?;
-                let expr = Expr::parse(parser)?;
-                parser.consume(Token::RightParen)?;
-                Ok(Expr::Grouping(Box::new(expr)))
             }
             _ => Err(Error::UnhandledPrimaryExpression),
         }
@@ -474,28 +469,6 @@ mod expr_tests {
                 operator: UnaryOperator::Not,
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(42.0)))),
             }),
-        };
-
-        assert_eq!(expr, expected);
-    }
-
-    #[test]
-    fn parses_grouping_expr() {
-        let source = "(1 + 2) * 3";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
-
-        let mut parser = Parser::new(tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
-
-        let expected = Expr::Binary {
-            left: Box::new(Expr::Grouping(Box::new(Expr::Binary {
-                left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
-                operator: BinaryOperator::Add,
-                right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(2.0)))),
-            }))),
-            operator: BinaryOperator::Multiply,
-            right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(3.0)))),
         };
 
         assert_eq!(expr, expected);
