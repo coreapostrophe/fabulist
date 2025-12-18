@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
-    ast::{decl::parameter_body::ParameterBodyDecl, expr::Expr, stmt::block::BlockStmt},
+    ast::{
+        expr::{Expr, Primary},
+        stmt::block::BlockStmt,
+    },
     error::Error,
     Parsable,
 };
@@ -15,7 +18,7 @@ pub enum Primitive {
     Grouping(Box<Expr>),
     Object(HashMap<String, Expr>),
     Closure {
-        params: ParameterBodyDecl,
+        params: Vec<String>,
         body: BlockStmt,
     },
     Context,
@@ -57,10 +60,45 @@ impl Parsable for Primitive {
                 Ok(Primitive::Context)
             }
             Token::LeftParen => {
-                parser.consume(Token::LeftParen)?;
-                let expr = Expr::parse(parser)?;
-                parser.consume(Token::RightParen)?;
-                Ok(Primitive::Grouping(Box::new(expr)))
+                let expr_tuple = parser.punctuated(
+                    Token::LeftParen,
+                    Token::RightParen,
+                    Token::Comma,
+                    |parser| Expr::parse(parser),
+                )?;
+
+                if !parser.is_at_end() && parser.peek() == &Token::ArrowRight {
+                    parser.consume(Token::ArrowRight)?;
+
+                    let body = Box::new(BlockStmt::parse(parser)?);
+
+                    let params = expr_tuple
+                        .into_iter()
+                        .map(|expr| match expr {
+                            Expr::Primary(Primary::Primitive(Primitive::Identifier(name))) => {
+                                Ok(name)
+                            }
+                            _ => Err(Error::ExpectedFound {
+                                expected: "identifier".to_string(),
+                                found: format!("{:?}", expr),
+                            }),
+                        })
+                        .collect::<Result<Vec<String>, Error>>()?;
+
+                    Ok(Primitive::Closure {
+                        params,
+                        body: *body,
+                    })
+                } else if expr_tuple.len() == 1 {
+                    Ok(Primitive::Grouping(Box::new(
+                        expr_tuple.into_iter().next().ok_or(Error::ExpectedFound {
+                            expected: "expression".to_string(),
+                            found: "empty group".to_string(),
+                        })?,
+                    )))
+                } else {
+                    Err(Error::UnhandledPrimitive)
+                }
             }
             Token::LeftBrace => {
                 parser.consume(Token::LeftBrace)?;
@@ -103,12 +141,15 @@ mod primitive_tests {
     use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
     use crate::{
-        ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary},
+        ast::{
+            expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
+            stmt::{block::BlockStmt, expr::ExprStmt, Stmt},
+        },
         Parsable, Parser,
     };
 
     #[test]
-    fn parses_primitives() {
+    fn parses_basic_primitives() {
         let tokens = vec![Token::Identifier("foo".to_string())];
         let mut parser = Parser::new(&tokens);
         assert_eq!(
@@ -165,6 +206,34 @@ mod primitive_tests {
             );
             map
         });
+        assert_eq!(primitive, expected);
+    }
+
+    #[test]
+    fn parses_closure_primitive() {
+        let source = "(x, y) => { x + y; }";
+        let mut lexer = fabc_lexer::Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize");
+
+        let mut parser = Parser::new(tokens);
+        let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
+
+        let expected = Primitive::Closure {
+            params: vec!["x".to_string(), "y".to_string()],
+            body: BlockStmt {
+                statements: vec![Stmt::Expr(ExprStmt {
+                    expr: Expr::Binary {
+                        left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                            "x".to_string(),
+                        )))),
+                        operator: BinaryOperator::Add,
+                        right: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                            "y".to_string(),
+                        )))),
+                    },
+                })],
+            },
+        };
         assert_eq!(primitive, expected);
     }
 }

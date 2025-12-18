@@ -1,10 +1,7 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
-    ast::{
-        decl::argument_body::ArgumentBodyDecl,
-        expr::{literal::Literal, primitive::Primitive},
-    },
+    ast::expr::{literal::Literal, primitive::Primitive},
     error::Error,
     Parsable, Parser,
 };
@@ -111,7 +108,7 @@ pub enum Expr {
     },
     Call {
         callee: Box<Expr>,
-        arguments: ArgumentBodyDecl,
+        arguments: Vec<Expr>,
     },
     Primary(Primary),
     Grouping(Box<Expr>),
@@ -264,7 +261,12 @@ impl Expr {
         let mut expr = Self::primary(parser)?;
 
         if parser.peek() == &Token::LeftParen {
-            let arguments = ArgumentBodyDecl::parse(parser)?;
+            let arguments = parser.punctuated(
+                Token::LeftParen,
+                Token::RightParen,
+                Token::Comma,
+                |parser| Expr::parse(parser),
+            )?;
             expr = Expr::Call {
                 callee: Box::new(expr),
                 arguments,
@@ -312,12 +314,8 @@ mod expr_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::{
-            decl::argument_body::ArgumentBodyDecl,
-            expr::{
-                literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary,
-                UnaryOperator,
-            },
+        ast::expr::{
+            literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
         },
         Parsable, Parser,
     };
@@ -413,16 +411,14 @@ mod expr_tests {
             callee: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
                 "func".to_string(),
             )))),
-            arguments: ArgumentBodyDecl {
-                arguments: vec![
-                    Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                        "arg1".to_string(),
-                    ))),
-                    Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                        "arg2".to_string(),
-                    ))),
-                ],
-            },
+            arguments: vec![
+                Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "arg1".to_string(),
+                ))),
+                Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "arg2".to_string(),
+                ))),
+            ],
         };
 
         assert_eq!(expr, expected);

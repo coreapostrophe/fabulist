@@ -53,6 +53,30 @@ impl<'a> Parser<'a> {
         self.previous()
     }
 
+    fn punctuated<F, T>(
+        &mut self,
+        start: Token,
+        end: Token,
+        delimiter: Token,
+        parser_fn: F,
+    ) -> Result<Vec<T>, Error>
+    where
+        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+    {
+        self.consume(start)?;
+        let mut items = Vec::new();
+
+        while !self.is_at_end() && self.peek() != &end {
+            items.push(parser_fn(self)?);
+            if !self.r#match(vec![delimiter.clone()]) {
+                break;
+            }
+        }
+
+        self.consume(end)?;
+        Ok(items)
+    }
+
     fn consume(&mut self, expected: Token) -> Result<&Token, Error> {
         if self.peek() == &expected {
             Ok(self.advance())

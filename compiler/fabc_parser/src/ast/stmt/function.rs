@@ -1,15 +1,11 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{
-    ast::{decl::parameter_body::ParameterBodyDecl, stmt::block::BlockStmt},
-    error::Error,
-    Parsable,
-};
+use crate::{ast::stmt::block::BlockStmt, error::Error, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct FunctionStmt {
     pub name: String,
-    pub parameters: ParameterBodyDecl,
+    pub parameters: Vec<String>,
     pub body: Box<BlockStmt>,
 }
 
@@ -25,7 +21,22 @@ impl Parsable for FunctionStmt {
             }),
         }?;
 
-        let parameters = ParameterBodyDecl::parse(parser)?;
+        let parameters = parser.punctuated(
+            Token::LeftParen,
+            Token::RightParen,
+            Token::Comma,
+            |parser| {
+                let param = match parser.advance() {
+                    Token::Identifier(ident) => Ok(ident.to_string()),
+                    _ => Err(Error::ExpectedFound {
+                        expected: "identifier".to_string(),
+                        found: parser.peek().to_string(),
+                    }),
+                }?;
+                Ok(param)
+            },
+        )?;
+
         let body = Box::new(BlockStmt::parse(parser)?);
 
         Ok(FunctionStmt {
@@ -40,7 +51,6 @@ impl Parsable for FunctionStmt {
 mod function_stmt_tests {
     use crate::{
         ast::{
-            decl::parameter_body::ParameterBodyDecl,
             expr::{primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, function::FunctionStmt, Stmt},
         },
@@ -61,9 +71,7 @@ mod function_stmt_tests {
             function_stmt,
             FunctionStmt {
                 name: "add".to_string(),
-                parameters: ParameterBodyDecl {
-                    parameters: vec!["a".to_string(), "b".to_string(),],
-                },
+                parameters: vec!["a".to_string(), "b".to_string()],
                 body: Box::new(BlockStmt {
                     statements: vec![Stmt::Expr(ExprStmt {
                         expr: Expr::Binary {
