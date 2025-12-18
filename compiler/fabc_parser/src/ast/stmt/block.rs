@@ -30,8 +30,7 @@ mod block_stmt_tests {
 
     use crate::{
         ast::{
-            expr::{Expr, Primary},
-            literal::Literal,
+            expr::{literal::Literal, Expr, Primary},
             stmt::{block::BlockStmt, r#let::LetStmt, Stmt},
         },
         Parsable, Parser,

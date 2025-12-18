@@ -41,8 +41,7 @@ mod function_stmt_tests {
 
     use crate::{
         ast::{
-            expr::{Expr, Primary},
-            primitive::Primitive,
+            expr::{primitive::Primitive, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, function::FunctionStmt, Stmt},
         },
         Parsable, Parser,

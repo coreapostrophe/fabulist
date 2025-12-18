@@ -23,7 +23,7 @@ impl Parsable for LetStmt {
 
         parser.consume(Token::Equal)?;
 
-        let initializer = parser.expression()?;
+        let initializer = Expr::parse(parser)?;
 
         parser.consume(Token::Semicolon)?;
 
@@ -37,8 +37,7 @@ mod let_stmt_tests {
 
     use crate::{
         ast::{
-            expr::{Expr, Primary},
-            literal::Literal,
+            expr::{literal::Literal, Expr, Primary},
             stmt::r#let::LetStmt,
         },
         Parsable, Parser,

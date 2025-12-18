@@ -52,7 +52,7 @@ impl<'a> Lexer<'a> {
             '.' => self.tokens.push(Token::Dot),
             '-' => self.tokens.push(Token::Minus),
             '+' => self.tokens.push(Token::Plus),
-            '*' => self.tokens.push(Token::Star),
+            '*' => self.tokens.push(Token::Asterisk),
             ';' => self.tokens.push(Token::Semicolon),
 
             // Double-character tokens.
@@ -275,7 +275,7 @@ mod lexer_tests {
             Token::Dot,
             Token::Minus,
             Token::Plus,
-            Token::Star,
+            Token::Asterisk,
             Token::Semicolon,
             Token::Bang,
             Token::BangEqual,

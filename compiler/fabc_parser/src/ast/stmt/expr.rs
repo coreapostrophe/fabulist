@@ -21,9 +21,7 @@ mod expr_stmt_tests {
 
     use crate::{
         ast::{
-            expr::{Expr, Primary},
-            literal::Literal,
-            primitive::Primitive,
+            expr::{literal::Literal, primitive::Primitive, Expr, Primary},
             stmt::expr::ExprStmt,
         },
         Parsable, Parser,

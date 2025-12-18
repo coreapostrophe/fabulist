@@ -13,7 +13,7 @@ pub enum Token {
     Dot,
     Minus,
     Plus,
-    Star,
+    Asterisk,
     Slash,
     Semicolon,
 
@@ -48,7 +48,7 @@ impl Display for Token {
             Token::Dot => write!(f, "."),
             Token::Minus => write!(f, "-"),
             Token::Plus => write!(f, "+"),
-            Token::Star => write!(f, "*"),
+            Token::Asterisk => write!(f, "*"),
             Token::Slash => write!(f, "/"),
             Token::Semicolon => write!(f, ";"),
             Token::Bang => write!(f, "!"),

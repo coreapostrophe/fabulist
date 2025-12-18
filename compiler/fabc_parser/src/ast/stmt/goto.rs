@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{ast::primitive::Primitive, error::Error, Parsable, Parser};
+use crate::{ast::expr::primitive::Primitive, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GotoStmt {
@@ -32,7 +32,7 @@ mod goto_stmt_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::{primitive::Primitive, stmt::goto::GotoStmt},
+        ast::{expr::primitive::Primitive, stmt::goto::GotoStmt},
         Parsable, Parser,
     };
 
