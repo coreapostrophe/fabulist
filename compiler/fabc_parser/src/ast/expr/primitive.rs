@@ -14,7 +14,6 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub enum Primitive {
     Identifier(String),
-    Path(Vec<String>),
     Grouping(Box<Expr>),
     Object(HashMap<String, Expr>),
     Closure {
@@ -42,18 +41,6 @@ impl Parsable for Primitive {
                     }
                 };
                 Ok(Primitive::Identifier(name.clone()))
-            }
-            Token::Path(_) => {
-                let segments = match parser.advance() {
-                    Token::Path(segments) => segments.clone(),
-                    _ => {
-                        return Err(Error::ExpectedFound {
-                            expected: "path".to_string(),
-                            found: parser.peek().to_string(),
-                        })
-                    }
-                };
-                Ok(Primitive::Path(segments.clone()))
             }
             Token::Keyword(KeywordKind::Context) => {
                 parser.consume(Token::Keyword(KeywordKind::Context))?;
@@ -154,16 +141,6 @@ mod primitive_tests {
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
             Primitive::Identifier("foo".to_string())
-        );
-
-        let tokens = vec![Token::Path(vec![
-            "module".to_string(),
-            "symbol".to_string(),
-        ])];
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(
-            Primitive::parse(&mut parser).unwrap(),
-            Primitive::Path(vec!["module".to_string(), "symbol".to_string()])
         );
 
         let tokens = vec![

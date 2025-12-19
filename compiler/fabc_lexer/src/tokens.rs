@@ -34,7 +34,6 @@ pub enum Token {
     String(String),
     Number(f64),
     Keyword(KeywordKind),
-    Path(Vec<String>),
 
     EoF,
 }
@@ -67,7 +66,6 @@ impl Display for Token {
             Token::String(value) => write!(f, "string `{}`", value),
             Token::Number(value) => write!(f, "number `{}`", value),
             Token::Keyword(kind) => write!(f, "keyword `{}`", kind),
-            Token::Path(segments) => write!(f, "path `{}`", segments.join("::")),
             Token::EoF => write!(f, "EOF"),
         }
     }

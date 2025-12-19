@@ -1,27 +1,21 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{ast::expr::primitive::Primitive, error::Error, Parsable, Parser};
+use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GotoStmt {
-    pub label: Primitive,
+    pub target: Box<Expr>,
 }
 
 impl Parsable for GotoStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         parser.consume(Token::Keyword(KeywordKind::Goto))?;
 
-        let path = match parser.advance() {
-            Token::Path(segments) => Ok(segments.clone()),
-            _ => Err(Error::ExpectedFound {
-                expected: "path".to_string(),
-                found: parser.peek().to_string(),
-            }),
-        }?;
+        let target = Expr::parse(parser)?;
         parser.consume(Token::Semicolon)?;
 
         Ok(GotoStmt {
-            label: Primitive::Path(path),
+            target: Box::new(target),
         })
     }
 }
@@ -31,13 +25,16 @@ mod goto_stmt_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::{expr::primitive::Primitive, stmt::goto::GotoStmt},
+        ast::{
+            expr::{primitive::Primitive, Expr, Primary},
+            stmt::goto::GotoStmt,
+        },
         Parsable, Parser,
     };
 
     #[test]
     fn parses_goto_statements() {
-        let source = "goto my::module::label;";
+        let source = "goto module.part_ident;";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
@@ -45,11 +42,14 @@ mod goto_stmt_tests {
         let stmt = GotoStmt::parse(&mut parser).expect("Failed to parse");
 
         let expected = GotoStmt {
-            label: Primitive::Path(vec![
-                "my".to_string(),
-                "module".to_string(),
-                "label".to_string(),
-            ]),
+            target: Box::new(Expr::MemberAccess {
+                left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "module".to_string(),
+                )))),
+                members: vec![Expr::Primary(Primary::Primitive(Primitive::Identifier(
+                    "part_ident".to_string(),
+                )))],
+            }),
         };
 
         assert_eq!(stmt, expected);
