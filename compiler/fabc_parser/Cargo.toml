@@ -9,3 +9,12 @@ license.workspace = true
 thiserror.workspace = true
 
 fabc_lexer = { path = "../fabc_lexer" }
+fabulist_lang = { path = "../../packages/fabulist_lang" }
+criterion.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "parser_comparison"
+harness = false

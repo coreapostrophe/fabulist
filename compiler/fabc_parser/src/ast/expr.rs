@@ -25,7 +25,7 @@ pub enum BinaryOperator {
     Or,
 }
 
-impl TryFrom<&Token> for BinaryOperator {
+impl TryFrom<&Token<'_>> for BinaryOperator {
     type Error = Error;
 
     fn try_from(token: &Token) -> Result<Self, Self::Error> {
@@ -51,7 +51,7 @@ pub enum UnaryOperator {
     Negate,
 }
 
-impl TryFrom<&Token> for UnaryOperator {
+impl TryFrom<&Token<'_>> for UnaryOperator {
     type Error = Error;
 
     fn try_from(token: &Token) -> Result<Self, Self::Error> {
@@ -69,7 +69,7 @@ pub enum LogicalOperator {
     Or,
 }
 
-impl TryFrom<&Token> for LogicalOperator {
+impl TryFrom<&Token<'_>> for LogicalOperator {
     type Error = Error;
 
     fn try_from(token: &Token) -> Result<Self, Self::Error> {

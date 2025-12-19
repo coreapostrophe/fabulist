@@ -16,13 +16,13 @@ where
 }
 
 pub struct Parser<'a> {
-    tokens: &'a Vec<Token>,
+    tokens: &'a Vec<Token<'a>>,
     current: usize,
     save: Option<usize>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a Vec<Token>) -> Self {
+    pub fn new(tokens: &'a Vec<Token<'a>>) -> Self {
         Self {
             tokens,
             current: 0,
@@ -34,7 +34,7 @@ impl<'a> Parser<'a> {
         Stmt::parse(self)
     }
 
-    fn r#match(&mut self, expected: &[Token]) -> bool {
+    fn r#match(&mut self, expected: &[Token<'a>]) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -46,25 +46,25 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn previous(&self) -> &Token {
+    fn previous(&self) -> &Token<'a> {
         &self.tokens[self.current - 1]
     }
 
-    fn peek(&self) -> &Token {
+    fn peek(&self) -> &Token<'a> {
         if self.is_at_end() {
             return &Token::EoF;
         }
         &self.tokens[self.current]
     }
 
-    fn advance(&mut self) -> &Token {
+    fn advance(&mut self) -> &Token<'a> {
         if !self.is_at_end() {
             self.current += 1;
         }
         self.previous()
     }
 
-    fn enclosed<F, T>(&mut self, start: Token, end: Token, parser_fn: F) -> Result<T, Error>
+    fn enclosed<F, T>(&mut self, start: Token<'a>, end: Token<'a>, parser_fn: F) -> Result<T, Error>
     where
         F: Fn(&mut Parser<'a>) -> Result<T, Error>,
     {
@@ -76,9 +76,9 @@ impl<'a> Parser<'a> {
 
     fn punctuated<F, T>(
         &mut self,
-        start: Token,
-        end: Token,
-        delimiter: Token,
+        start: Token<'a>,
+        end: Token<'a>,
+        delimiter: Token<'a>,
         parser_fn: F,
     ) -> Result<Vec<T>, Error>
     where
@@ -116,7 +116,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn consume(&mut self, expected: Token) -> Result<&Token, Error> {
+    fn consume(&mut self, expected: Token<'a>) -> Result<&Token<'a>, Error> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {

@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::keywords::KeywordKind;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum Token<'a> {
     // Single-character tokens
     LeftParen,
     RightParen,
@@ -33,15 +33,15 @@ pub enum Token {
     ArrowRight,
 
     // Literals
-    Identifier(String),
-    String(String),
+    Identifier(&'a str),
+    String(&'a str),
     Number(f64),
     Keyword(KeywordKind),
 
     EoF,
 }
 
-impl Display for Token {
+impl<'a> Display for Token<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Token::LeftParen => write!(f, "("),

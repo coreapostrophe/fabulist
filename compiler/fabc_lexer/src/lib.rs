@@ -6,7 +6,7 @@ pub mod tokens;
 
 pub struct Lexer<'a> {
     source: &'a str,
-    tokens: Vec<Token>,
+    tokens: Vec<Token<'a>>,
     start: usize,
     current: usize,
     line: usize,
@@ -23,7 +23,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize(&mut self) -> Result<&Vec<Token>, Error> {
+    pub fn tokenize(&mut self) -> Result<&Vec<Token<'a>>, Error> {
         self.scan_tokens()?;
         Ok(&self.tokens)
     }
@@ -94,7 +94,7 @@ impl<'a> Lexer<'a> {
             // Comments and whitespace.
             '/' => {
                 if self.r#match('/')? {
-                    while self.peek()? != '\n' && !self.is_at_end() {
+                    while self.peek() != '\n' && !self.is_at_end() {
                         self.advance()?;
                     }
                 } else {
@@ -123,7 +123,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn identifier(&mut self) -> Result<(), Error> {
-        while self.peek()?.is_ascii_alphanumeric() || self.peek()? == '_' {
+        while self.peek().is_ascii_alphanumeric() || self.peek() == '_' {
             self.advance()?;
         }
 
@@ -133,21 +133,21 @@ impl<'a> Lexer<'a> {
         if let Some(keyword_kind) = keyword_kind {
             self.tokens.push(Token::Keyword(keyword_kind));
         } else {
-            self.tokens.push(Token::Identifier(text.to_string()));
+            self.tokens.push(Token::Identifier(text));
         }
 
         Ok(())
     }
 
     fn number(&mut self) -> Result<(), Error> {
-        while self.peek()?.is_ascii_digit() {
+        while self.peek().is_ascii_digit() {
             self.advance()?;
         }
 
-        if self.peek()? == '.' && self.peek_next()?.is_ascii_digit() {
+        if self.peek() == '.' && self.peek_next()?.is_ascii_digit() {
             self.advance()?;
 
-            while self.peek()?.is_ascii_digit() {
+            while self.peek().is_ascii_digit() {
                 self.advance()?;
             }
         }
@@ -171,8 +171,8 @@ impl<'a> Lexer<'a> {
     }
 
     fn string(&mut self) -> Result<(), Error> {
-        while self.peek()? != '"' && !self.is_at_end() {
-            if self.peek()? == '\n' {
+        while self.peek() != '"' && !self.is_at_end() {
+            if self.peek() == '\n' {
                 self.line += 1;
             }
             self.advance()?;
@@ -185,7 +185,7 @@ impl<'a> Lexer<'a> {
         self.advance()?;
 
         let value = &self.source[self.start + 1..self.current - 1];
-        self.tokens.push(Token::String(value.to_string()));
+        self.tokens.push(Token::String(value));
 
         Ok(())
     }
@@ -208,23 +208,22 @@ impl<'a> Lexer<'a> {
         Ok(true)
     }
 
-    fn peek(&self) -> Result<char, Error> {
+    fn peek(&self) -> char {
         if self.is_at_end() {
-            return Ok('\0');
+            return '\0';
         }
-        self.source
-            .chars()
-            .nth(self.current)
-            .ok_or(Error::UnexpectedEndOfInput)
+        let bytes = self.source.as_bytes();
+        bytes[self.current] as char
     }
 
     fn advance(&mut self) -> Result<char, Error> {
-        let ch = self
-            .source
-            .chars()
-            .nth(self.current)
-            .ok_or(Error::UnexpectedEndOfInput)?;
-        self.current += 1;
+        if self.is_at_end() {
+            return Err(Error::UnexpectedEndOfInput);
+        }
+
+        let ch = self.peek();
+
+        self.current += ch.len_utf8();
         Ok(ch)
     }
 
@@ -291,7 +290,7 @@ mod lexer_tests {
             Token::Keyword(KeywordKind::And),
             Token::Keyword(KeywordKind::Or),
             Token::Keyword(KeywordKind::Context),
-            Token::Identifier("myVar".to_string()),
+            Token::Identifier("myVar"),
             Token::EoF,
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -303,7 +302,7 @@ mod lexer_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Token::String("hello".to_string()),
+            Token::String("hello"),
             Token::Number(123.0),
             Token::Number(45.67),
             Token::EoF,

@@ -15,7 +15,7 @@ impl Parsable for Literal {
         match parser.advance() {
             Token::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
             Token::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),
-            Token::String(value) => Ok(Literal::String(value.clone())),
+            Token::String(value) => Ok(Literal::String(value.to_string())),
             Token::Number(value) => Ok(Literal::Number(*value)),
             Token::Keyword(KeywordKind::None) => Ok(Literal::None),
             _ => Err(Error::UnhandledLiteral),
@@ -35,7 +35,7 @@ mod literal_tests {
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Number(42.0));
 
-        let tokens = vec![Token::String("hello".to_string())];
+        let tokens = vec![Token::String("hello")];
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Literal::parse(&mut parser).unwrap(),

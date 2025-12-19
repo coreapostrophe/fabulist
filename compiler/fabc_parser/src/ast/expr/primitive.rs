@@ -103,18 +103,14 @@ mod primitive_tests {
 
     #[test]
     fn parses_basic_primitives() {
-        let tokens = vec![Token::Identifier("foo".to_string())];
+        let tokens = vec![Token::Identifier("foo")];
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
             Primitive::Identifier("foo".to_string())
         );
 
-        let tokens = vec![
-            Token::LeftParen,
-            Token::Identifier("x".to_string()),
-            Token::RightParen,
-        ];
+        let tokens = vec![Token::LeftParen, Token::Identifier("x"), Token::RightParen];
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
