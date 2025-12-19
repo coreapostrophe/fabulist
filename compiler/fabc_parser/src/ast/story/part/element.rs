@@ -2,6 +2,7 @@ use fabc_lexer::tokens::Token;
 
 use crate::{ast::story::part::element::narration::Narration, error::Error, Parsable};
 
+pub mod dialogue;
 pub mod narration;
 
 #[derive(Debug, PartialEq)]
