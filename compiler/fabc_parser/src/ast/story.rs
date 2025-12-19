@@ -1,7 +1,10 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
-    ast::{stmt::module::ModuleStmt, story::metadata::Metadata},
+    ast::{
+        stmt::module::ModuleStmt,
+        story::{metadata::Metadata, part::Part},
+    },
     Parsable,
 };
 
@@ -12,6 +15,7 @@ pub mod part;
 pub struct Story {
     pub metadata: Option<Metadata>,
     pub modules: Vec<ModuleStmt>,
+    pub parts: Vec<Part>,
 }
 
 impl Parsable for Story {
@@ -29,7 +33,17 @@ impl Parsable for Story {
             None
         };
 
-        Ok(Story { metadata, modules })
+        let mut parts = Vec::new();
+        while parser.peek() == &Token::Pound {
+            let part = Part::parse(parser)?;
+            parts.push(part);
+        }
+
+        Ok(Story {
+            metadata,
+            modules,
+            parts,
+        })
     }
 }
 
@@ -43,7 +57,19 @@ mod story_tests {
         ast::{
             expr::{literal::Literal, Expr, Primary},
             stmt::module::ModuleStmt,
-            story::{metadata::Metadata, Story},
+            story::{
+                metadata::Metadata,
+                part::{
+                    element::{
+                        dialogue::{quote::Quote, Dialogue},
+                        narration::Narration,
+                        selection::{choice::Choice, Selection},
+                        Element,
+                    },
+                    Part,
+                },
+                Story,
+            },
         },
         Parsable, Parser,
     };
@@ -51,8 +77,8 @@ mod story_tests {
     #[test]
     fn parses_story_with_metadata_and_modules() {
         let source = r#"
-            module "path/to/module1" as mod1
-            module "path/to/module2"
+            module "path/to/module1" as mod1;
+            module "path/to/module2";
 
             Story {
                 description: "This is a test story."
@@ -86,6 +112,96 @@ mod story_tests {
                     path: "path/to/module2".to_string(),
                 },
             ],
+            parts: vec![],
+        };
+
+        assert_eq!(story, expected);
+    }
+
+    #[test]
+    fn parses_basic_story() {
+        let source = r#"
+            module "path/to/module" as dialogues;
+
+            Story {
+                start: "dialogue_1"
+            }
+
+            # dialogue_1
+            * "Welcome to the story!"
+            [traveller]
+            > "Hello there!"
+            > "Choose your path."
+                - "Go left." { score: 10 }
+                - "Go right." { score: 5 }
+        "#;
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source code");
+
+        let mut parser = Parser::new(tokens);
+        let story = Story::parse(&mut parser).expect("Failed to parse story");
+
+        let expected = Story {
+            metadata: Some({
+                let mut map = HashMap::new();
+                map.insert(
+                    "start".to_string(),
+                    Expr::Primary(Primary::Literal(Literal::String("dialogue_1".to_string()))),
+                );
+                Metadata { map }
+            }),
+            modules: vec![ModuleStmt {
+                path: "path/to/module".to_string(),
+                alias: Some("dialogues".to_string()),
+            }],
+            parts: vec![Part {
+                id: "dialogue_1".to_string(),
+                elements: vec![
+                    Element::Narration(Narration {
+                        text: "Welcome to the story!".to_string(),
+                        properties: None,
+                    }),
+                    Element::Dialogue(Dialogue {
+                        speaker: "traveller".to_string(),
+                        quotes: vec![
+                            Quote {
+                                text: "Hello there!".to_string(),
+                                properties: None,
+                            },
+                            Quote {
+                                text: "Choose your path.".to_string(),
+                                properties: None,
+                            },
+                        ],
+                    }),
+                    Element::Selection(Selection {
+                        choices: vec![
+                            Choice {
+                                text: "Go left.".to_string(),
+                                properties: Some({
+                                    let mut map = HashMap::new();
+                                    map.insert(
+                                        "score".to_string(),
+                                        Expr::Primary(Primary::Literal(Literal::Number(10.0))),
+                                    );
+                                    map
+                                }),
+                            },
+                            Choice {
+                                text: "Go right.".to_string(),
+                                properties: Some({
+                                    let mut map = HashMap::new();
+                                    map.insert(
+                                        "score".to_string(),
+                                        Expr::Primary(Primary::Literal(Literal::Number(5.0))),
+                                    );
+                                    map
+                                }),
+                            },
+                        ],
+                    }),
+                ],
+            }],
         };
 
         assert_eq!(story, expected);

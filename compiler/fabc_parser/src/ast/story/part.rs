@@ -6,8 +6,8 @@ pub mod element;
 
 #[derive(Debug, PartialEq)]
 pub struct Part {
-    id: String,
-    elements: Vec<Element>,
+    pub id: String,
+    pub elements: Vec<Element>,
 }
 
 impl Parsable for Part {
@@ -18,7 +18,7 @@ impl Parsable for Part {
 
         let mut elements = Vec::new();
 
-        while [Token::Asterisk].contains(parser.peek()) {
+        while [Token::Asterisk, Token::LeftBracket, Token::Minus].contains(parser.peek()) {
             let element = Element::parse(parser)?;
             elements.push(element);
         }

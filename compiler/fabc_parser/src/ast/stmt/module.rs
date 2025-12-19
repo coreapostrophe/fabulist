@@ -14,19 +14,15 @@ impl Parsable for ModuleStmt {
 
         let path = expect_token!(parser, Token::String, "module string path")?;
 
-        if parser.r#match(&[Token::Keyword(KeywordKind::As)]) {
-            let alias = expect_token!(parser, Token::Identifier, "module alias")?;
-
-            Ok(ModuleStmt {
-                path: path.to_string(),
-                alias: Some(alias.to_string()),
-            })
+        let alias = if parser.r#match(&[Token::Keyword(KeywordKind::As)]) {
+            Some(expect_token!(parser, Token::Identifier, "module alias")?)
         } else {
-            Ok(ModuleStmt {
-                path: path.to_string(),
-                alias: None,
-            })
-        }
+            None
+        };
+
+        parser.consume(Token::Semicolon)?;
+
+        Ok(ModuleStmt { path, alias })
     }
 }
 
@@ -38,7 +34,7 @@ mod module_stmt_tests {
 
     #[test]
     fn parses_module_stmt_without_alias() {
-        let source = r#"module "my/module/path""#;
+        let source = r#"module "my/module/path";"#;
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source code");
 
@@ -55,7 +51,7 @@ mod module_stmt_tests {
 
     #[test]
     fn parses_module_stmt_with_alias() {
-        let source = r#"module "my/module/path" as my_alias"#;
+        let source = r#"module "my/module/path" as my_alias;"#;
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source code");
 
