@@ -36,10 +36,6 @@ pub enum Stmt {
 
 impl Parsable for Stmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
-        if parser.is_at_end() {
-            return Err(Error::UnexpectedEndOfInput);
-        }
-
         match parser.peek() {
             Token::Keyword(KeywordKind::Fn) => Ok(Stmt::Function(FunctionStmt::parse(parser)?)),
             Token::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),

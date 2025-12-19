@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::Token;
 
-use crate::{ast::story::part::element::Element, error::Error, Parsable};
+use crate::{ast::story::part::element::Element, expect_token, Parsable};
 
 pub mod element;
 
@@ -14,14 +14,7 @@ impl Parsable for Part {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         parser.consume(Token::Pound)?;
 
-        let id = if let Token::Identifier(id) = parser.advance() {
-            id.clone()
-        } else {
-            return Err(Error::ExpectedFound {
-                expected: "identifier".to_string(),
-                found: parser.previous().to_string(),
-            });
-        };
+        let id = expect_token!(parser, Token::Identifier, "identifier")?;
 
         let mut elements = Vec::new();
 

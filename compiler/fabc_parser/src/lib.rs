@@ -1,9 +1,12 @@
+use std::slice;
+
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{ast::stmt::Stmt, error::Error};
 
 pub mod ast;
 pub mod error;
+mod macros;
 
 pub trait Parsable
 where
@@ -31,7 +34,7 @@ impl<'a> Parser<'a> {
         Stmt::parse(self)
     }
 
-    fn r#match(&mut self, expected: Vec<Token>) -> bool {
+    fn r#match(&mut self, expected: &[Token]) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -86,7 +89,7 @@ impl<'a> Parser<'a> {
 
             while !parser.is_at_end() && parser.peek() != &end {
                 items.push(parser_fn(parser)?);
-                if !parser.r#match(vec![delimiter.clone()]) {
+                if !parser.r#match(slice::from_ref(&delimiter)) {
                     break;
                 }
             }

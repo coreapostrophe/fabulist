@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{error::Error, Parsable};
+use crate::{expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct ModuleStmt {
@@ -12,24 +12,10 @@ impl Parsable for ModuleStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         parser.consume(Token::Keyword(KeywordKind::Module))?;
 
-        let path = if let Token::String(path) = parser.advance() {
-            path.to_string()
-        } else {
-            return Err(Error::ExpectedFound {
-                expected: "path string".to_string(),
-                found: parser.peek().to_string(),
-            });
-        };
+        let path = expect_token!(parser, Token::String, "module string path")?;
 
-        if parser.r#match(vec![Token::Keyword(KeywordKind::As)]) {
-            let alias = if let Token::Identifier(alias) = parser.advance() {
-                alias.to_string()
-            } else {
-                return Err(Error::ExpectedFound {
-                    expected: "identifier".to_string(),
-                    found: parser.peek().to_string(),
-                });
-            };
+        if parser.r#match(&[Token::Keyword(KeywordKind::As)]) {
+            let alias = expect_token!(parser, Token::Identifier, "module alias")?;
 
             Ok(ModuleStmt {
                 path: path.to_string(),

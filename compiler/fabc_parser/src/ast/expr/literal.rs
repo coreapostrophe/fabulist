@@ -12,9 +12,7 @@ pub enum Literal {
 
 impl Parsable for Literal {
     fn parse(parser: &mut crate::Parser) -> Result<Self, Error> {
-        let token = parser.advance();
-
-        match token {
+        match parser.advance() {
             Token::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
             Token::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),
             Token::String(value) => Ok(Literal::String(value.clone())),

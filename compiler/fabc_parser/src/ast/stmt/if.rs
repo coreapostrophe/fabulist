@@ -28,8 +28,8 @@ impl Parsable for IfStmt {
 
         let then_branch = Box::new(BlockStmt::parse(parser)?);
 
-        let else_branch = if parser.r#match(vec![Token::Keyword(KeywordKind::Else)]) {
-            if parser.r#match(vec![Token::Keyword(KeywordKind::If)]) {
+        let else_branch = if parser.r#match(&[Token::Keyword(KeywordKind::Else)]) {
+            if parser.r#match(&[Token::Keyword(KeywordKind::If)]) {
                 Some(ElseClause::If(Box::new(IfStmt::parse(parser)?)))
             } else {
                 Some(ElseClause::Block(Box::new(BlockStmt::parse(parser)?)))

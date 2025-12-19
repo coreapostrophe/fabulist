@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
+use crate::{ast::expr::Expr, error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct LetStmt {
@@ -12,14 +12,7 @@ impl Parsable for LetStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         parser.consume(Token::Keyword(KeywordKind::Let))?;
 
-        let name = if let Token::Identifier(ident) = parser.advance() {
-            ident.clone()
-        } else {
-            return Err(Error::ExpectedFound {
-                expected: "identifier".to_string(),
-                found: parser.peek().to_string(),
-            });
-        };
+        let name = expect_token!(parser, Token::Identifier, "identifier")?;
 
         parser.consume(Token::Equal)?;
 

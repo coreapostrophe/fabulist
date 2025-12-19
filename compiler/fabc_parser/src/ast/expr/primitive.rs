@@ -4,11 +4,12 @@ use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
     ast::{
+        decl::object::ObjectDecl,
         expr::{Expr, Primary},
         stmt::block::BlockStmt,
     },
     error::Error,
-    Parsable,
+    expect_token, Parsable,
 };
 
 #[derive(Debug, PartialEq)]
@@ -31,16 +32,8 @@ impl Parsable for Primitive {
 
         match parser.peek() {
             Token::Identifier(_) => {
-                let name = match parser.advance() {
-                    Token::Identifier(ident) => ident.to_string(),
-                    _ => {
-                        return Err(Error::ExpectedFound {
-                            expected: "identifier".to_string(),
-                            found: parser.peek().to_string(),
-                        })
-                    }
-                };
-                Ok(Primitive::Identifier(name.clone()))
+                let name = expect_token!(parser, Token::Identifier, "identifier")?;
+                Ok(Primitive::Identifier(name))
             }
             Token::Keyword(KeywordKind::Context) => {
                 parser.consume(Token::Keyword(KeywordKind::Context))?;
@@ -86,33 +79,7 @@ impl Parsable for Primitive {
                 }
             }
             Token::LeftBrace => {
-                let map_vec = parser.punctuated(
-                    Token::LeftBrace,
-                    Token::RightBrace,
-                    Token::Comma,
-                    |parser| {
-                        let key = match parser.advance() {
-                            Token::Identifier(ident) => ident.to_string(),
-                            _ => {
-                                return Err(Error::ExpectedFound {
-                                    expected: "identifier".to_string(),
-                                    found: parser.peek().to_string(),
-                                })
-                            }
-                        };
-
-                        parser.consume(Token::Colon)?;
-
-                        let value = Expr::parse(parser)?;
-                        Ok((key, value))
-                    },
-                )?;
-
-                let mut map = HashMap::new();
-                for (key, value) in map_vec {
-                    map.insert(key, value);
-                }
-
+                let map = ObjectDecl::parse(parser)?.map;
                 Ok(Primitive::Object(map))
             }
             _ => Err(Error::UnhandledPrimitive),

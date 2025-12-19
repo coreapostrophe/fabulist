@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use fabc_lexer::tokens::Token;
 
-use crate::{ast::expr::Expr, Parsable};
+use crate::{
+    ast::{decl::object::ObjectDecl, expr::Expr},
+    expect_token, Parsable,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Narration {
@@ -14,44 +17,10 @@ impl Parsable for Narration {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         parser.consume(Token::Asterisk)?;
 
-        let text = if let Token::String(text) = parser.advance() {
-            text.clone()
-        } else {
-            return Err(crate::error::Error::ExpectedFound {
-                expected: "string literal".to_string(),
-                found: parser.previous().to_string(),
-            });
-        };
+        let text = expect_token!(parser, Token::String, "string literal")?;
 
         let properties = if parser.peek() == &Token::LeftBrace {
-            let map_vec = parser.punctuated(
-                Token::LeftBrace,
-                Token::RightBrace,
-                Token::Comma,
-                |parser| {
-                    let key = if let Token::Identifier(key) = parser.advance() {
-                        key.clone()
-                    } else {
-                        return Err(crate::error::Error::ExpectedFound {
-                            expected: "identifier".to_string(),
-                            found: parser.previous().to_string(),
-                        });
-                    };
-
-                    parser.consume(Token::Colon)?;
-
-                    let value = Expr::parse(parser)?;
-
-                    Ok((key, value))
-                },
-            )?;
-
-            let mut map = HashMap::new();
-            for (key, value) in map_vec {
-                map.insert(key, value);
-            }
-
-            Some(map)
+            Some(ObjectDecl::parse(parser)?.map)
         } else {
             None
         };

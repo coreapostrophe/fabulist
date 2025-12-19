@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
-    ast::expr::{primitive::Primitive, Expr},
-    error::Error,
+    ast::{decl::object::ObjectDecl, expr::Expr},
     Parsable,
 };
 
@@ -17,28 +16,7 @@ impl Parsable for Metadata {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         parser.consume(Token::Keyword(KeywordKind::Story))?;
 
-        let map_vec = parser.punctuated(
-            Token::LeftBrace,
-            Token::RightBrace,
-            Token::Comma,
-            |parser| {
-                let Primitive::Identifier(key) = Primitive::parse(parser)? else {
-                    return Err(Error::ExpectedFound {
-                        expected: "identifier".to_string(),
-                        found: parser.peek().to_string(),
-                    });
-                };
-                parser.consume(Token::Colon)?;
-                let value = Expr::parse(parser)?;
-
-                Ok((key, value))
-            },
-        );
-
-        let mut map = HashMap::new();
-        for (key, value) in map_vec? {
-            map.insert(key, value);
-        }
+        let map = ObjectDecl::parse(parser)?.map;
 
         Ok(Metadata { map })
     }

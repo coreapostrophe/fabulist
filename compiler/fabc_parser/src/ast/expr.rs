@@ -118,7 +118,7 @@ impl Expr {
     pub fn assignment(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::logical(parser)?;
 
-        if parser.r#match(vec![Token::Equal]) {
+        if parser.r#match(&[Token::Equal]) {
             let value = Self::assignment(parser)?;
             expr = Expr::Assignment {
                 name: Box::new(expr),
@@ -132,7 +132,7 @@ impl Expr {
     fn logical(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::equality(parser)?;
 
-        while parser.r#match(vec![
+        while parser.r#match(&[
             Token::Keyword(KeywordKind::And),
             Token::Keyword(KeywordKind::Or),
         ]) {
@@ -154,7 +154,7 @@ impl Expr {
     fn equality(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::comparison(parser)?;
 
-        while parser.r#match(vec![Token::BangEqual, Token::EqualEqual]) {
+        while parser.r#match(&[Token::BangEqual, Token::EqualEqual]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::comparison(parser)?;
             expr = Expr::Binary {
@@ -170,7 +170,7 @@ impl Expr {
     fn comparison(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::term(parser)?;
 
-        while parser.r#match(vec![
+        while parser.r#match(&[
             Token::Greater,
             Token::GreaterEqual,
             Token::Less,
@@ -191,7 +191,7 @@ impl Expr {
     fn term(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::factor(parser)?;
 
-        while parser.r#match(vec![Token::Minus, Token::Plus]) {
+        while parser.r#match(&[Token::Minus, Token::Plus]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::factor(parser)?;
             expr = Expr::Binary {
@@ -207,7 +207,7 @@ impl Expr {
     fn factor(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::unary(parser)?;
 
-        while parser.r#match(vec![Token::Slash, Token::Asterisk]) {
+        while parser.r#match(&[Token::Slash, Token::Asterisk]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             expr = Expr::Binary {
@@ -221,7 +221,7 @@ impl Expr {
     }
 
     fn unary(parser: &mut Parser) -> Result<Expr, Error> {
-        if parser.r#match(vec![Token::Bang, Token::Minus]) {
+        if parser.r#match(&[Token::Bang, Token::Minus]) {
             let operator = UnaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             return Ok(Expr::Unary {
@@ -236,14 +236,14 @@ impl Expr {
     fn member_access(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::call(parser)?;
 
-        if parser.r#match(vec![Token::Dot]) {
+        if parser.r#match(&[Token::Dot]) {
             let mut members = Vec::new();
 
             loop {
                 let member = Self::call(parser)?;
                 members.push(member);
 
-                if !parser.r#match(vec![Token::Dot]) {
+                if !parser.r#match(&[Token::Dot]) {
                     break;
                 }
             }
