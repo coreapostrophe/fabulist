@@ -48,6 +48,8 @@ impl<'a> Lexer<'a> {
             ')' => self.tokens.push(Token::RightParen),
             '{' => self.tokens.push(Token::LeftBrace),
             '}' => self.tokens.push(Token::RightBrace),
+            '[' => self.tokens.push(Token::LeftBracket),
+            ']' => self.tokens.push(Token::RightBracket),
             ',' => self.tokens.push(Token::Comma),
             '.' => self.tokens.push(Token::Dot),
             '-' => self.tokens.push(Token::Minus),
@@ -55,6 +57,7 @@ impl<'a> Lexer<'a> {
             '*' => self.tokens.push(Token::Asterisk),
             ':' => self.tokens.push(Token::Colon),
             ';' => self.tokens.push(Token::Semicolon),
+            '#' => self.tokens.push(Token::Pound),
 
             // Double-character tokens.
             '!' => {
@@ -236,7 +239,7 @@ mod lexer_tests {
 
     #[test]
     fn test_simple_tokens() {
-        let source = "( ) { } , . - + * : ; ! != = == < <= > >= / =>";
+        let source = "( ) { } [ ] , . - + * : ; ! != = == < <= > >= / =>";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
@@ -244,6 +247,8 @@ mod lexer_tests {
             Token::RightParen,
             Token::LeftBrace,
             Token::RightBrace,
+            Token::LeftBracket,
+            Token::RightBracket,
             Token::Comma,
             Token::Dot,
             Token::Minus,

@@ -8,6 +8,8 @@ pub enum Error {
     UnhandledPrimitive,
     #[error("Unexpected primary")]
     UnhandledPrimary,
+    #[error("Unexpected element")]
+    UnhandledElement,
     #[error("Unexpected literal")]
     UnhandledLiteral,
     #[error("Unexpected primary expression")]

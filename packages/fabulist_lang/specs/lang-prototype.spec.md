@@ -6,18 +6,11 @@
 # "dialogue-1"
 [Jose]
 > "What's up?"
-    - "The ceiling." => {
-        next: (context) => {
-            if affinity > 2 {
-                
-            }
-        },
-        change_context: (context) => {
-            context.affinity -= 1;
-            context.humor += 1;
-        },
+    - "The ceiling." {
+        next: (context) => {},
+        change_context: (context) => {},
     }
-    - "Nothing much." => {
+    - "Nothing much." {
         next: (context) => {},
         change_context: (context) => {},
     }

@@ -9,6 +9,8 @@ pub enum Token {
     RightParen,
     LeftBrace,
     RightBrace,
+    LeftBracket,
+    RightBracket,
     Comma,
     Dot,
     Minus,
@@ -17,6 +19,7 @@ pub enum Token {
     Slash,
     Colon,
     Semicolon,
+    Pound,
 
     // One or two character tokens
     Bang,
@@ -45,6 +48,8 @@ impl Display for Token {
             Token::RightParen => write!(f, ")"),
             Token::LeftBrace => write!(f, "{{"),
             Token::RightBrace => write!(f, "}}"),
+            Token::LeftBracket => write!(f, "["),
+            Token::RightBracket => write!(f, "]"),
             Token::Comma => write!(f, ","),
             Token::Dot => write!(f, "."),
             Token::Minus => write!(f, "-"),
@@ -53,6 +58,7 @@ impl Display for Token {
             Token::Slash => write!(f, "/"),
             Token::Colon => write!(f, ":"),
             Token::Semicolon => write!(f, ";"),
+            Token::Pound => write!(f, "#"),
             Token::Bang => write!(f, "!"),
             Token::BangEqual => write!(f, "!="),
             Token::Equal => write!(f, "="),

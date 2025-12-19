@@ -6,6 +6,7 @@ use crate::{
 };
 
 pub mod metadata;
+pub mod part;
 
 #[derive(Debug, PartialEq)]
 pub struct Story {
