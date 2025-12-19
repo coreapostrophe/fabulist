@@ -2,8 +2,8 @@ use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
 use crate::{
     ast::stmt::{
-        block::BlockStmt, expr::ExprStmt, function::FunctionStmt, goto::GotoStmt, r#if::IfStmt,
-        r#let::LetStmt,
+        block::BlockStmt, expr::ExprStmt, function::FunctionStmt, goto::GotoStmt,
+        module::ModuleStmt, r#if::IfStmt, r#let::LetStmt,
     },
     error::Error,
     Parsable, Parser,
@@ -15,6 +15,7 @@ pub mod function;
 pub mod goto;
 pub mod r#if;
 pub mod r#let;
+pub mod module;
 
 #[derive(Debug, PartialEq)]
 pub enum ElseClause {
@@ -30,6 +31,7 @@ pub enum Stmt {
     Goto(GotoStmt),
     If(IfStmt),
     Function(FunctionStmt),
+    Module(ModuleStmt),
 }
 
 impl Parsable for Stmt {
@@ -44,6 +46,7 @@ impl Parsable for Stmt {
             Token::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),
             Token::LeftBrace => Ok(Stmt::Block(BlockStmt::parse(parser)?)),
             Token::Keyword(KeywordKind::Let) => Ok(Stmt::Let(LetStmt::parse(parser)?)),
+            Token::Keyword(KeywordKind::Module) => Ok(Stmt::Module(ModuleStmt::parse(parser)?)),
             _ => Ok(Stmt::Expr(ExprStmt::parse(parser)?)),
         }
     }

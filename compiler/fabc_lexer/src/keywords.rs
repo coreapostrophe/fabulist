@@ -11,7 +11,11 @@ pub enum KeywordKind {
     Else,
     Return,
     Goto,
+
+    // Definitions
     Story,
+    Module,
+    As,
 
     // Literals
     True,
@@ -40,6 +44,8 @@ impl Display for KeywordKind {
             KeywordKind::Return => write!(f, "return"),
             KeywordKind::Goto => write!(f, "goto"),
             KeywordKind::Story => write!(f, "Story"),
+            KeywordKind::Module => write!(f, "module"),
+            KeywordKind::As => write!(f, "as"),
             KeywordKind::True => write!(f, "true"),
             KeywordKind::False => write!(f, "false"),
             KeywordKind::None => write!(f, "none"),
@@ -62,6 +68,8 @@ impl KeywordKind {
             "return" => Some(KeywordKind::Return),
             "goto" => Some(KeywordKind::Goto),
             "Story" => Some(KeywordKind::Story),
+            "module" => Some(KeywordKind::Module),
+            "as" => Some(KeywordKind::As),
             "true" => Some(KeywordKind::True),
             "false" => Some(KeywordKind::False),
             "none" => Some(KeywordKind::None),

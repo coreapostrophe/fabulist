@@ -7,8 +7,15 @@
 [Jose]
 > "What's up?"
     - "The ceiling." => {
-        next: (context) => {},
-        change_context: (context) => {},
+        next: (context) => {
+            if affinity > 2 {
+                
+            }
+        },
+        change_context: (context) => {
+            context.affinity -= 1;
+            context.humor += 1;
+        },
     }
     - "Nothing much." => {
         next: (context) => {},
@@ -41,3 +48,7 @@
     - "I'm flat out broke man." 
     - "In a few years. I just need to sell more coccaine. "
 ```
+
+dialogue -> choice 1 -> dialogue
+
+dialogue - context_change -> dialogue

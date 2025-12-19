@@ -291,7 +291,10 @@ impl Expr {
             }
 
             // Primitives
-            Token::LeftParen | Token::Identifier(_) | Token::Keyword(KeywordKind::Context) => {
+            Token::LeftParen
+            | Token::LeftBrace
+            | Token::Identifier(_)
+            | Token::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
                 Ok(Expr::Primary(Primary::Primitive(primitive)))
             }

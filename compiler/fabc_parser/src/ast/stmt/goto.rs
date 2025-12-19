@@ -34,7 +34,7 @@ mod goto_stmt_tests {
 
     #[test]
     fn parses_goto_statements() {
-        let source = "goto module.part_ident;";
+        let source = "goto module_ns.part_ident;";
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
@@ -44,7 +44,7 @@ mod goto_stmt_tests {
         let expected = GotoStmt {
             target: Box::new(Expr::MemberAccess {
                 left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                    "module".to_string(),
+                    "module_ns".to_string(),
                 )))),
                 members: vec![Expr::Primary(Primary::Primitive(Primitive::Identifier(
                     "part_ident".to_string(),
