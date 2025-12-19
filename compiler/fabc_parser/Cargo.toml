@@ -9,4 +9,3 @@ license.workspace = true
 thiserror.workspace = true
 
 fabc_lexer = { path = "../fabc_lexer" }
-fabc_derive = { path = "../fabc_derive" }
