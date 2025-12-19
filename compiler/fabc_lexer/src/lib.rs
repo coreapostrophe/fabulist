@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
             self.advance()?;
         }
 
-        if self.peek() == '.' && self.peek_next()?.is_ascii_digit() {
+        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
             self.advance()?;
 
             while self.peek().is_ascii_digit() {
@@ -158,16 +158,6 @@ impl<'a> Lexer<'a> {
         ));
 
         Ok(())
-    }
-
-    fn peek_next(&self) -> Result<char, Error> {
-        if self.current + 1 >= self.source.len() {
-            return Ok('\0');
-        }
-        self.source
-            .chars()
-            .nth(self.current + 1)
-            .ok_or(Error::UnexpectedEndOfInput)
     }
 
     fn string(&mut self) -> Result<(), Error> {
@@ -191,38 +181,26 @@ impl<'a> Lexer<'a> {
     }
 
     fn r#match(&mut self, expected: char) -> Result<bool, Error> {
-        if self.is_at_end() {
+        if self.peek() != expected {
             return Ok(false);
         }
-        if self
-            .source
-            .chars()
-            .nth(self.current)
-            .ok_or(Error::UnexpectedEndOfInput)?
-            != expected
-        {
-            return Ok(false);
-        }
-
-        self.current += 1;
+        self.advance()?;
         Ok(true)
     }
 
     fn peek(&self) -> char {
-        if self.is_at_end() {
-            return '\0';
-        }
-        let bytes = self.source.as_bytes();
-        bytes[self.current] as char
+        self.source[self.current..].chars().next().unwrap_or('\0')
+    }
+
+    fn peek_next(&self) -> char {
+        self.source[self.current..].chars().nth(1).unwrap_or('\0')
     }
 
     fn advance(&mut self) -> Result<char, Error> {
         if self.is_at_end() {
             return Err(Error::UnexpectedEndOfInput);
         }
-
         let ch = self.peek();
-
         self.current += ch.len_utf8();
         Ok(ch)
     }
