@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{
     ast::story::part::element::{dialogue::Dialogue, narration::Narration, selection::Selection},
@@ -20,9 +20,9 @@ pub enum Element {
 impl Parsable for Element {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         match parser.peek() {
-            Token::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
-            Token::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),
-            Token::Asterisk => Ok(Element::Narration(Narration::parse(parser)?)),
+            TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
+            TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),
+            TokenKind::Asterisk => Ok(Element::Narration(Narration::parse(parser)?)),
             _ => Err(Error::UnhandledElement),
         }
     }

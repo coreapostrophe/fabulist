@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::stmt::{
@@ -37,12 +37,12 @@ pub enum Stmt {
 impl Parsable for Stmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         match parser.peek() {
-            Token::Keyword(KeywordKind::Fn) => Ok(Stmt::Function(FunctionStmt::parse(parser)?)),
-            Token::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),
-            Token::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),
-            Token::LeftBrace => Ok(Stmt::Block(BlockStmt::parse(parser)?)),
-            Token::Keyword(KeywordKind::Let) => Ok(Stmt::Let(LetStmt::parse(parser)?)),
-            Token::Keyword(KeywordKind::Module) => Ok(Stmt::Module(ModuleStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::Fn) => Ok(Stmt::Function(FunctionStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),
+            TokenKind::LeftBrace => Ok(Stmt::Block(BlockStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::Let) => Ok(Stmt::Let(LetStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::Module) => Ok(Stmt::Module(ModuleStmt::parse(parser)?)),
             _ => Ok(Stmt::Expr(ExprStmt::parse(parser)?)),
         }
     }

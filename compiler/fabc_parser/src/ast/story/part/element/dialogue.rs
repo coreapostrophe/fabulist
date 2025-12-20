@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::story::part::element::dialogue::quote::Quote, expect_token, Parsable};
 
@@ -12,12 +12,13 @@ pub struct Dialogue {
 
 impl Parsable for Dialogue {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        let speaker = parser.enclosed(Token::LeftBracket, Token::RightBracket, |parser| {
-            expect_token!(parser, Token::Identifier, "speaker identifier")
-        })?;
+        let speaker =
+            parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
+                expect_token!(parser, TokenKind::Identifier, "speaker identifier")
+            })?;
 
         let mut quotes = Vec::new();
-        while parser.peek() == &Token::Greater {
+        while parser.peek() == &TokenKind::Greater {
             let quote = Quote::parse(parser)?;
             quotes.push(quote);
         }

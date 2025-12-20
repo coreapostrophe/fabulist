@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::expr::{literal::Literal, primitive::Primitive},
@@ -25,21 +25,21 @@ pub enum BinaryOperator {
     Or,
 }
 
-impl TryFrom<&Token<'_>> for BinaryOperator {
+impl TryFrom<&TokenKind<'_>> for BinaryOperator {
     type Error = Error;
 
-    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
         match token {
-            Token::EqualEqual => Ok(BinaryOperator::EqualEqual),
-            Token::BangEqual => Ok(BinaryOperator::NotEqual),
-            Token::Greater => Ok(BinaryOperator::Greater),
-            Token::GreaterEqual => Ok(BinaryOperator::GreaterEqual),
-            Token::Less => Ok(BinaryOperator::Less),
-            Token::LessEqual => Ok(BinaryOperator::LessEqual),
-            Token::Plus => Ok(BinaryOperator::Add),
-            Token::Minus => Ok(BinaryOperator::Subtraction),
-            Token::Asterisk => Ok(BinaryOperator::Multiply),
-            Token::Slash => Ok(BinaryOperator::Divide),
+            TokenKind::EqualEqual => Ok(BinaryOperator::EqualEqual),
+            TokenKind::BangEqual => Ok(BinaryOperator::NotEqual),
+            TokenKind::Greater => Ok(BinaryOperator::Greater),
+            TokenKind::GreaterEqual => Ok(BinaryOperator::GreaterEqual),
+            TokenKind::Less => Ok(BinaryOperator::Less),
+            TokenKind::LessEqual => Ok(BinaryOperator::LessEqual),
+            TokenKind::Plus => Ok(BinaryOperator::Add),
+            TokenKind::Minus => Ok(BinaryOperator::Subtraction),
+            TokenKind::Asterisk => Ok(BinaryOperator::Multiply),
+            TokenKind::Slash => Ok(BinaryOperator::Divide),
             _ => Err(Error::InvalidBinaryOperator),
         }
     }
@@ -51,13 +51,13 @@ pub enum UnaryOperator {
     Negate,
 }
 
-impl TryFrom<&Token<'_>> for UnaryOperator {
+impl TryFrom<&TokenKind<'_>> for UnaryOperator {
     type Error = Error;
 
-    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
         match token {
-            Token::Bang => Ok(UnaryOperator::Not),
-            Token::Minus => Ok(UnaryOperator::Negate),
+            TokenKind::Bang => Ok(UnaryOperator::Not),
+            TokenKind::Minus => Ok(UnaryOperator::Negate),
             _ => Err(Error::InvalidUnaryOperator),
         }
     }
@@ -69,13 +69,13 @@ pub enum LogicalOperator {
     Or,
 }
 
-impl TryFrom<&Token<'_>> for LogicalOperator {
+impl TryFrom<&TokenKind<'_>> for LogicalOperator {
     type Error = Error;
 
-    fn try_from(token: &Token) -> Result<Self, Self::Error> {
+    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
         match token {
-            Token::Keyword(KeywordKind::And) => Ok(LogicalOperator::And),
-            Token::Keyword(KeywordKind::Or) => Ok(LogicalOperator::Or),
+            TokenKind::Keyword(KeywordKind::And) => Ok(LogicalOperator::And),
+            TokenKind::Keyword(KeywordKind::Or) => Ok(LogicalOperator::Or),
             _ => Err(Error::InvalidLogicalOperator),
         }
     }
@@ -118,7 +118,7 @@ impl Expr {
     pub fn assignment(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::logical(parser)?;
 
-        if parser.r#match(&[Token::Equal]) {
+        if parser.r#match(&[TokenKind::Equal]) {
             let value = Self::assignment(parser)?;
             expr = Expr::Assignment {
                 name: Box::new(expr),
@@ -133,8 +133,8 @@ impl Expr {
         let mut expr = Self::equality(parser)?;
 
         while parser.r#match(&[
-            Token::Keyword(KeywordKind::And),
-            Token::Keyword(KeywordKind::Or),
+            TokenKind::Keyword(KeywordKind::And),
+            TokenKind::Keyword(KeywordKind::Or),
         ]) {
             let operator = LogicalOperator::try_from(parser.previous())?;
             let right = Self::equality(parser)?;
@@ -154,7 +154,7 @@ impl Expr {
     fn equality(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::comparison(parser)?;
 
-        while parser.r#match(&[Token::BangEqual, Token::EqualEqual]) {
+        while parser.r#match(&[TokenKind::BangEqual, TokenKind::EqualEqual]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::comparison(parser)?;
             expr = Expr::Binary {
@@ -171,10 +171,10 @@ impl Expr {
         let mut expr = Self::term(parser)?;
 
         while parser.r#match(&[
-            Token::Greater,
-            Token::GreaterEqual,
-            Token::Less,
-            Token::LessEqual,
+            TokenKind::Greater,
+            TokenKind::GreaterEqual,
+            TokenKind::Less,
+            TokenKind::LessEqual,
         ]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::term(parser)?;
@@ -191,7 +191,7 @@ impl Expr {
     fn term(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::factor(parser)?;
 
-        while parser.r#match(&[Token::Minus, Token::Plus]) {
+        while parser.r#match(&[TokenKind::Minus, TokenKind::Plus]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::factor(parser)?;
             expr = Expr::Binary {
@@ -207,7 +207,7 @@ impl Expr {
     fn factor(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::unary(parser)?;
 
-        while parser.r#match(&[Token::Slash, Token::Asterisk]) {
+        while parser.r#match(&[TokenKind::Slash, TokenKind::Asterisk]) {
             let operator = BinaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             expr = Expr::Binary {
@@ -221,7 +221,7 @@ impl Expr {
     }
 
     fn unary(parser: &mut Parser) -> Result<Expr, Error> {
-        if parser.r#match(&[Token::Bang, Token::Minus]) {
+        if parser.r#match(&[TokenKind::Bang, TokenKind::Minus]) {
             let operator = UnaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
             return Ok(Expr::Unary {
@@ -236,14 +236,14 @@ impl Expr {
     fn member_access(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::call(parser)?;
 
-        if parser.r#match(&[Token::Dot]) {
+        if parser.r#match(&[TokenKind::Dot]) {
             let mut members = Vec::new();
 
             loop {
                 let member = Self::call(parser)?;
                 members.push(member);
 
-                if !parser.r#match(&[Token::Dot]) {
+                if !parser.r#match(&[TokenKind::Dot]) {
                     break;
                 }
             }
@@ -260,11 +260,11 @@ impl Expr {
     fn call(parser: &mut Parser) -> Result<Expr, Error> {
         let mut expr = Self::primary(parser)?;
 
-        if parser.peek() == &Token::LeftParen {
+        if parser.peek() == &TokenKind::LeftParen {
             let arguments = parser.punctuated(
-                Token::LeftParen,
-                Token::RightParen,
-                Token::Comma,
+                TokenKind::LeftParen,
+                TokenKind::RightParen,
+                TokenKind::Comma,
                 |parser| Expr::parse(parser),
             )?;
             expr = Expr::Call {
@@ -283,18 +283,18 @@ impl Expr {
 
         match parser.peek() {
             // Literals
-            Token::String(_)
-            | Token::Number(_)
-            | Token::Keyword(KeywordKind::True | KeywordKind::False | KeywordKind::None) => {
+            TokenKind::String(_)
+            | TokenKind::Number(_)
+            | TokenKind::Keyword(KeywordKind::True | KeywordKind::False | KeywordKind::None) => {
                 let literal = Literal::parse(parser)?;
                 Ok(Expr::Primary(Primary::Literal(literal)))
             }
 
             // Primitives
-            Token::LeftParen
-            | Token::LeftBrace
-            | Token::Identifier(_)
-            | Token::Keyword(KeywordKind::Context) => {
+            TokenKind::LeftParen
+            | TokenKind::LeftBrace
+            | TokenKind::Identifier(_)
+            | TokenKind::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
                 Ok(Expr::Primary(Primary::Primitive(primitive)))
             }

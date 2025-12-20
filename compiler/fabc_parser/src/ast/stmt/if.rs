@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{expr::Expr, stmt::block::BlockStmt},
@@ -20,16 +20,16 @@ pub struct IfStmt {
 
 impl Parsable for IfStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Keyword(KeywordKind::If))?;
+        parser.consume(TokenKind::Keyword(KeywordKind::If))?;
 
-        let condition = parser.enclosed(Token::LeftParen, Token::RightParen, |parser| {
+        let condition = parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
             Expr::parse(parser)
         })?;
 
         let then_branch = Box::new(BlockStmt::parse(parser)?);
 
-        let else_branch = if parser.r#match(&[Token::Keyword(KeywordKind::Else)]) {
-            if parser.r#match(&[Token::Keyword(KeywordKind::If)]) {
+        let else_branch = if parser.r#match(&[TokenKind::Keyword(KeywordKind::Else)]) {
+            if parser.r#match(&[TokenKind::Keyword(KeywordKind::If)]) {
                 Some(ElseClause::If(Box::new(IfStmt::parse(parser)?)))
             } else {
                 Some(ElseClause::Block(Box::new(BlockStmt::parse(parser)?)))

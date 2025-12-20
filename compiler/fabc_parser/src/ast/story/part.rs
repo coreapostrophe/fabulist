@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::story::part::element::Element, expect_token, Parsable};
 
@@ -12,13 +12,19 @@ pub struct Part {
 
 impl Parsable for Part {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Pound)?;
+        parser.consume(TokenKind::Pound)?;
 
-        let id = expect_token!(parser, Token::Identifier, "identifier")?;
+        let id = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
         let mut elements = Vec::new();
 
-        while [Token::Asterisk, Token::LeftBracket, Token::Minus].contains(parser.peek()) {
+        while [
+            TokenKind::Asterisk,
+            TokenKind::LeftBracket,
+            TokenKind::Minus,
+        ]
+        .contains(parser.peek())
+        {
             let element = Element::parse(parser)?;
             elements.push(element);
         }

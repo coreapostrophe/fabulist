@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::stmt::Stmt, error::Error, Parsable, Parser};
 
@@ -11,14 +11,14 @@ impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         let mut statements = Vec::new();
 
-        parser.consume(Token::LeftBrace)?;
+        parser.consume(TokenKind::LeftBrace)?;
 
-        while !parser.is_at_end() && parser.peek() != &Token::RightBrace {
+        while !parser.is_at_end() && parser.peek() != &TokenKind::RightBrace {
             let stmt = Stmt::parse(parser)?;
             statements.push(stmt);
         }
 
-        parser.consume(Token::RightBrace)?;
+        parser.consume(TokenKind::RightBrace)?;
 
         Ok(BlockStmt { statements })
     }

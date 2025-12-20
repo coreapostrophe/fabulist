@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{ast::stmt::block::BlockStmt, expect_token, Parsable};
 
@@ -11,16 +11,16 @@ pub struct FunctionStmt {
 
 impl Parsable for FunctionStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Keyword(KeywordKind::Fn))?;
+        parser.consume(TokenKind::Keyword(KeywordKind::Fn))?;
 
-        let name = expect_token!(parser, Token::Identifier, "function name")?;
+        let name = expect_token!(parser, TokenKind::Identifier, "function name")?;
 
         let parameters = parser.punctuated(
-            Token::LeftParen,
-            Token::RightParen,
-            Token::Comma,
+            TokenKind::LeftParen,
+            TokenKind::RightParen,
+            TokenKind::Comma,
             |parser| {
-                let param = expect_token!(parser, Token::Identifier, "parameter name")?;
+                let param = expect_token!(parser, TokenKind::Identifier, "parameter name")?;
                 Ok(param)
             },
         )?;

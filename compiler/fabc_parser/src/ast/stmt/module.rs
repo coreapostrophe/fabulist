@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{expect_token, Parsable};
 
@@ -10,17 +10,21 @@ pub struct ModuleStmt {
 
 impl Parsable for ModuleStmt {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Keyword(KeywordKind::Module))?;
+        parser.consume(TokenKind::Keyword(KeywordKind::Module))?;
 
-        let path = expect_token!(parser, Token::String, "module string path")?;
+        let path = expect_token!(parser, TokenKind::String, "module string path")?;
 
-        let alias = if parser.r#match(&[Token::Keyword(KeywordKind::As)]) {
-            Some(expect_token!(parser, Token::Identifier, "module alias")?)
+        let alias = if parser.r#match(&[TokenKind::Keyword(KeywordKind::As)]) {
+            Some(expect_token!(
+                parser,
+                TokenKind::Identifier,
+                "module alias"
+            )?)
         } else {
             None
         };
 
-        parser.consume(Token::Semicolon)?;
+        parser.consume(TokenKind::Semicolon)?;
 
         Ok(ModuleStmt { path, alias })
     }

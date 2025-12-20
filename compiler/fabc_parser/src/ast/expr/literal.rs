@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{error::Error, Parsable};
 
@@ -13,11 +13,11 @@ pub enum Literal {
 impl Parsable for Literal {
     fn parse(parser: &mut crate::Parser) -> Result<Self, Error> {
         match parser.advance() {
-            Token::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
-            Token::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),
-            Token::String(value) => Ok(Literal::String(value.to_string())),
-            Token::Number(value) => Ok(Literal::Number(*value)),
-            Token::Keyword(KeywordKind::None) => Ok(Literal::None),
+            TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
+            TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),
+            TokenKind::String(value) => Ok(Literal::String(value.to_string())),
+            TokenKind::Number(value) => Ok(Literal::Number(*value)),
+            TokenKind::Keyword(KeywordKind::None) => Ok(Literal::None),
             _ => Err(Error::UnhandledLiteral),
         }
     }
@@ -25,35 +25,45 @@ impl Parsable for Literal {
 
 #[cfg(test)]
 mod literal_tests {
-    use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+    use fabc_lexer::Lexer;
 
     use crate::{ast::expr::literal::Literal, Parsable, Parser};
 
     #[test]
     fn parses_literals() {
-        let tokens = vec![Token::Number(42.0)];
+        let source = "42";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Number(42.0));
 
-        let tokens = vec![Token::String("hello")];
+        let source = "\"hello\"";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Literal::parse(&mut parser).unwrap(),
             Literal::String("hello".to_string())
         );
 
-        let tokens = vec![Token::Keyword(KeywordKind::True)];
+        let source = "true";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Boolean(true));
 
-        let tokens = vec![Token::Keyword(KeywordKind::False)];
+        let source = "false";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Literal::parse(&mut parser).unwrap(),
             Literal::Boolean(false)
         );
 
-        let tokens = vec![Token::Keyword(KeywordKind::None)];
+        let source = "none";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::None);
     }

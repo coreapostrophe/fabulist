@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::story::part::element::selection::choice::Choice, Parsable};
 
@@ -12,7 +12,7 @@ pub struct Selection {
 impl Parsable for Selection {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         let mut choices = Vec::new();
-        while parser.peek() == &Token::Minus {
+        while parser.peek() == &TokenKind::Minus {
             let choice = Choice::parse(parser)?;
             choices.push(choice);
         }

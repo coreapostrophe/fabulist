@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{
     ast::{decl::object::ObjectDecl, expr::Expr},
@@ -15,11 +15,11 @@ pub struct Choice {
 
 impl Parsable for Choice {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Minus)?;
+        parser.consume(TokenKind::Minus)?;
 
-        let text = expect_token!(parser, Token::String, "choice text")?;
+        let text = expect_token!(parser, TokenKind::String, "choice text")?;
 
-        let properties = if parser.peek() == &Token::LeftBrace {
+        let properties = if parser.peek() == &TokenKind::LeftBrace {
             Some(ObjectDecl::parse(parser)?.map)
         } else {
             None

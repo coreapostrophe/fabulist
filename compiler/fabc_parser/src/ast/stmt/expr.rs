@@ -1,4 +1,4 @@
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
 
@@ -10,7 +10,7 @@ pub struct ExprStmt {
 impl Parsable for ExprStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
         let expr = Expr::parse(parser)?;
-        parser.consume(Token::Semicolon)?;
+        parser.consume(TokenKind::Semicolon)?;
         Ok(ExprStmt { expr })
     }
 }

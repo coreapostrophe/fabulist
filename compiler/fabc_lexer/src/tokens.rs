@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::keywords::KeywordKind;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Token<'a> {
+pub enum TokenKind<'a> {
     // Single-character tokens
     LeftParen,
     RightParen,
@@ -41,38 +41,45 @@ pub enum Token<'a> {
     EoF,
 }
 
-impl<'a> Display for Token<'a> {
+impl<'a> Display for TokenKind<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::LeftParen => write!(f, "("),
-            Token::RightParen => write!(f, ")"),
-            Token::LeftBrace => write!(f, "{{"),
-            Token::RightBrace => write!(f, "}}"),
-            Token::LeftBracket => write!(f, "["),
-            Token::RightBracket => write!(f, "]"),
-            Token::Comma => write!(f, ","),
-            Token::Dot => write!(f, "."),
-            Token::Minus => write!(f, "-"),
-            Token::Plus => write!(f, "+"),
-            Token::Asterisk => write!(f, "*"),
-            Token::Slash => write!(f, "/"),
-            Token::Colon => write!(f, ":"),
-            Token::Semicolon => write!(f, ";"),
-            Token::Pound => write!(f, "#"),
-            Token::Bang => write!(f, "!"),
-            Token::BangEqual => write!(f, "!="),
-            Token::Equal => write!(f, "="),
-            Token::EqualEqual => write!(f, "=="),
-            Token::Greater => write!(f, ">"),
-            Token::GreaterEqual => write!(f, ">="),
-            Token::Less => write!(f, "<"),
-            Token::LessEqual => write!(f, "<="),
-            Token::ArrowRight => write!(f, "=>"),
-            Token::Identifier(name) => write!(f, "identifier `{}`", name),
-            Token::String(value) => write!(f, "string `{}`", value),
-            Token::Number(value) => write!(f, "number `{}`", value),
-            Token::Keyword(kind) => write!(f, "keyword `{}`", kind),
-            Token::EoF => write!(f, "EOF"),
+            TokenKind::LeftParen => write!(f, "("),
+            TokenKind::RightParen => write!(f, ")"),
+            TokenKind::LeftBrace => write!(f, "{{"),
+            TokenKind::RightBrace => write!(f, "}}"),
+            TokenKind::LeftBracket => write!(f, "["),
+            TokenKind::RightBracket => write!(f, "]"),
+            TokenKind::Comma => write!(f, ","),
+            TokenKind::Dot => write!(f, "."),
+            TokenKind::Minus => write!(f, "-"),
+            TokenKind::Plus => write!(f, "+"),
+            TokenKind::Asterisk => write!(f, "*"),
+            TokenKind::Slash => write!(f, "/"),
+            TokenKind::Colon => write!(f, ":"),
+            TokenKind::Semicolon => write!(f, ";"),
+            TokenKind::Pound => write!(f, "#"),
+            TokenKind::Bang => write!(f, "!"),
+            TokenKind::BangEqual => write!(f, "!="),
+            TokenKind::Equal => write!(f, "="),
+            TokenKind::EqualEqual => write!(f, "=="),
+            TokenKind::Greater => write!(f, ">"),
+            TokenKind::GreaterEqual => write!(f, ">="),
+            TokenKind::Less => write!(f, "<"),
+            TokenKind::LessEqual => write!(f, "<="),
+            TokenKind::ArrowRight => write!(f, "=>"),
+            TokenKind::Identifier(name) => write!(f, "identifier `{}`", name),
+            TokenKind::String(value) => write!(f, "string `{}`", value),
+            TokenKind::Number(value) => write!(f, "number `{}`", value),
+            TokenKind::Keyword(kind) => write!(f, "keyword `{}`", kind),
+            TokenKind::EoF => write!(f, "EOF"),
         }
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Token<'a> {
+    pub kind: TokenKind<'a>,
+    pub line: usize,
+    pub column: usize,
 }

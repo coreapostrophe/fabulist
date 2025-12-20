@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{
@@ -31,24 +31,24 @@ impl Parsable for Primitive {
         }
 
         match parser.peek() {
-            Token::Identifier(_) => {
-                let name = expect_token!(parser, Token::Identifier, "identifier")?;
+            TokenKind::Identifier(_) => {
+                let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
                 Ok(Primitive::Identifier(name))
             }
-            Token::Keyword(KeywordKind::Context) => {
-                parser.consume(Token::Keyword(KeywordKind::Context))?;
+            TokenKind::Keyword(KeywordKind::Context) => {
+                parser.consume(TokenKind::Keyword(KeywordKind::Context))?;
                 Ok(Primitive::Context)
             }
-            Token::LeftParen => {
+            TokenKind::LeftParen => {
                 if let Some(closure) = parser.rollbacking(|parser| {
                     let expr_tuple = parser.punctuated(
-                        Token::LeftParen,
-                        Token::RightParen,
-                        Token::Comma,
+                        TokenKind::LeftParen,
+                        TokenKind::RightParen,
+                        TokenKind::Comma,
                         |parser| Expr::parse(parser),
                     )?;
 
-                    parser.consume(Token::ArrowRight)?;
+                    parser.consume(TokenKind::ArrowRight)?;
 
                     let body = Box::new(BlockStmt::parse(parser)?);
 
@@ -72,13 +72,14 @@ impl Parsable for Primitive {
                 }) {
                     Ok(closure)
                 } else {
-                    let expr = parser.enclosed(Token::LeftParen, Token::RightParen, |parser| {
-                        Expr::parse(parser)
-                    })?;
+                    let expr =
+                        parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
+                            Expr::parse(parser)
+                        })?;
                     Ok(Primitive::Grouping(Box::new(expr)))
                 }
             }
-            Token::LeftBrace => {
+            TokenKind::LeftBrace => {
                 let map = ObjectDecl::parse(parser)?.map;
                 Ok(Primitive::Object(map))
             }
@@ -91,7 +92,7 @@ impl Parsable for Primitive {
 mod primitive_tests {
     use std::collections::HashMap;
 
-    use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+    use fabc_lexer::Lexer;
 
     use crate::{
         ast::{
@@ -103,14 +104,18 @@ mod primitive_tests {
 
     #[test]
     fn parses_basic_primitives() {
-        let tokens = vec![Token::Identifier("foo")];
+        let source = "foo";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
             Primitive::Identifier("foo".to_string())
         );
 
-        let tokens = vec![Token::LeftParen, Token::Identifier("x"), Token::RightParen];
+        let source = "(x)";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
@@ -119,7 +124,9 @@ mod primitive_tests {
             ))))
         );
 
-        let tokens = vec![Token::Keyword(KeywordKind::Context)];
+        let source = "context";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Primitive::parse(&mut parser).unwrap(), Primitive::Context);
     }

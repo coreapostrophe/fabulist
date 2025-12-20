@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{
@@ -20,9 +20,9 @@ pub struct Story {
 
 impl Parsable for Story {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        let modules = if parser.peek() == &Token::Keyword(KeywordKind::Module) {
+        let modules = if parser.peek() == &TokenKind::Keyword(KeywordKind::Module) {
             let mut mods = Vec::new();
-            while parser.peek() == &Token::Keyword(KeywordKind::Module) {
+            while parser.peek() == &TokenKind::Keyword(KeywordKind::Module) {
                 let module = ModuleStmt::parse(parser)?;
                 mods.push(module);
             }
@@ -31,7 +31,7 @@ impl Parsable for Story {
             None
         };
 
-        let metadata = if parser.peek() == &Token::Keyword(KeywordKind::Story) {
+        let metadata = if parser.peek() == &TokenKind::Keyword(KeywordKind::Story) {
             let metadata = Metadata::parse(parser)?;
             Some(metadata)
         } else {
@@ -39,7 +39,7 @@ impl Parsable for Story {
         };
 
         let mut parts = Vec::new();
-        while parser.peek() == &Token::Pound {
+        while parser.peek() == &TokenKind::Pound {
             let part = Part::parse(parser)?;
             parts.push(part);
         }

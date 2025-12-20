@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{
     ast::{decl::object::ObjectDecl, expr::Expr},
@@ -15,11 +15,11 @@ pub struct Narration {
 
 impl Parsable for Narration {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Asterisk)?;
+        parser.consume(TokenKind::Asterisk)?;
 
-        let text = expect_token!(parser, Token::String, "string literal")?;
+        let text = expect_token!(parser, TokenKind::String, "string literal")?;
 
-        let properties = if parser.peek() == &Token::LeftBrace {
+        let properties = if parser.peek() == &TokenKind::LeftBrace {
             Some(ObjectDecl::parse(parser)?.map)
         } else {
             None

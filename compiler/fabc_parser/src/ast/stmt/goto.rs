@@ -1,4 +1,4 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
 
@@ -9,10 +9,10 @@ pub struct GotoStmt {
 
 impl Parsable for GotoStmt {
     fn parse(parser: &mut Parser) -> Result<Self, Error> {
-        parser.consume(Token::Keyword(KeywordKind::Goto))?;
+        parser.consume(TokenKind::Keyword(KeywordKind::Goto))?;
 
         let target = Expr::parse(parser)?;
-        parser.consume(Token::Semicolon)?;
+        parser.consume(TokenKind::Semicolon)?;
 
         Ok(GotoStmt {
             target: Box::new(target),

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{decl::object::ObjectDecl, expr::Expr},
@@ -14,7 +14,7 @@ pub struct Metadata {
 
 impl Parsable for Metadata {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        parser.consume(Token::Keyword(KeywordKind::Story))?;
+        parser.consume(TokenKind::Keyword(KeywordKind::Story))?;
 
         let map = ObjectDecl::parse(parser)?.map;
 

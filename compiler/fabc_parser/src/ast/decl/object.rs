@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_lexer::tokens::Token;
+use fabc_lexer::tokens::TokenKind;
 
 use crate::{ast::expr::Expr, expect_token, Parsable};
 
@@ -12,12 +12,12 @@ pub struct ObjectDecl {
 impl Parsable for ObjectDecl {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
         let map_vec = parser.punctuated(
-            Token::LeftBrace,
-            Token::RightBrace,
-            Token::Comma,
+            TokenKind::LeftBrace,
+            TokenKind::RightBrace,
+            TokenKind::Comma,
             |parser| {
-                let key = expect_token!(parser, Token::Identifier, "identifier")?;
-                parser.consume(Token::Colon)?;
+                let key = expect_token!(parser, TokenKind::Identifier, "identifier")?;
+                parser.consume(TokenKind::Colon)?;
                 let value = Expr::parse(parser)?;
                 Ok((key, value))
             },

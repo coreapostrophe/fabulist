@@ -1,6 +1,9 @@
 use std::slice;
 
-use fabc_lexer::{keywords::KeywordKind, tokens::Token};
+use fabc_lexer::{
+    keywords::KeywordKind,
+    tokens::{Token, TokenKind},
+};
 
 use crate::{ast::story::Story, error::Error};
 
@@ -34,7 +37,7 @@ impl<'a> Parser<'a> {
         Story::parse(self)
     }
 
-    fn r#match(&mut self, expected: &[Token<'a>]) -> bool {
+    fn r#match(&mut self, expected: &[TokenKind<'a>]) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -46,25 +49,30 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn previous(&self) -> &Token<'a> {
-        &self.tokens[self.current - 1]
+    fn previous(&self) -> &TokenKind<'a> {
+        &self.tokens[self.current - 1].kind
     }
 
-    fn peek(&self) -> &Token<'a> {
+    fn peek(&self) -> &TokenKind<'a> {
         if self.is_at_end() {
-            return &Token::EoF;
+            return &TokenKind::EoF;
         }
-        &self.tokens[self.current]
+        &self.tokens[self.current].kind
     }
 
-    fn advance(&mut self) -> &Token<'a> {
+    fn advance(&mut self) -> &TokenKind<'a> {
         if !self.is_at_end() {
             self.current += 1;
         }
         self.previous()
     }
 
-    fn enclosed<F, T>(&mut self, start: Token<'a>, end: Token<'a>, parser_fn: F) -> Result<T, Error>
+    fn enclosed<F, T>(
+        &mut self,
+        start: TokenKind<'a>,
+        end: TokenKind<'a>,
+        parser_fn: F,
+    ) -> Result<T, Error>
     where
         F: Fn(&mut Parser<'a>) -> Result<T, Error>,
     {
@@ -76,9 +84,9 @@ impl<'a> Parser<'a> {
 
     fn punctuated<F, T>(
         &mut self,
-        start: Token<'a>,
-        end: Token<'a>,
-        delimiter: Token<'a>,
+        start: TokenKind<'a>,
+        end: TokenKind<'a>,
+        delimiter: TokenKind<'a>,
         parser_fn: F,
     ) -> Result<Vec<T>, Error>
     where
@@ -116,7 +124,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn consume(&mut self, expected: Token<'a>) -> Result<&Token<'a>, Error> {
+    fn consume(&mut self, expected: TokenKind<'a>) -> Result<&TokenKind<'a>, Error> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
@@ -131,11 +139,11 @@ impl<'a> Parser<'a> {
         self.advance();
 
         while !self.is_at_end() {
-            if let Token::Semicolon = self.previous() {
+            if let TokenKind::Semicolon = self.previous() {
                 return;
             }
 
-            if let Token::Keyword(
+            if let TokenKind::Keyword(
                 KeywordKind::Let
                 | KeywordKind::Fn
                 | KeywordKind::For

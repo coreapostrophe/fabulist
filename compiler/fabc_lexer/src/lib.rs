@@ -1,4 +1,8 @@
-use crate::{error::Error, keywords::KeywordKind, tokens::Token};
+use crate::{
+    error::Error,
+    keywords::KeywordKind,
+    tokens::{Token, TokenKind},
+};
 
 pub mod error;
 pub mod keywords;
@@ -21,6 +25,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    pub fn make_token(&self, kind: TokenKind<'a>) -> Token<'a> {
+        Token {
+            kind,
+            line: self.line,
+            column: self.start,
+        }
+    }
+
     pub fn tokenize(&mut self) -> Result<Vec<Token<'a>>, Error> {
         let mut tokens = Vec::new();
 
@@ -29,64 +41,64 @@ impl<'a> Lexer<'a> {
             let token = self.scan_token()?;
             tokens.push(token);
         }
-        tokens.push(Token::EoF);
+        tokens.push(self.make_token(TokenKind::EoF));
 
         Ok(tokens)
     }
 
     pub fn scan_token(&mut self) -> Result<Token<'a>, Error> {
         if self.is_at_end() {
-            return Ok(Token::EoF);
+            return Ok(self.make_token(TokenKind::EoF));
         }
 
         let c = self.advance()?;
 
         match c {
             // Single-character tokens.
-            '(' => Ok(Token::LeftParen),
-            ')' => Ok(Token::RightParen),
-            '{' => Ok(Token::LeftBrace),
-            '}' => Ok(Token::RightBrace),
-            '[' => Ok(Token::LeftBracket),
-            ']' => Ok(Token::RightBracket),
-            ',' => Ok(Token::Comma),
-            '.' => Ok(Token::Dot),
-            '-' => Ok(Token::Minus),
-            '+' => Ok(Token::Plus),
-            '*' => Ok(Token::Asterisk),
-            ':' => Ok(Token::Colon),
-            ';' => Ok(Token::Semicolon),
-            '#' => Ok(Token::Pound),
+            '(' => Ok(self.make_token(TokenKind::LeftParen)),
+            ')' => Ok(self.make_token(TokenKind::RightParen)),
+            '{' => Ok(self.make_token(TokenKind::LeftBrace)),
+            '}' => Ok(self.make_token(TokenKind::RightBrace)),
+            '[' => Ok(self.make_token(TokenKind::LeftBracket)),
+            ']' => Ok(self.make_token(TokenKind::RightBracket)),
+            ',' => Ok(self.make_token(TokenKind::Comma)),
+            '.' => Ok(self.make_token(TokenKind::Dot)),
+            '-' => Ok(self.make_token(TokenKind::Minus)),
+            '+' => Ok(self.make_token(TokenKind::Plus)),
+            '*' => Ok(self.make_token(TokenKind::Asterisk)),
+            ':' => Ok(self.make_token(TokenKind::Colon)),
+            ';' => Ok(self.make_token(TokenKind::Semicolon)),
+            '#' => Ok(self.make_token(TokenKind::Pound)),
 
             // Double-character tokens.
             '!' => {
                 if self.r#match('=')? {
-                    Ok(Token::BangEqual)
+                    Ok(self.make_token(TokenKind::BangEqual))
                 } else {
-                    Ok(Token::Bang)
+                    Ok(self.make_token(TokenKind::Bang))
                 }
             }
             '=' => {
                 if self.r#match('=')? {
-                    Ok(Token::EqualEqual)
+                    Ok(self.make_token(TokenKind::EqualEqual))
                 } else if self.r#match('>')? {
-                    Ok(Token::ArrowRight)
+                    Ok(self.make_token(TokenKind::ArrowRight))
                 } else {
-                    Ok(Token::Equal)
+                    Ok(self.make_token(TokenKind::Equal))
                 }
             }
             '<' => {
                 if self.r#match('=')? {
-                    Ok(Token::LessEqual)
+                    Ok(self.make_token(TokenKind::LessEqual))
                 } else {
-                    Ok(Token::Less)
+                    Ok(self.make_token(TokenKind::Less))
                 }
             }
             '>' => {
                 if self.r#match('=')? {
-                    Ok(Token::GreaterEqual)
+                    Ok(self.make_token(TokenKind::GreaterEqual))
                 } else {
-                    Ok(Token::Greater)
+                    Ok(self.make_token(TokenKind::Greater))
                 }
             }
 
@@ -98,7 +110,7 @@ impl<'a> Lexer<'a> {
                     }
                     self.scan_token()
                 } else {
-                    Ok(Token::Slash)
+                    Ok(self.make_token(TokenKind::Slash))
                 }
             }
             ' ' | '\r' | '\t' => {
@@ -132,9 +144,9 @@ impl<'a> Lexer<'a> {
         let keyword_kind = KeywordKind::get(text);
 
         if let Some(keyword_kind) = keyword_kind {
-            Ok(Token::Keyword(keyword_kind))
+            Ok(self.make_token(TokenKind::Keyword(keyword_kind)))
         } else {
-            Ok(Token::Identifier(text))
+            Ok(self.make_token(TokenKind::Identifier(text)))
         }
     }
 
@@ -153,9 +165,9 @@ impl<'a> Lexer<'a> {
 
         let number_str = &self.source[self.start..self.current];
 
-        Ok(Token::Number(
+        Ok(self.make_token(TokenKind::Number(
             number_str.parse().map_err(|_| Error::UnableToParseNumber)?,
-        ))
+        )))
     }
 
     fn string(&mut self) -> Result<Token<'a>, Error> {
@@ -173,7 +185,7 @@ impl<'a> Lexer<'a> {
         self.advance()?;
 
         let value = &self.source[self.start + 1..self.current - 1];
-        Ok(Token::String(value))
+        Ok(self.make_token(TokenKind::String(value)))
     }
 
     fn r#match(&mut self, expected: char) -> Result<bool, Error> {
@@ -216,30 +228,126 @@ mod lexer_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Token::LeftParen,
-            Token::RightParen,
-            Token::LeftBrace,
-            Token::RightBrace,
-            Token::LeftBracket,
-            Token::RightBracket,
-            Token::Comma,
-            Token::Dot,
-            Token::Minus,
-            Token::Plus,
-            Token::Asterisk,
-            Token::Colon,
-            Token::Semicolon,
-            Token::Bang,
-            Token::BangEqual,
-            Token::Equal,
-            Token::EqualEqual,
-            Token::Less,
-            Token::LessEqual,
-            Token::Greater,
-            Token::GreaterEqual,
-            Token::Slash,
-            Token::ArrowRight,
-            Token::EoF,
+            Token {
+                kind: TokenKind::LeftParen,
+                line: 1,
+                column: 0,
+            },
+            Token {
+                kind: TokenKind::RightParen,
+                line: 1,
+                column: 2,
+            },
+            Token {
+                kind: TokenKind::LeftBrace,
+                line: 1,
+                column: 4,
+            },
+            Token {
+                kind: TokenKind::RightBrace,
+                line: 1,
+                column: 6,
+            },
+            Token {
+                kind: TokenKind::LeftBracket,
+                line: 1,
+                column: 8,
+            },
+            Token {
+                kind: TokenKind::RightBracket,
+                line: 1,
+                column: 10,
+            },
+            Token {
+                kind: TokenKind::Comma,
+                line: 1,
+                column: 12,
+            },
+            Token {
+                kind: TokenKind::Dot,
+                line: 1,
+                column: 14,
+            },
+            Token {
+                kind: TokenKind::Minus,
+                line: 1,
+                column: 16,
+            },
+            Token {
+                kind: TokenKind::Plus,
+                line: 1,
+                column: 18,
+            },
+            Token {
+                kind: TokenKind::Asterisk,
+                line: 1,
+                column: 20,
+            },
+            Token {
+                kind: TokenKind::Colon,
+                line: 1,
+                column: 22,
+            },
+            Token {
+                kind: TokenKind::Semicolon,
+                line: 1,
+                column: 24,
+            },
+            Token {
+                kind: TokenKind::Bang,
+                line: 1,
+                column: 26,
+            },
+            Token {
+                kind: TokenKind::BangEqual,
+                line: 1,
+                column: 28,
+            },
+            Token {
+                kind: TokenKind::Equal,
+                line: 1,
+                column: 31,
+            },
+            Token {
+                kind: TokenKind::EqualEqual,
+                line: 1,
+                column: 33,
+            },
+            Token {
+                kind: TokenKind::Less,
+                line: 1,
+                column: 36,
+            },
+            Token {
+                kind: TokenKind::LessEqual,
+                line: 1,
+                column: 38,
+            },
+            Token {
+                kind: TokenKind::Greater,
+                line: 1,
+                column: 41,
+            },
+            Token {
+                kind: TokenKind::GreaterEqual,
+                line: 1,
+                column: 43,
+            },
+            Token {
+                kind: TokenKind::Slash,
+                line: 1,
+                column: 46,
+            },
+            Token {
+                kind: TokenKind::ArrowRight,
+                line: 1,
+                column: 48,
+            },
+            Token {
+                kind: TokenKind::EoF,
+                line: 1,
+                column: 48,
+            },
         ];
         assert_eq!(*tokens, expected_tokens);
     }
@@ -250,22 +358,86 @@ mod lexer_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Token::Keyword(KeywordKind::Let),
-            Token::Keyword(KeywordKind::Fn),
-            Token::Keyword(KeywordKind::If),
-            Token::Keyword(KeywordKind::Else),
-            Token::Keyword(KeywordKind::Return),
-            Token::Keyword(KeywordKind::Goto),
-            Token::Keyword(KeywordKind::True),
-            Token::Keyword(KeywordKind::False),
-            Token::Keyword(KeywordKind::None),
-            Token::Keyword(KeywordKind::While),
-            Token::Keyword(KeywordKind::For),
-            Token::Keyword(KeywordKind::And),
-            Token::Keyword(KeywordKind::Or),
-            Token::Keyword(KeywordKind::Context),
-            Token::Identifier("myVar"),
-            Token::EoF,
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Let),
+                line: 1,
+                column: 0,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Fn),
+                line: 1,
+                column: 4,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::If),
+                line: 1,
+                column: 7,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Else),
+                line: 1,
+                column: 10,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Return),
+                line: 1,
+                column: 15,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Goto),
+                line: 1,
+                column: 22,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::True),
+                line: 1,
+                column: 27,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::False),
+                line: 1,
+                column: 32,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::None),
+                line: 1,
+                column: 38,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::While),
+                line: 1,
+                column: 43,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::For),
+                line: 1,
+                column: 49,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::And),
+                line: 1,
+                column: 53,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Or),
+                line: 1,
+                column: 57,
+            },
+            Token {
+                kind: TokenKind::Keyword(KeywordKind::Context),
+                line: 1,
+                column: 60,
+            },
+            Token {
+                kind: TokenKind::Identifier("myVar"),
+                line: 1,
+                column: 68,
+            },
+            Token {
+                kind: TokenKind::EoF,
+                line: 1,
+                column: 68,
+            },
         ];
         assert_eq!(*tokens, expected_tokens);
     }
@@ -276,10 +448,26 @@ mod lexer_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().unwrap();
         let expected_tokens = vec![
-            Token::String("hello"),
-            Token::Number(123.0),
-            Token::Number(45.67),
-            Token::EoF,
+            Token {
+                kind: TokenKind::String("hello"),
+                line: 1,
+                column: 0,
+            },
+            Token {
+                kind: TokenKind::Number(123.0),
+                line: 1,
+                column: 8,
+            },
+            Token {
+                kind: TokenKind::Number(45.67),
+                line: 1,
+                column: 12,
+            },
+            Token {
+                kind: TokenKind::EoF,
+                line: 1,
+                column: 12,
+            },
         ];
         assert_eq!(*tokens, expected_tokens);
     }
