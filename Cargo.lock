@@ -258,6 +258,16 @@ name = "fabc_reg_test"
 version = "0.1.0"
 
 [[package]]
+name = "fabc_vm"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "fabc_lexer",
+ "fabc_parser",
+ "thiserror",
+]
+
+[[package]]
 name = "fabulist_core"
 version = "0.2.0"
 dependencies = [

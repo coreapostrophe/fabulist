@@ -1,0 +1,19 @@
+[package]
+name = "fabc_vm"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+
+fabc_parser = { path = "../fabc_parser" }
+
+[dev-dependencies]
+criterion.workspace = true
+
+fabc_lexer = { path = "../fabc_lexer" }
+
+[lib]
+bench = false
