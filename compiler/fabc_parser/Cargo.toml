@@ -13,7 +13,6 @@ fabc_lexer = { path = "../fabc_lexer" }
 [dev-dependencies]
 criterion.workspace = true
 
-fabulist_lang = { path = "../../packages/fabulist_lang" }
 fabc_reg_test = { path = "../fabc_reg_test" }
 
 [[bench]]

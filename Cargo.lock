@@ -250,7 +250,6 @@ dependencies = [
  "criterion",
  "fabc_lexer",
  "fabc_reg_test",
- "fabulist_lang",
  "thiserror",
 ]
 
