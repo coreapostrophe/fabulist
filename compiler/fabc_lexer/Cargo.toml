@@ -7,3 +7,16 @@ license.workspace = true
 
 [dependencies]
 thiserror.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+fabc_reg_test = { path = "../fabc_reg_test" }
+
+[[bench]]
+name = "lexer_bench"
+harness = false
+path = "benches/lexer_bench.rs"
+
+[lib]
+bench = false

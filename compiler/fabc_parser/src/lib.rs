@@ -2,7 +2,7 @@ use std::slice;
 
 use fabc_lexer::{keywords::KeywordKind, tokens::Token};
 
-use crate::{ast::stmt::Stmt, error::Error};
+use crate::{ast::story::Story, error::Error};
 
 pub mod ast;
 pub mod error;
@@ -30,8 +30,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Stmt, Error> {
-        Stmt::parse(self)
+    pub fn parse(&mut self) -> Result<Story, Error> {
+        Story::parse(self)
     }
 
     fn r#match(&mut self, expected: &[Token<'a>]) -> bool {
@@ -153,5 +153,36 @@ impl<'a> Parser<'a> {
 
     fn is_at_end(&self) -> bool {
         self.current >= self.tokens.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use fabc_lexer::Lexer;
+
+    use crate::Parser;
+
+    #[test]
+    fn parses_simple_story() {
+        let source = fabc_reg_test::SIMPLE_STORY;
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+
+        let mut parser = Parser::new(tokens);
+        let ast = parser.parse();
+
+        assert!(ast.is_ok());
+    }
+
+    #[test]
+    fn parses_complex_story() {
+        let source = fabc_reg_test::COMPLEX_STORY;
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+
+        let mut parser = Parser::new(tokens);
+        let ast = parser.parse();
+
+        assert!(ast.is_ok());
     }
 }

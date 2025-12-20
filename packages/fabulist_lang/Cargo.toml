@@ -11,3 +11,14 @@ thiserror.workspace = true
 pest_derive = { workspace = true, features = ["grammar-extras"] }
 
 fabulist_derive = { path = "../fabulist_derive" }
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "parsing_bench"
+harness = false
+path = "benches/parsing_bench.rs"
+
+[lib]
+bench = false

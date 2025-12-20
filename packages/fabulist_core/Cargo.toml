@@ -22,3 +22,6 @@ selection = ["actions"]
 dialogue = ["actions"]
 narration = ["actions"]
 actions = []
+
+[lib]
+bench = false

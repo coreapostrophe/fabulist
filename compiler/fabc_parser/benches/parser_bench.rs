@@ -1,0 +1,68 @@
+use std::hint::black_box;
+
+use criterion::{criterion_group, criterion_main, Criterion};
+use fabc_lexer::Lexer;
+use fabc_parser::Parser;
+
+fn parser_performance(c: &mut Criterion) {
+    let source = fabc_reg_test::SIMPLE_STORY;
+    let mut lexer = Lexer::new(source);
+    let tokens = lexer.tokenize().expect("Failed to tokenize source");
+
+    let mut group = c.benchmark_group("parser");
+
+    group.bench_with_input("parses_simple_story", tokens, |b, tokens| {
+        b.iter(|| {
+            let mut parser = Parser::new(black_box(tokens));
+            let _ast = parser.parse().unwrap();
+        })
+    });
+
+    let source = fabc_reg_test::COMPLEX_STORY;
+    let mut lexer = Lexer::new(source);
+    let tokens = lexer.tokenize().expect("Failed to tokenize source");
+
+    group.bench_with_input("parses_complex_story", tokens, |b, tokens| {
+        b.iter(|| {
+            let mut parser = Parser::new(black_box(tokens));
+            let _ast = parser.parse().unwrap();
+        })
+    });
+
+    group.finish();
+}
+
+fn full_parsing_performance(c: &mut Criterion) {
+    let mut group = c.benchmark_group("full_parsing");
+
+    group.bench_with_input(
+        "tokenizes_and_parses_simple_story",
+        fabc_reg_test::COMPLEX_STORY,
+        |b, source| {
+            b.iter(|| {
+                let mut lexer = Lexer::new(black_box(source));
+                let tokens = lexer.tokenize().expect("Failed to tokenize source");
+                let mut parser = Parser::new(tokens);
+                let _ast = parser.parse().unwrap();
+            })
+        },
+    );
+
+    group.bench_with_input(
+        "tokenizes_and_parses_complex_story",
+        fabc_reg_test::COMPLEX_STORY,
+        |b, source| {
+            b.iter(|| {
+                let mut lexer = Lexer::new(black_box(source));
+                let tokens = lexer.tokenize().expect("Failed to tokenize source");
+                let mut parser = Parser::new(tokens);
+                let _ast = parser.parse().unwrap();
+            })
+        },
+    );
+
+    group.finish();
+}
+
+criterion_group!(benches, parser_performance, full_parsing_performance);
+criterion_main!(benches);

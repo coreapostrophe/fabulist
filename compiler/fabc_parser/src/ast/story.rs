@@ -14,17 +14,22 @@ pub mod part;
 #[derive(Debug, PartialEq)]
 pub struct Story {
     pub metadata: Option<Metadata>,
-    pub modules: Vec<ModuleStmt>,
+    pub modules: Option<Vec<ModuleStmt>>,
     pub parts: Vec<Part>,
 }
 
 impl Parsable for Story {
     fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
-        let mut modules = Vec::new();
-        while parser.peek() == &Token::Keyword(KeywordKind::Module) {
-            let module = ModuleStmt::parse(parser)?;
-            modules.push(module);
-        }
+        let modules = if parser.peek() == &Token::Keyword(KeywordKind::Module) {
+            let mut mods = Vec::new();
+            while parser.peek() == &Token::Keyword(KeywordKind::Module) {
+                let module = ModuleStmt::parse(parser)?;
+                mods.push(module);
+            }
+            Some(mods)
+        } else {
+            None
+        };
 
         let metadata = if parser.peek() == &Token::Keyword(KeywordKind::Story) {
             let metadata = Metadata::parse(parser)?;
@@ -102,7 +107,7 @@ mod story_tests {
                 );
                 Metadata { map }
             }),
-            modules: vec![
+            modules: Some(vec![
                 ModuleStmt {
                     path: "path/to/module1".to_string(),
                     alias: Some("mod1".to_string()),
@@ -111,7 +116,7 @@ mod story_tests {
                     alias: None,
                     path: "path/to/module2".to_string(),
                 },
-            ],
+            ]),
             parts: vec![],
         };
 
@@ -150,10 +155,10 @@ mod story_tests {
                 );
                 Metadata { map }
             }),
-            modules: vec![ModuleStmt {
+            modules: Some(vec![ModuleStmt {
                 path: "path/to/module".to_string(),
                 alias: Some("dialogues".to_string()),
-            }],
+            }]),
             parts: vec![Part {
                 id: "dialogue_1".to_string(),
                 elements: vec![
