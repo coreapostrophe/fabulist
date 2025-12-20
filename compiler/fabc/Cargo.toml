@@ -7,17 +7,10 @@ license.workspace = true
 
 [dependencies]
 thiserror.workspace = true
-clap = { version = "4.5.53", features = ["derive"] }
 
 fabc_lexer = { path = "../fabc_lexer" }
 fabc_parser = { path = "../fabc_parser" }
 fabc_vm = { path = "../fabc_vm" }
 
 [lib]
-name = "fabc_lib"
-path = "lib/mod.rs"
 bench = false
-
-[[bin]]
-name = "fabc"
-path = "src/main.rs"

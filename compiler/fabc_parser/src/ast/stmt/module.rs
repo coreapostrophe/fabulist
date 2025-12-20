@@ -38,7 +38,7 @@ mod module_stmt_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source code");
 
-        let mut parser = crate::Parser::new(tokens);
+        let mut parser = crate::Parser::new(&tokens);
         let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {
@@ -55,7 +55,7 @@ mod module_stmt_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source code");
 
-        let mut parser = crate::Parser::new(tokens);
+        let mut parser = crate::Parser::new(&tokens);
         let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {

@@ -326,7 +326,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Binary {
@@ -352,7 +352,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Binary {
@@ -374,7 +374,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Binary {
@@ -404,7 +404,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Call {
@@ -430,7 +430,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::MemberAccess {
@@ -456,7 +456,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Unary {
@@ -476,7 +476,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Binary {
@@ -498,7 +498,7 @@ mod expr_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
 
         let expected = Expr::Assignment {

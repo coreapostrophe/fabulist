@@ -11,7 +11,7 @@ fn parser_performance(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("parser");
 
-    group.bench_with_input("parses_simple_story", tokens, |b, tokens| {
+    group.bench_with_input("parses_simple_story", &tokens, |b, tokens| {
         b.iter(|| {
             let mut parser = Parser::new(black_box(tokens));
             let _ast = parser.parse().unwrap();
@@ -22,7 +22,7 @@ fn parser_performance(c: &mut Criterion) {
     let mut lexer = Lexer::new(source);
     let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-    group.bench_with_input("parses_complex_story", tokens, |b, tokens| {
+    group.bench_with_input("parses_complex_story", &tokens, |b, tokens| {
         b.iter(|| {
             let mut parser = Parser::new(black_box(tokens));
             let _ast = parser.parse().unwrap();
@@ -42,7 +42,7 @@ fn full_parsing_performance(c: &mut Criterion) {
             b.iter(|| {
                 let mut lexer = Lexer::new(black_box(source));
                 let tokens = lexer.tokenize().expect("Failed to tokenize source");
-                let mut parser = Parser::new(tokens);
+                let mut parser = Parser::new(&tokens);
                 let _ast = parser.parse().unwrap();
             })
         },
@@ -55,7 +55,7 @@ fn full_parsing_performance(c: &mut Criterion) {
             b.iter(|| {
                 let mut lexer = Lexer::new(black_box(source));
                 let tokens = lexer.tokenize().expect("Failed to tokenize source");
-                let mut parser = Parser::new(tokens);
+                let mut parser = Parser::new(&tokens);
                 let _ast = parser.parse().unwrap();
             })
         },

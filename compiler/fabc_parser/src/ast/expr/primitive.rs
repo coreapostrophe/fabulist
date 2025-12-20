@@ -130,7 +130,7 @@ mod primitive_tests {
         let mut lexer = fabc_lexer::Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
 
         let expected = Primitive::Object({
@@ -154,7 +154,7 @@ mod primitive_tests {
         let mut lexer = fabc_lexer::Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
 
         let expected = Primitive::Closure {

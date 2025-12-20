@@ -50,7 +50,7 @@ mod dialogue_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let dialogue = Dialogue::parse(&mut parser).expect("Failed to parse dialogue");
 
         let expected = Dialogue {

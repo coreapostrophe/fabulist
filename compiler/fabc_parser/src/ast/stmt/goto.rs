@@ -38,7 +38,7 @@ mod goto_stmt_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let stmt = GotoStmt::parse(&mut parser).expect("Failed to parse");
 
         let expected = GotoStmt {

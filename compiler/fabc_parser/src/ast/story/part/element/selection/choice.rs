@@ -49,7 +49,7 @@ mod choice_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
 
         let expected = Choice {
@@ -66,7 +66,7 @@ mod choice_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
 
         let expected = Choice {

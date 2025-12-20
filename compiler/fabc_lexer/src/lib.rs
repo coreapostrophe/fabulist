@@ -6,7 +6,6 @@ pub mod tokens;
 
 pub struct Lexer<'a> {
     source: &'a str,
-    tokens: Vec<Token<'a>>,
     start: usize,
     current: usize,
     line: usize,
@@ -16,78 +15,78 @@ impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             source: input,
-            tokens: Vec::new(),
             start: 0,
             current: 0,
             line: 1,
         }
     }
 
-    pub fn tokenize(&mut self) -> Result<&Vec<Token<'a>>, Error> {
-        self.scan_tokens()?;
-        Ok(&self.tokens)
+    pub fn tokenize(&mut self) -> Result<Vec<Token<'a>>, Error> {
+        let mut tokens = Vec::new();
+
+        while !self.is_at_end() {
+            self.reset_start();
+            let token = self.scan_token()?;
+            tokens.push(token);
+        }
+        tokens.push(Token::EoF);
+
+        Ok(tokens)
     }
 
-    fn scan_tokens(&mut self) -> Result<(), Error> {
-        while !self.is_at_end() {
-            self.start = self.current;
-            self.scan_token()?;
+    pub fn scan_token(&mut self) -> Result<Token<'a>, Error> {
+        if self.is_at_end() {
+            return Ok(Token::EoF);
         }
 
-        self.tokens.push(Token::EoF);
-
-        Ok(())
-    }
-
-    fn scan_token(&mut self) -> Result<(), Error> {
         let c = self.advance()?;
 
         match c {
             // Single-character tokens.
-            '(' => self.tokens.push(Token::LeftParen),
-            ')' => self.tokens.push(Token::RightParen),
-            '{' => self.tokens.push(Token::LeftBrace),
-            '}' => self.tokens.push(Token::RightBrace),
-            '[' => self.tokens.push(Token::LeftBracket),
-            ']' => self.tokens.push(Token::RightBracket),
-            ',' => self.tokens.push(Token::Comma),
-            '.' => self.tokens.push(Token::Dot),
-            '-' => self.tokens.push(Token::Minus),
-            '+' => self.tokens.push(Token::Plus),
-            '*' => self.tokens.push(Token::Asterisk),
-            ':' => self.tokens.push(Token::Colon),
-            ';' => self.tokens.push(Token::Semicolon),
-            '#' => self.tokens.push(Token::Pound),
+            '(' => Ok(Token::LeftParen),
+            ')' => Ok(Token::RightParen),
+            '{' => Ok(Token::LeftBrace),
+            '}' => Ok(Token::RightBrace),
+            '[' => Ok(Token::LeftBracket),
+            ']' => Ok(Token::RightBracket),
+            ',' => Ok(Token::Comma),
+            '.' => Ok(Token::Dot),
+            '-' => Ok(Token::Minus),
+            '+' => Ok(Token::Plus),
+            '*' => Ok(Token::Asterisk),
+            ':' => Ok(Token::Colon),
+            ';' => Ok(Token::Semicolon),
+            '#' => Ok(Token::Pound),
 
             // Double-character tokens.
             '!' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Token::BangEqual)
+                    Ok(Token::BangEqual)
                 } else {
-                    self.tokens.push(Token::Bang)
+                    Ok(Token::Bang)
                 }
             }
             '=' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Token::EqualEqual)
+                    Ok(Token::EqualEqual)
                 } else if self.r#match('>')? {
-                    self.tokens.push(Token::ArrowRight)
+                    Ok(Token::ArrowRight)
                 } else {
-                    self.tokens.push(Token::Equal)
+                    Ok(Token::Equal)
                 }
             }
             '<' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Token::LessEqual)
+                    Ok(Token::LessEqual)
                 } else {
-                    self.tokens.push(Token::Less)
+                    Ok(Token::Less)
                 }
             }
             '>' => {
                 if self.r#match('=')? {
-                    self.tokens.push(Token::GreaterEqual)
+                    Ok(Token::GreaterEqual)
                 } else {
-                    self.tokens.push(Token::Greater)
+                    Ok(Token::Greater)
                 }
             }
 
@@ -97,32 +96,34 @@ impl<'a> Lexer<'a> {
                     while self.peek() != '\n' && !self.is_at_end() {
                         self.advance()?;
                     }
+                    self.scan_token()
                 } else {
-                    self.tokens.push(Token::Slash)
+                    Ok(Token::Slash)
                 }
             }
-            ' ' | '\r' | '\t' => {}
+            ' ' | '\r' | '\t' => {
+                self.reset_start();
+                self.scan_token()
+            }
             '\n' => {
                 self.line += 1;
+                self.reset_start();
+                self.scan_token()
             }
 
             // Literals.
-            '"' => {
-                self.string()?;
-            }
-            '0'..='9' => {
-                self.number()?;
-            }
-            'a'..='z' | 'A'..='Z' | '_' => {
-                self.identifier()?;
-            }
-            _ => return Err(Error::UnexpectedCharacter(c)),
+            '"' => self.string(),
+            '0'..='9' => self.number(),
+            'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
+            _ => Err(Error::UnexpectedCharacter(c)),
         }
-
-        Ok(())
     }
 
-    fn identifier(&mut self) -> Result<(), Error> {
+    fn reset_start(&mut self) {
+        self.start = self.current;
+    }
+
+    fn identifier(&mut self) -> Result<Token<'a>, Error> {
         while self.peek().is_ascii_alphanumeric() || self.peek() == '_' {
             self.advance()?;
         }
@@ -131,15 +132,13 @@ impl<'a> Lexer<'a> {
         let keyword_kind = KeywordKind::get(text);
 
         if let Some(keyword_kind) = keyword_kind {
-            self.tokens.push(Token::Keyword(keyword_kind));
+            Ok(Token::Keyword(keyword_kind))
         } else {
-            self.tokens.push(Token::Identifier(text));
+            Ok(Token::Identifier(text))
         }
-
-        Ok(())
     }
 
-    fn number(&mut self) -> Result<(), Error> {
+    fn number(&mut self) -> Result<Token<'a>, Error> {
         while self.peek().is_ascii_digit() {
             self.advance()?;
         }
@@ -153,14 +152,13 @@ impl<'a> Lexer<'a> {
         }
 
         let number_str = &self.source[self.start..self.current];
-        self.tokens.push(Token::Number(
-            number_str.parse().map_err(|_| Error::UnableToParseNumber)?,
-        ));
 
-        Ok(())
+        Ok(Token::Number(
+            number_str.parse().map_err(|_| Error::UnableToParseNumber)?,
+        ))
     }
 
-    fn string(&mut self) -> Result<(), Error> {
+    fn string(&mut self) -> Result<Token<'a>, Error> {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.line += 1;
@@ -175,9 +173,7 @@ impl<'a> Lexer<'a> {
         self.advance()?;
 
         let value = &self.source[self.start + 1..self.current - 1];
-        self.tokens.push(Token::String(value));
-
-        Ok(())
+        Ok(Token::String(value))
     }
 
     fn r#match(&mut self, expected: char) -> Result<bool, Error> {

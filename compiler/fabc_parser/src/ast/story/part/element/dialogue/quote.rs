@@ -49,7 +49,7 @@ mod quote_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let quote = Quote::parse(&mut parser).expect("Failed to parse quote");
 
         let expected = Quote {
@@ -66,7 +66,7 @@ mod quote_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let quote = Quote::parse(&mut parser).expect("Failed to parse quote");
 
         let expected = Quote {

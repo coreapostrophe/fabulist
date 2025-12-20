@@ -67,7 +67,7 @@ mod if_stmt_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let if_stmt = IfStmt::parse(&mut parser).expect("Failed to parse");
 
         assert_eq!(
@@ -86,7 +86,7 @@ mod if_stmt_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let if_stmt = IfStmt::parse(&mut parser).expect("Failed to parse");
 
         assert_eq!(

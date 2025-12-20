@@ -47,7 +47,7 @@ mod narration_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let narration = Narration::parse(&mut parser).expect("Failed to parse narration");
 
         let expected = Narration {
@@ -64,7 +64,7 @@ mod narration_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let narration = Narration::parse(&mut parser).expect("Failed to parse narration");
 
         let expected = Narration {

@@ -48,7 +48,7 @@ mod part_tests {
         let mut lexer = Lexer::new(source);
         let tokens = lexer.tokenize().expect("Failed to tokenize source");
 
-        let mut parser = Parser::new(tokens);
+        let mut parser = Parser::new(&tokens);
         let part = Part::parse(&mut parser).expect("Failed to parse part");
 
         let expected = Part {
