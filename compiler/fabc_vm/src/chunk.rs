@@ -19,6 +19,10 @@ impl Chunk {
         &self.constants
     }
 
+    pub fn write_opcode(&mut self, opcode: OpCode) {
+        self.code.push(opcode);
+    }
+
     pub fn add_constant(&mut self, value: Value) -> usize {
         self.constants.push(value);
         self.constants.len() - 1
