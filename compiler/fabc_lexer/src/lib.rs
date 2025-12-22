@@ -113,12 +113,13 @@ impl<'a> Lexer<'a> {
                     Ok(self.make_token(TokenKind::Slash))
                 }
             }
-            ' ' | '\r' | '\t' => {
-                self.reset_start();
-                self.scan_token()
-            }
-            '\n' => {
-                self.line += 1;
+            ' ' | '\r' | '\t' | '\n' => {
+                while self.is_white_space() {
+                    if c == '\n' {
+                        self.line += 1;
+                    }
+                    self.advance()?;
+                }
                 self.reset_start();
                 self.scan_token()
             }
@@ -129,6 +130,10 @@ impl<'a> Lexer<'a> {
             'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
             _ => Err(Error::UnexpectedCharacter(c)),
         }
+    }
+
+    fn is_white_space(&self) -> bool {
+        matches!(self.peek(), ' ' | '\r' | '\t' | '\n')
     }
 
     fn reset_start(&mut self) {
@@ -197,11 +202,19 @@ impl<'a> Lexer<'a> {
     }
 
     fn peek(&self) -> char {
-        self.source[self.current..].chars().next().unwrap_or('\0')
+        if self.is_at_end() {
+            '\0'
+        } else {
+            self.source.as_bytes()[self.current] as char
+        }
     }
 
     fn peek_next(&self) -> char {
-        self.source[self.current..].chars().nth(1).unwrap_or('\0')
+        if self.is_at_end() {
+            '\0'
+        } else {
+            self.source.as_bytes()[self.current + 1] as char
+        }
     }
 
     fn advance(&mut self) -> Result<char, Error> {
@@ -209,7 +222,7 @@ impl<'a> Lexer<'a> {
             return Err(Error::UnexpectedEndOfInput);
         }
         let ch = self.peek();
-        self.current += ch.len_utf8();
+        self.current += 1;
         Ok(ch)
     }
 
