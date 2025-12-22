@@ -32,14 +32,12 @@ mod literal_tests {
     #[test]
     fn parses_literals() {
         let source = "42";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Number(42.0));
 
         let source = "\"hello\"";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Literal::parse(&mut parser).unwrap(),
@@ -47,14 +45,12 @@ mod literal_tests {
         );
 
         let source = "true";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Boolean(true));
 
         let source = "false";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Literal::parse(&mut parser).unwrap(),
@@ -62,8 +58,7 @@ mod literal_tests {
         );
 
         let source = "none";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::None);
     }

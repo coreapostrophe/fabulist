@@ -6,8 +6,7 @@ use fabc_parser::Parser;
 
 fn parser_performance(c: &mut Criterion) {
     let source = fabc_reg_test::SIMPLE_STORY;
-    let mut lexer = Lexer::new(source);
-    let tokens = lexer.tokenize().expect("Failed to tokenize source");
+    let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
 
     let mut group = c.benchmark_group("parser");
 
@@ -19,8 +18,7 @@ fn parser_performance(c: &mut Criterion) {
     });
 
     let source = fabc_reg_test::COMPLEX_STORY;
-    let mut lexer = Lexer::new(source);
-    let tokens = lexer.tokenize().expect("Failed to tokenize source");
+    let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
 
     group.bench_with_input("parses_complex_story", &tokens, |b, tokens| {
         b.iter(|| {
@@ -40,8 +38,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let mut lexer = Lexer::new(black_box(source));
-                let tokens = lexer.tokenize().expect("Failed to tokenize source");
+                let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
                 let mut parser = Parser::new(&tokens);
                 let _ast = parser.parse().unwrap();
             })
@@ -53,8 +50,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let mut lexer = Lexer::new(black_box(source));
-                let tokens = lexer.tokenize().expect("Failed to tokenize source");
+                let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
                 let mut parser = Parser::new(&tokens);
                 let _ast = parser.parse().unwrap();
             })

@@ -51,8 +51,7 @@ mod part_tests {
             # intro
             * "This is a narration."
         "##;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let part = Part::parse(&mut parser).expect("Failed to parse part");

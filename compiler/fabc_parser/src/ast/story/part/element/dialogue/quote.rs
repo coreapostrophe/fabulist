@@ -46,8 +46,7 @@ mod quote_tests {
     #[test]
     fn parses_quote_without_properties() {
         let source = "> \"This is a quote.\"";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let quote = Quote::parse(&mut parser).expect("Failed to parse quote");
@@ -63,8 +62,7 @@ mod quote_tests {
     #[test]
     fn parses_quote_with_properties() {
         let source = "> \"This is a quote.\" { emotion: \"happy\", volume: 5 }";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let quote = Quote::parse(&mut parser).expect("Failed to parse quote");

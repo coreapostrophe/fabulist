@@ -64,8 +64,7 @@ mod if_stmt_tests {
     #[test]
     fn parses_if_stmt_without_else() {
         let source = "if (true) { }";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let if_stmt = IfStmt::parse(&mut parser).expect("Failed to parse");
@@ -83,8 +82,7 @@ mod if_stmt_tests {
     #[test]
     fn parses_if_stmt_with_else_block() {
         let source = "if (false) { } else { }";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let if_stmt = IfStmt::parse(&mut parser).expect("Failed to parse");

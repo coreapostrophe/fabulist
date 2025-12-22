@@ -49,8 +49,7 @@ mod function_stmt_tests {
     #[test]
     fn parses_function_stmt() {
         let source = "fn add(a, b) { a + b; }";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let function_stmt = FunctionStmt::parse(&mut parser).expect("Failed to parse");

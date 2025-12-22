@@ -44,8 +44,7 @@ mod narration_tests {
     #[test]
     fn parses_narration_without_properties() {
         let source = "* \"This is a narration.\"";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let narration = Narration::parse(&mut parser).expect("Failed to parse narration");
@@ -61,8 +60,7 @@ mod narration_tests {
     #[test]
     fn parses_narration_with_properties() {
         let source = "* \"This is a narration.\" { mood: happy, volume: loud }";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let narration = Narration::parse(&mut parser).expect("Failed to parse narration");

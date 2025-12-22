@@ -16,13 +16,15 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
-        Self {
+    pub fn tokenize(input: &'a str) -> Result<Vec<Token<'a>>, Error> {
+        let mut lexer = Self {
             source: input,
             start: 0,
             current: 0,
             line: 1,
-        }
+        };
+
+        lexer.scan_tokens()
     }
 
     pub fn make_token(&self, kind: TokenKind<'a>) -> Token<'a> {
@@ -33,7 +35,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<Token<'a>>, Error> {
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token<'a>>, Error> {
         let mut tokens = Vec::new();
 
         while !self.is_at_end() {
@@ -238,8 +240,7 @@ mod lexer_tests {
     #[test]
     fn test_simple_tokens() {
         let source = "( ) { } [ ] , . - + * : ; ! != = == < <= > >= / =>";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::LeftParen,
@@ -368,8 +369,7 @@ mod lexer_tests {
     #[test]
     fn test_keywords_and_identifiers() {
         let source = "let fn if else return goto true false none while for and or context myVar";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Let),
@@ -458,8 +458,7 @@ mod lexer_tests {
     #[test]
     fn test_string_and_number_literals() {
         let source = r#""hello" 123 45.67"#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().unwrap();
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::String("hello"),

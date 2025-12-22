@@ -105,8 +105,7 @@ mod primitive_tests {
     #[test]
     fn parses_basic_primitives() {
         let source = "foo";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
@@ -114,8 +113,7 @@ mod primitive_tests {
         );
 
         let source = "(x)";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(
             Primitive::parse(&mut parser).unwrap(),
@@ -125,8 +123,7 @@ mod primitive_tests {
         );
 
         let source = "context";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
         assert_eq!(Primitive::parse(&mut parser).unwrap(), Primitive::Context);
     }
@@ -134,8 +131,7 @@ mod primitive_tests {
     #[test]
     fn parses_object_primitive() {
         let source = "{ key1: 42, key2: true }";
-        let mut lexer = fabc_lexer::Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
@@ -158,8 +154,7 @@ mod primitive_tests {
     #[test]
     fn parses_closure_primitive() {
         let source = "(x, y) => { x + y; }";
-        let mut lexer = fabc_lexer::Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let primitive = Primitive::parse(&mut parser).expect("Failed to parse");

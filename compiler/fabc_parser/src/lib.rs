@@ -173,8 +173,7 @@ mod tests {
     #[test]
     fn parses_simple_story() {
         let source = fabc_reg_test::SIMPLE_STORY;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
 
         let mut parser = Parser::new(&tokens);
         let ast = parser.parse();
@@ -185,8 +184,7 @@ mod tests {
     #[test]
     fn parses_complex_story() {
         let source = fabc_reg_test::COMPLEX_STORY;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
 
         let mut parser = Parser::new(&tokens);
         let ast = parser.parse();

@@ -323,8 +323,7 @@ mod expr_tests {
     #[test]
     fn parses_arithmetic_binary_expr() {
         let source = "1 + 2 * 3 / 4";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -349,8 +348,7 @@ mod expr_tests {
     #[test]
     fn parses_equality_expr() {
         let source = "10 == 20 != 30";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -371,8 +369,7 @@ mod expr_tests {
     #[test]
     fn parses_comparison_expr() {
         let source = "5 > 3 < 9 >= 2 <= 10";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -401,8 +398,7 @@ mod expr_tests {
     #[test]
     fn parses_call_expr() {
         let source = "func(arg1, arg2)";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -427,8 +423,7 @@ mod expr_tests {
     #[test]
     fn parses_member_access_expr() {
         let source = "obj.prop1.prop2";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -453,8 +448,7 @@ mod expr_tests {
     #[test]
     fn parses_unary_expr() {
         let source = "-!42";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -473,8 +467,7 @@ mod expr_tests {
     #[test]
     fn parses_logical_expr() {
         let source = "true and false or true";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");
@@ -495,8 +488,7 @@ mod expr_tests {
     #[test]
     fn parses_assignment_expr() {
         let source = "x = 10 + 20";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let expr = Expr::parse(&mut parser).expect("Failed to parse");

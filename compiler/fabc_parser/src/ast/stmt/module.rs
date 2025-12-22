@@ -39,8 +39,7 @@ mod module_stmt_tests {
     #[test]
     fn parses_module_stmt_without_alias() {
         let source = r#"module "my/module/path";"#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = crate::Parser::new(&tokens);
         let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");
@@ -56,8 +55,7 @@ mod module_stmt_tests {
     #[test]
     fn parses_module_stmt_with_alias() {
         let source = r#"module "my/module/path" as my_alias;"#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = crate::Parser::new(&tokens);
         let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");

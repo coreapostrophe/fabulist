@@ -43,8 +43,7 @@ mod metadata_tests {
                 title: "My Story",
             }
         "#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let mut parser = Parser::new(&tokens);
 
         let metadata = Metadata::parse(&mut parser).expect("Failed to parse metadata");

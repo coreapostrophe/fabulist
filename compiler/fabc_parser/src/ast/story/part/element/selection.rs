@@ -41,8 +41,7 @@ mod selection_tests {
             - "Go left." { score: 10, health: 5 }
             - "Go right." { score: 5 }
         "#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let selection = Selection::parse(&mut parser).expect("Failed to parse selection");

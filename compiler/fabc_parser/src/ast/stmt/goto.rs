@@ -35,8 +35,7 @@ mod goto_stmt_tests {
     #[test]
     fn parses_goto_statements() {
         let source = "goto module_ns.part_ident;";
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
 
         let mut parser = Parser::new(&tokens);
         let stmt = GotoStmt::parse(&mut parser).expect("Failed to parse");

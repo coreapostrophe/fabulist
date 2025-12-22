@@ -46,8 +46,7 @@ mod choice_tests {
     #[test]
     fn parses_choice_without_properties() {
         let source = r#"- "Go left.""#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
@@ -63,8 +62,7 @@ mod choice_tests {
     #[test]
     fn parses_choice_with_properties() {
         let source = r#"- "Go right." { score: 10, health: 5 }"#;
-        let mut lexer = Lexer::new(source);
-        let tokens = lexer.tokenize().expect("Failed to tokenize source");
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
 
         let mut parser = Parser::new(&tokens);
         let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
