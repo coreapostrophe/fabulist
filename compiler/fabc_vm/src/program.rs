@@ -1,4 +1,4 @@
-use crate::{instructions::Instruction};
+use crate::instructions::Instruction;
 
 pub struct Program {
     store: Vec<Instruction>,
