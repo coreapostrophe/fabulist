@@ -1,9 +1,11 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Unable to cast value")]
-    UnableToCastValue,
+    #[error("Type mismatch")]
+    TypeMismatch,
     #[error("Stack underflow")]
     StackUnderflow,
-    #[error("Unexpected end of chunk")]
-    UnexpectedEndOfChunk,
+    #[error("Constant does not exist")]
+    ConstantDoesNotExist,
+    #[error("Instruction pointer out of bounds")]
+    InstructionOutOfBounds,
 }
