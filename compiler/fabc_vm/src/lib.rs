@@ -79,12 +79,8 @@ impl<'a> VirtualMachine<'a> {
             self.program_counter += 1;
 
             match instruction {
-                Instruction::LoadConstant(index) => {
-                    let constant = self
-                        .program
-                        .get_constant(*index)
-                        .ok_or(Error::ConstantDoesNotExist)?;
-                    self.stack.push(constant.clone());
+                Instruction::LoadConstant(value) => {
+                    self.stack.push(value.clone());
                 }
 
                 Instruction::Add => binary_op!(self, +),
@@ -124,6 +120,34 @@ impl<'a> VirtualMachine<'a> {
                 Instruction::Gr => binary_bool!(self, >),
                 Instruction::Geq => binary_bool!(self, >=),
 
+                Instruction::Load => {
+                    let address = self.stack.last().ok_or(Error::StackUnderflow)?;
+                    let value = match address {
+                        Value::Address(addr) => self
+                            .stack
+                            .get(*addr)
+                            .ok_or(Error::InvalidStackAddress)?
+                            .clone(),
+                        _ => return Err(Error::TypeMismatch),
+                    };
+                    let last_mut = self.stack.last_mut().ok_or(Error::StackUnderflow)?;
+                    *last_mut = value;
+                }
+                Instruction::Store => {
+                    let address = self.stack.pop().ok_or(Error::StackUnderflow)?;
+                    // TODO: Consider popping as a future optimization
+                    let value = self.stack.last().ok_or(Error::StackUnderflow)?.clone();
+
+                    match address {
+                        Value::Address(addr) => {
+                            let slot =
+                                self.stack.get_mut(addr).ok_or(Error::InvalidStackAddress)?;
+                            *slot = value;
+                        }
+                        _ => return Err(Error::TypeMismatch),
+                    }
+                }
+
                 Instruction::Halt => {
                     break 'runtime;
                 }
@@ -149,11 +173,8 @@ mod vm_tests {
 
     #[test]
     fn load_constant_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Halt,
         ]);
 
@@ -168,13 +189,9 @@ mod vm_tests {
 
     #[test]
     fn add_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(10));
-        let const_index2 = program.add_constant(Value::Number(32));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(10)),
+            Instruction::LoadConstant(Value::Number(32)),
             Instruction::Add,
             Instruction::Halt,
         ]);
@@ -190,13 +207,9 @@ mod vm_tests {
 
     #[test]
     fn sub_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(100));
-        let const_index2 = program.add_constant(Value::Number(58));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(100)),
+            Instruction::LoadConstant(Value::Number(58)),
             Instruction::Sub,
             Instruction::Halt,
         ]);
@@ -212,13 +225,9 @@ mod vm_tests {
 
     #[test]
     fn mul_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(6));
-        let const_index2 = program.add_constant(Value::Number(7));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(6)),
+            Instruction::LoadConstant(Value::Number(7)),
             Instruction::Mul,
             Instruction::Halt,
         ]);
@@ -234,13 +243,9 @@ mod vm_tests {
 
     #[test]
     fn div_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(84));
-        let const_index2 = program.add_constant(Value::Number(2));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(84)),
+            Instruction::LoadConstant(Value::Number(2)),
             Instruction::Div,
             Instruction::Halt,
         ]);
@@ -256,13 +261,9 @@ mod vm_tests {
 
     #[test]
     fn mod_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(85));
-        let const_index2 = program.add_constant(Value::Number(43));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(85)),
+            Instruction::LoadConstant(Value::Number(43)),
             Instruction::Mod,
             Instruction::Halt,
         ]);
@@ -278,13 +279,9 @@ mod vm_tests {
 
     #[test]
     fn and_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Boolean(true));
-        let const_index2 = program.add_constant(Value::Boolean(false));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Boolean(true)),
+            Instruction::LoadConstant(Value::Boolean(false)),
             Instruction::And,
             Instruction::Halt,
         ]);
@@ -300,13 +297,9 @@ mod vm_tests {
 
     #[test]
     fn or_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Boolean(true));
-        let const_index2 = program.add_constant(Value::Boolean(false));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Boolean(true)),
+            Instruction::LoadConstant(Value::Boolean(false)),
             Instruction::Or,
             Instruction::Halt,
         ]);
@@ -322,13 +315,9 @@ mod vm_tests {
 
     #[test]
     fn eq_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(42));
-        let const_index2 = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Eq,
             Instruction::Halt,
         ]);
@@ -344,13 +333,9 @@ mod vm_tests {
 
     #[test]
     fn neq_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(42));
-        let const_index2 = program.add_constant(Value::Number(43));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
+            Instruction::LoadConstant(Value::Number(43)),
             Instruction::Neq,
             Instruction::Halt,
         ]);
@@ -366,13 +351,9 @@ mod vm_tests {
 
     #[test]
     fn le_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(41));
-        let const_index2 = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(41)),
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Le,
             Instruction::Halt,
         ]);
@@ -388,13 +369,9 @@ mod vm_tests {
 
     #[test]
     fn leq_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(42));
-        let const_index2 = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Leq,
             Instruction::Halt,
         ]);
@@ -410,13 +387,9 @@ mod vm_tests {
 
     #[test]
     fn gr_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(43));
-        let const_index2 = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(43)),
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Gr,
             Instruction::Halt,
         ]);
@@ -432,13 +405,9 @@ mod vm_tests {
 
     #[test]
     fn geq_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index1 = program.add_constant(Value::Number(42));
-        let const_index2 = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index1),
-            Instruction::LoadConstant(const_index2),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Geq,
             Instruction::Halt,
         ]);
@@ -454,11 +423,8 @@ mod vm_tests {
 
     #[test]
     fn neg_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index = program.add_constant(Value::Number(42));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)),
             Instruction::Neg,
             Instruction::Halt,
         ]);
@@ -474,11 +440,8 @@ mod vm_tests {
 
     #[test]
     fn not_instruction_works() {
-        let mut program = Program::new(vec![]);
-        let const_index = program.add_constant(Value::Boolean(true));
-
-        program.write_instructions(vec![
-            Instruction::LoadConstant(const_index),
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Boolean(true)),
             Instruction::Not,
             Instruction::Halt,
         ]);
@@ -489,6 +452,43 @@ mod vm_tests {
         match &vm.stack[0] {
             Value::Boolean(b) => assert!(!*b),
             _ => panic!("Expected Boolean value"),
+        }
+    }
+
+    #[test]
+    fn load_instruction_works() {
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(42)), // Push 42 onto the stack
+            Instruction::LoadConstant(Value::Address(0)), // Push address 0 onto the stack
+            Instruction::Load,                            // Load value at address 0 (first 42)
+            Instruction::Halt,
+        ]);
+
+        let vm = VirtualMachine::interpret(&program).expect("Failed to interpret program");
+        assert_eq!(vm.stack.len(), 2);
+
+        match &vm.stack[1] {
+            Value::Number(n) => assert_eq!(*n, 42),
+            _ => panic!("Expected Number value"),
+        }
+    }
+
+    #[test]
+    fn store_instruction_works() {
+        let program = Program::new(vec![
+            Instruction::LoadConstant(Value::Number(0)), // Push  0 onto the stack
+            Instruction::LoadConstant(Value::Number(42)), // Push 42 onto the stack
+            Instruction::LoadConstant(Value::Address(0)), // Push address 0 onto the stack
+            Instruction::Store,                          // Store 42 at address 0
+            Instruction::Halt,
+        ]);
+
+        let vm = VirtualMachine::interpret(&program).expect("Failed to interpret program");
+        assert_eq!(vm.stack.len(), 2);
+
+        match &vm.stack[0] {
+            Value::Number(n) => assert_eq!(*n, 42),
+            _ => panic!("Expected Number value"),
         }
     }
 }

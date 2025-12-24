@@ -1,5 +1,7 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Invalid stack address")]
+    InvalidStackAddress,
     #[error("Type mismatch")]
     TypeMismatch,
     #[error("Stack underflow")]

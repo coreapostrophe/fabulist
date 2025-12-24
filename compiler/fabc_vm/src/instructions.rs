@@ -1,5 +1,9 @@
+use crate::value::Value;
+
 pub enum Instruction {
-    LoadConstant(usize),
+    LoadConstant(Value),
+    Load,
+    Store,
 
     Add,
     Mul,
