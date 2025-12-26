@@ -11,7 +11,9 @@ pub struct Dialogue {
 }
 
 impl Parsable for Dialogue {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         let speaker =
             parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
                 expect_token!(parser, TokenKind::Identifier, "speaker identifier")

@@ -9,7 +9,7 @@ pub struct LetStmt {
 }
 
 impl Parsable for LetStmt {
-    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Let))?;
 
         let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;

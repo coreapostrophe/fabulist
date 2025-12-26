@@ -10,7 +10,9 @@ pub struct FunctionStmt {
 }
 
 impl Parsable for FunctionStmt {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Fn))?;
 
         let name = expect_token!(parser, TokenKind::Identifier, "function name")?;

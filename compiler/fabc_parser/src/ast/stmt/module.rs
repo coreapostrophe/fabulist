@@ -9,7 +9,9 @@ pub struct ModuleStmt {
 }
 
 impl Parsable for ModuleStmt {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Module))?;
 
         let path = expect_token!(parser, TokenKind::String, "module string path")?;

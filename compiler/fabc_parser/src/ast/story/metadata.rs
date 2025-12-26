@@ -13,7 +13,9 @@ pub struct Metadata {
 }
 
 impl Parsable for Metadata {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Story))?;
 
         let map = ObjectDecl::parse(parser)?.map;

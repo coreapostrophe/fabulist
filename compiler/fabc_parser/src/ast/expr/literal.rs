@@ -11,7 +11,7 @@ pub enum Literal {
 }
 
 impl Parsable for Literal {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut crate::Parser<'src, 'tok>) -> Result<Self, Error> {
         match parser.advance() {
             TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
             TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),

@@ -14,7 +14,9 @@ pub struct Narration {
 }
 
 impl Parsable for Narration {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Asterisk)?;
 
         let text = expect_token!(parser, TokenKind::String, "string literal")?;

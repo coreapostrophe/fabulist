@@ -8,7 +8,7 @@ pub struct BlockStmt {
 }
 
 impl Parsable for BlockStmt {
-    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
         let mut statements = Vec::new();
 
         parser.consume(TokenKind::LeftBrace)?;

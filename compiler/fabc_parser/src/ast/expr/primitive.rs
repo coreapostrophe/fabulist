@@ -25,7 +25,7 @@ pub enum Primitive {
 }
 
 impl Parsable for Primitive {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut crate::Parser<'src, 'tok>) -> Result<Self, Error> {
         if parser.is_at_end() {
             return Err(Error::UnexpectedEndOfInput);
         }

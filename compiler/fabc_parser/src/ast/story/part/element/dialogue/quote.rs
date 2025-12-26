@@ -14,7 +14,9 @@ pub struct Quote {
 }
 
 impl Parsable for Quote {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Greater)?;
 
         let text = expect_token!(parser, TokenKind::String, "quote text")?;

@@ -10,7 +10,9 @@ pub struct Selection {
 }
 
 impl Parsable for Selection {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         let mut choices = Vec::new();
         while parser.peek() == &TokenKind::Minus {
             let choice = Choice::parse(parser)?;

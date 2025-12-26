@@ -19,7 +19,9 @@ pub struct Story {
 }
 
 impl Parsable for Story {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         let modules = if parser.peek() == &TokenKind::Keyword(KeywordKind::Module) {
             let mut mods = Vec::new();
             while parser.peek() == &TokenKind::Keyword(KeywordKind::Module) {
@@ -89,7 +91,6 @@ mod story_tests {
                 description: "This is a test story."
             }
         "#;
-
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let story = Parser::parse::<Story>(&tokens).expect("Failed to parse story");
 
@@ -116,7 +117,6 @@ mod story_tests {
             ]),
             parts: vec![],
         };
-
         assert_eq!(story, expected);
     }
 
@@ -202,7 +202,6 @@ mod story_tests {
                 ],
             }],
         };
-
         assert_eq!(story, expected);
     }
 }

@@ -3,6 +3,7 @@ use std::slice;
 use fabc_lexer::{
     keywords::KeywordKind,
     tokens::{Token, TokenKind},
+    Lexer,
 };
 
 use crate::error::Error;
@@ -15,17 +16,32 @@ pub trait Parsable
 where
     Self: Sized,
 {
-    fn parse(parser: &mut Parser) -> Result<Self, Error>;
+    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error>;
 }
 
-pub struct Parser<'a> {
-    tokens: &'a Vec<Token<'a>>,
+pub struct Parser<'src, 'tok> {
+    tokens: &'tok [Token<'src>],
     current: usize,
     save: Option<usize>,
 }
 
-impl<'a> Parser<'a> {
-    pub fn parse<T>(tokens: &'a Vec<Token<'a>>) -> Result<T, Error>
+impl<'src, 'tok> Parser<'src, 'tok> {
+    pub fn parse_str<T>(source: &str) -> Result<T, Error>
+    where
+        T: Parsable,
+    {
+        let tokens = Lexer::tokenize(source)?;
+
+        let mut parser = Parser {
+            tokens: &tokens,
+            current: 0,
+            save: None,
+        };
+
+        T::parse(&mut parser)
+    }
+
+    pub fn parse<T>(tokens: &'tok [Token<'src>]) -> Result<T, Error>
     where
         T: Parsable,
     {
@@ -38,7 +54,7 @@ impl<'a> Parser<'a> {
         T::parse(&mut parser)
     }
 
-    fn r#match(&mut self, expected: &[TokenKind<'a>]) -> bool {
+    fn r#match(&mut self, expected: &[TokenKind<'src>]) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -50,18 +66,18 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn previous(&self) -> &TokenKind<'a> {
+    fn previous(&self) -> &TokenKind<'src> {
         &self.tokens[self.current - 1].kind
     }
 
-    fn peek(&self) -> &TokenKind<'a> {
+    fn peek(&self) -> &TokenKind<'src> {
         if self.is_at_end() {
             return &TokenKind::EoF;
         }
         &self.tokens[self.current].kind
     }
 
-    fn advance(&mut self) -> &TokenKind<'a> {
+    fn advance(&mut self) -> &TokenKind<'src> {
         if !self.is_at_end() {
             self.current += 1;
         }
@@ -70,12 +86,12 @@ impl<'a> Parser<'a> {
 
     fn enclosed<F, T>(
         &mut self,
-        start: TokenKind<'a>,
-        end: TokenKind<'a>,
+        start: TokenKind<'src>,
+        end: TokenKind<'src>,
         parser_fn: F,
     ) -> Result<T, Error>
     where
-        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         self.consume(start)?;
         let result = parser_fn(self)?;
@@ -85,13 +101,13 @@ impl<'a> Parser<'a> {
 
     fn punctuated<F, T>(
         &mut self,
-        start: TokenKind<'a>,
-        end: TokenKind<'a>,
-        delimiter: TokenKind<'a>,
+        start: TokenKind<'src>,
+        end: TokenKind<'src>,
+        delimiter: TokenKind<'src>,
         parser_fn: F,
     ) -> Result<Vec<T>, Error>
     where
-        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         self.enclosed(start, end.clone(), |parser| {
             let mut items = Vec::new();
@@ -109,7 +125,7 @@ impl<'a> Parser<'a> {
 
     fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
     where
-        F: Fn(&mut Parser<'a>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         self.save = Some(self.current);
 
@@ -125,7 +141,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn consume(&mut self, expected: TokenKind<'a>) -> Result<&TokenKind<'a>, Error> {
+    fn consume(&mut self, expected: TokenKind<'src>) -> Result<&TokenKind<'src>, Error> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
@@ -174,18 +190,18 @@ mod tests {
     #[test]
     fn parses_simple_story() {
         let source = fabc_reg_test::SIMPLE_STORY;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-        let ast = Parser::parse::<Story>(&tokens);
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let story = Parser::parse::<Story>(&tokens);
 
-        assert!(ast.is_ok());
+        assert!(story.is_ok());
     }
 
     #[test]
     fn parses_complex_story() {
         let source = fabc_reg_test::COMPLEX_STORY;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-        let ast = Parser::parse::<Story>(&tokens);
+        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let story = Parser::parse::<Story>(&tokens);
 
-        assert!(ast.is_ok());
+        assert!(story.is_ok());
     }
 }

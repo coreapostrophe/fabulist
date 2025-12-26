@@ -35,7 +35,7 @@ pub enum Stmt {
 }
 
 impl Parsable for Stmt {
-    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
         match parser.peek() {
             TokenKind::Keyword(KeywordKind::Fn) => Ok(Stmt::Function(FunctionStmt::parse(parser)?)),
             TokenKind::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),

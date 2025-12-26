@@ -115,7 +115,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn assignment(parser: &mut Parser) -> Result<Expr, Error> {
+    pub fn assignment(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::logical(parser)?;
 
         if parser.r#match(&[TokenKind::Equal]) {
@@ -129,7 +129,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn logical(parser: &mut Parser) -> Result<Expr, Error> {
+    fn logical(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::equality(parser)?;
 
         while parser.r#match(&[
@@ -151,7 +151,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn equality(parser: &mut Parser) -> Result<Expr, Error> {
+    fn equality(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::comparison(parser)?;
 
         while parser.r#match(&[TokenKind::BangEqual, TokenKind::EqualEqual]) {
@@ -167,7 +167,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn comparison(parser: &mut Parser) -> Result<Expr, Error> {
+    fn comparison(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::term(parser)?;
 
         while parser.r#match(&[
@@ -188,7 +188,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn term(parser: &mut Parser) -> Result<Expr, Error> {
+    fn term(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::factor(parser)?;
 
         while parser.r#match(&[TokenKind::Minus, TokenKind::Plus]) {
@@ -204,7 +204,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn factor(parser: &mut Parser) -> Result<Expr, Error> {
+    fn factor(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::unary(parser)?;
 
         while parser.r#match(&[TokenKind::Slash, TokenKind::Asterisk]) {
@@ -220,7 +220,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn unary(parser: &mut Parser) -> Result<Expr, Error> {
+    fn unary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         if parser.r#match(&[TokenKind::Bang, TokenKind::Minus]) {
             let operator = UnaryOperator::try_from(parser.previous())?;
             let right = Self::unary(parser)?;
@@ -233,7 +233,7 @@ impl Expr {
         Self::member_access(parser)
     }
 
-    fn member_access(parser: &mut Parser) -> Result<Expr, Error> {
+    fn member_access(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::call(parser)?;
 
         if parser.r#match(&[TokenKind::Dot]) {
@@ -257,7 +257,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn call(parser: &mut Parser) -> Result<Expr, Error> {
+    fn call(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let mut expr = Self::primary(parser)?;
 
         if parser.peek() == &TokenKind::LeftParen {
@@ -276,7 +276,7 @@ impl Expr {
         Ok(expr)
     }
 
-    fn primary(parser: &mut Parser) -> Result<Expr, Error> {
+    fn primary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         if parser.is_at_end() {
             return Err(Error::UnexpectedEndOfInput);
         }
@@ -304,7 +304,7 @@ impl Expr {
 }
 
 impl Parsable for Expr {
-    fn parse(parser: &mut Parser) -> Result<Self, Error> {
+    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
         Self::assignment(parser)
     }
 }

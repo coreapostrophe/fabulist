@@ -36,8 +36,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
-                let _ast = Parser::parse::<Story>(&tokens).unwrap();
+                let _ast = Parser::parse_str::<Story>(black_box(source)).unwrap();
             })
         },
     );
@@ -47,8 +46,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
-                let _ast = Parser::parse::<Story>(&tokens).unwrap();
+                let _ast = Parser::parse_str::<Story>(black_box(source)).unwrap();
             })
         },
     );

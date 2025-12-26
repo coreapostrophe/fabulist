@@ -19,7 +19,9 @@ pub struct IfStmt {
 }
 
 impl Parsable for IfStmt {
-    fn parse(parser: &mut crate::Parser) -> Result<Self, crate::error::Error> {
+    fn parse<'src, 'tok>(
+        parser: &mut crate::Parser<'src, 'tok>,
+    ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::If))?;
 
         let condition = parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
