@@ -8,8 +8,6 @@ license.workspace = true
 [dependencies]
 thiserror.workspace = true
 
-fabc_lexer = { path = "../fabc_lexer" }
-fabc_parser = { path = "../fabc_parser" }
 fabc_vm = { path = "../fabc_vm" }
 
 [lib]

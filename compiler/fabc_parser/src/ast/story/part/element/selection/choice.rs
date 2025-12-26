@@ -40,16 +40,14 @@ mod choice_tests {
             expr::{literal::Literal, Expr, Primary},
             story::part::element::selection::choice::Choice,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_choice_without_properties() {
         let source = r#"- "Go left.""#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
+        let choice = Parser::parse::<Choice>(&tokens).expect("Failed to parse choice");
 
         let expected = Choice {
             text: "Go left.".to_string(),
@@ -63,9 +61,7 @@ mod choice_tests {
     fn parses_choice_with_properties() {
         let source = r#"- "Go right." { score: 10, health: 5 }"#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let choice = Choice::parse(&mut parser).expect("Failed to parse choice");
+        let choice = Parser::parse::<Choice>(&tokens).expect("Failed to parse choice");
 
         let expected = Choice {
             text: "Go right.".to_string(),

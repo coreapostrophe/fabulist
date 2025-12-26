@@ -27,39 +27,33 @@ impl Parsable for Literal {
 mod literal_tests {
     use fabc_lexer::Lexer;
 
-    use crate::{ast::expr::literal::Literal, Parsable, Parser};
+    use crate::{ast::expr::literal::Literal, Parser};
 
     #[test]
     fn parses_literals() {
         let source = "42";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Number(42.0));
+        let literal = Parser::parse::<Literal>(&tokens).expect("Failed to parse literal");
+        assert_eq!(literal, Literal::Number(42.0));
 
         let source = "\"hello\"";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(
-            Literal::parse(&mut parser).unwrap(),
-            Literal::String("hello".to_string())
-        );
+        let literal = Parser::parse::<Literal>(&tokens).expect("Failed to parse literal");
+        assert_eq!(literal, Literal::String("hello".to_string()));
 
         let source = "true";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::Boolean(true));
+        let literal = Parser::parse::<Literal>(&tokens).expect("Failed to parse literal");
+        assert_eq!(literal, Literal::Boolean(true));
 
         let source = "false";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(
-            Literal::parse(&mut parser).unwrap(),
-            Literal::Boolean(false)
-        );
+        let literal = Parser::parse::<Literal>(&tokens).expect("Failed to parse literal");
+        assert_eq!(literal, Literal::Boolean(false));
 
         let source = "none";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(Literal::parse(&mut parser).unwrap(), Literal::None);
+        let literal = Parser::parse::<Literal>(&tokens).expect("Failed to parse literal");
+        assert_eq!(literal, Literal::None);
     }
 }

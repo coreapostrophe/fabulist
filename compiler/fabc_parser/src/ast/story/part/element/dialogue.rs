@@ -38,7 +38,7 @@ mod dialogue_tests {
             expr::{literal::Literal, Expr, Primary},
             story::part::element::dialogue::{quote::Quote, Dialogue},
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
@@ -49,9 +49,7 @@ mod dialogue_tests {
             > "How are you?" { emotion: "curious" }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let dialogue = Dialogue::parse(&mut parser).expect("Failed to parse dialogue");
+        let dialogue = Parser::parse::<Dialogue>(&tokens).expect("Failed to parse dialogue");
 
         let expected = Dialogue {
             speaker: "narrator".to_string(),

@@ -24,16 +24,15 @@ mod expr_stmt_tests {
             expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::expr::ExprStmt,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_expr_statements() {
         let source = "x + 1;";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let expr_stmt = Parser::parse::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
 
-        let mut parser = Parser::new(&tokens);
-        let stmt = ExprStmt::parse(&mut parser).expect("Failed to parse");
         let expected = ExprStmt {
             expr: Expr::Binary {
                 left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
@@ -43,7 +42,6 @@ mod expr_stmt_tests {
                 right: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
             },
         };
-
-        assert_eq!(stmt, expected);
+        assert_eq!(expr_stmt, expected);
     }
 }

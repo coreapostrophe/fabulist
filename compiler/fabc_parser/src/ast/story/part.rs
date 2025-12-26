@@ -42,7 +42,7 @@ mod part_tests {
             element::{narration::Narration, Element},
             Part,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
@@ -52,9 +52,7 @@ mod part_tests {
             * "This is a narration."
         "##;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let part = Part::parse(&mut parser).expect("Failed to parse part");
+        let part = Parser::parse::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
             id: "intro".to_string(),

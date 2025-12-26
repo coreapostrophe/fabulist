@@ -33,22 +33,20 @@ mod let_stmt_tests {
             expr::{literal::Literal, Expr, Primary},
             stmt::r#let::LetStmt,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_let_statements() {
         let source = "let x = 42;";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let stmt = LetStmt::parse(&mut parser).expect("Failed to parse");
+        let let_stmt = Parser::parse::<LetStmt>(&tokens).expect("Failed to parse");
 
         let expected = LetStmt {
             name: "x".to_string(),
             initializer: Expr::Primary(Primary::Literal(Literal::Number(42.0))),
         };
 
-        assert_eq!(stmt, expected);
+        assert_eq!(let_stmt, expected);
     }
 }

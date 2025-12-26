@@ -42,7 +42,7 @@ mod function_stmt_tests {
             expr::{primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, function::FunctionStmt, Stmt},
         },
-        Parsable, Parser,
+        Parser,
     };
     use fabc_lexer::Lexer;
 
@@ -50,9 +50,8 @@ mod function_stmt_tests {
     fn parses_function_stmt() {
         let source = "fn add(a, b) { a + b; }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let function_stmt = FunctionStmt::parse(&mut parser).expect("Failed to parse");
+        let function_stmt =
+            Parser::parse::<FunctionStmt>(&tokens).expect("Failed to parse function statement");
 
         assert_eq!(
             function_stmt,

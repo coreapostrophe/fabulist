@@ -33,16 +33,15 @@ mod block_stmt_tests {
             expr::{literal::Literal, Expr, Primary},
             stmt::{block::BlockStmt, r#let::LetStmt, Stmt},
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_block_statements() {
         let source = "{ let a = 1; let b = 2; }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let stmt = BlockStmt::parse(&mut parser).expect("Failed to parse");
+        let block_stmt =
+            Parser::parse::<BlockStmt>(&tokens).expect("Failed to parse block statement");
 
         let expected = BlockStmt {
             statements: vec![
@@ -56,7 +55,6 @@ mod block_stmt_tests {
                 }),
             ],
         };
-
-        assert_eq!(stmt, expected);
+        assert_eq!(block_stmt, expected);
     }
 }

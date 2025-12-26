@@ -99,24 +99,21 @@ mod primitive_tests {
             expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, Stmt},
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_basic_primitives() {
         let source = "foo";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(
-            Primitive::parse(&mut parser).unwrap(),
-            Primitive::Identifier("foo".to_string())
-        );
+        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        assert_eq!(primitive, Primitive::Identifier("foo".to_string()));
 
         let source = "(x)";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
+        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
         assert_eq!(
-            Primitive::parse(&mut parser).unwrap(),
+            primitive,
             Primitive::Grouping(Box::new(Expr::Primary(Primary::Primitive(
                 Primitive::Identifier("x".to_string())
             ))))
@@ -124,17 +121,15 @@ mod primitive_tests {
 
         let source = "context";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-        assert_eq!(Primitive::parse(&mut parser).unwrap(), Primitive::Context);
+        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        assert_eq!(primitive, Primitive::Context);
     }
 
     #[test]
     fn parses_object_primitive() {
         let source = "{ key1: 42, key2: true }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
+        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Object({
             let mut map = HashMap::new();
@@ -155,9 +150,7 @@ mod primitive_tests {
     fn parses_closure_primitive() {
         let source = "(x, y) => { x + y; }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let primitive = Primitive::parse(&mut parser).expect("Failed to parse");
+        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Closure {
             params: vec!["x".to_string(), "y".to_string()],

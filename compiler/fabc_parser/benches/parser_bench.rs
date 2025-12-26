@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use fabc_lexer::Lexer;
-use fabc_parser::Parser;
+use fabc_parser::{ast::story::Story, Parser};
 
 fn parser_performance(c: &mut Criterion) {
     let source = fabc_reg_test::SIMPLE_STORY;
@@ -12,8 +12,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_simple_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let mut parser = Parser::new(black_box(tokens));
-            let _ast = parser.parse().unwrap();
+            let _ast = Parser::parse::<Story>(black_box(tokens)).unwrap();
         })
     });
 
@@ -22,8 +21,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_complex_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let mut parser = Parser::new(black_box(tokens));
-            let _ast = parser.parse().unwrap();
+            let _ast = Parser::parse::<Story>(black_box(tokens)).unwrap();
         })
     });
 
@@ -39,8 +37,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         |b, source| {
             b.iter(|| {
                 let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
-                let mut parser = Parser::new(&tokens);
-                let _ast = parser.parse().unwrap();
+                let _ast = Parser::parse::<Story>(&tokens).unwrap();
             })
         },
     );
@@ -51,8 +48,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         |b, source| {
             b.iter(|| {
                 let tokens = Lexer::tokenize(black_box(source)).expect("Failed to tokenize source");
-                let mut parser = Parser::new(&tokens);
-                let _ast = parser.parse().unwrap();
+                let _ast = Parser::parse::<Story>(&tokens).unwrap();
             })
         },
     );

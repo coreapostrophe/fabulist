@@ -38,7 +38,7 @@ mod object_decl_tests {
 
     use fabc_lexer::Lexer;
 
-    use crate::{ast::decl::object::ObjectDecl, Parsable, Parser};
+    use crate::{ast::decl::object::ObjectDecl, Parser};
 
     #[test]
     fn parses_object_decl() {
@@ -49,10 +49,8 @@ mod object_decl_tests {
             }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
         let object_decl =
-            ObjectDecl::parse(&mut parser).expect("Failed to parse object declaration");
+            Parser::parse::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 
         let expected = ObjectDecl {
             map: {

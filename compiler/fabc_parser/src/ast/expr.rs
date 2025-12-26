@@ -317,16 +317,14 @@ mod expr_tests {
         ast::expr::{
             literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_arithmetic_binary_expr() {
         let source = "1 + 2 * 3 / 4";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             left: Box::new(Expr::Primary(Primary::Literal(Literal::Number(1.0)))),
@@ -349,9 +347,7 @@ mod expr_tests {
     fn parses_equality_expr() {
         let source = "10 == 20 != 30";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             left: Box::new(Expr::Binary {
@@ -370,9 +366,7 @@ mod expr_tests {
     fn parses_comparison_expr() {
         let source = "5 > 3 < 9 >= 2 <= 10";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             left: Box::new(Expr::Binary {
@@ -399,9 +393,7 @@ mod expr_tests {
     fn parses_call_expr() {
         let source = "func(arg1, arg2)";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Call {
             callee: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
@@ -424,9 +416,7 @@ mod expr_tests {
     fn parses_member_access_expr() {
         let source = "obj.prop1.prop2";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::MemberAccess {
             left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
@@ -449,9 +439,7 @@ mod expr_tests {
     fn parses_unary_expr() {
         let source = "-!42";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Unary {
             operator: UnaryOperator::Negate,
@@ -468,9 +456,7 @@ mod expr_tests {
     fn parses_logical_expr() {
         let source = "true and false or true";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             left: Box::new(Expr::Binary {
@@ -489,9 +475,7 @@ mod expr_tests {
     fn parses_assignment_expr() {
         let source = "x = 10 + 20";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let expr = Expr::parse(&mut parser).expect("Failed to parse");
+        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Assignment {
             name: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(

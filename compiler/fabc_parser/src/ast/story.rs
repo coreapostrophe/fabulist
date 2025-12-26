@@ -76,7 +76,7 @@ mod story_tests {
                 Story,
             },
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
@@ -91,9 +91,7 @@ mod story_tests {
         "#;
 
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let story = Story::parse(&mut parser).expect("Failed to parse story");
+        let story = Parser::parse::<Story>(&tokens).expect("Failed to parse story");
 
         let expected = Story {
             metadata: Some({
@@ -140,9 +138,7 @@ mod story_tests {
                 - "Go right." { score: 5 }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let story = Story::parse(&mut parser).expect("Failed to parse story");
+        let story = Parser::parse::<Story>(&tokens).expect("Failed to parse story");
 
         let expected = Story {
             metadata: Some({

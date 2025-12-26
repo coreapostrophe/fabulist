@@ -33,7 +33,7 @@ mod metadata_tests {
             expr::{literal::Literal, Expr, Primary},
             story::metadata::Metadata,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
@@ -44,9 +44,7 @@ mod metadata_tests {
             }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let mut parser = Parser::new(&tokens);
-
-        let metadata = Metadata::parse(&mut parser).expect("Failed to parse metadata");
+        let metadata = Parser::parse::<Metadata>(&tokens).expect("Failed to parse metadata");
 
         let expected_map = {
             let mut map = HashMap::new();

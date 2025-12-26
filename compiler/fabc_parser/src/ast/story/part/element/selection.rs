@@ -32,7 +32,7 @@ mod selection_tests {
             expr::{literal::Literal, Expr, Primary},
             story::part::element::selection::{choice::Choice, Selection},
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
@@ -42,9 +42,7 @@ mod selection_tests {
             - "Go right." { score: 5 }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let selection = Selection::parse(&mut parser).expect("Failed to parse selection");
+        let selection = Parser::parse::<Selection>(&tokens).expect("Failed to parse selection");
 
         let expected = Selection {
             choices: vec![

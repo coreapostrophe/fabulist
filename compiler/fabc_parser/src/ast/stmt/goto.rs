@@ -29,16 +29,14 @@ mod goto_stmt_tests {
             expr::{primitive::Primitive, Expr, Primary},
             stmt::goto::GotoStmt,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_goto_statements() {
         let source = "goto module_ns.part_ident;";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-
-        let mut parser = Parser::new(&tokens);
-        let stmt = GotoStmt::parse(&mut parser).expect("Failed to parse");
+        let goto_stmt = Parser::parse::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
 
         let expected = GotoStmt {
             target: Box::new(Expr::MemberAccess {
@@ -51,6 +49,6 @@ mod goto_stmt_tests {
             }),
         };
 
-        assert_eq!(stmt, expected);
+        assert_eq!(goto_stmt, expected);
     }
 }

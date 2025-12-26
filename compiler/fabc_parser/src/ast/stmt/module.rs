@@ -34,15 +34,14 @@ impl Parsable for ModuleStmt {
 mod module_stmt_tests {
     use fabc_lexer::Lexer;
 
-    use crate::{ast::stmt::module::ModuleStmt, Parsable};
+    use crate::{ast::stmt::module::ModuleStmt, Parser};
 
     #[test]
     fn parses_module_stmt_without_alias() {
         let source = r#"module "my/module/path";"#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = crate::Parser::new(&tokens);
-        let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");
+        let module_stmt =
+            Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {
             path: "my/module/path".to_string(),
@@ -56,9 +55,8 @@ mod module_stmt_tests {
     fn parses_module_stmt_with_alias() {
         let source = r#"module "my/module/path" as my_alias;"#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = crate::Parser::new(&tokens);
-        let module_stmt = ModuleStmt::parse(&mut parser).expect("Failed to parse module statement");
+        let module_stmt =
+            Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {
             path: "my/module/path".to_string(),

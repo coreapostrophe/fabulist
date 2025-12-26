@@ -38,16 +38,14 @@ mod narration_tests {
             expr::{primitive::Primitive, Expr, Primary},
             story::part::element::narration::Narration,
         },
-        Parsable, Parser,
+        Parser,
     };
 
     #[test]
     fn parses_narration_without_properties() {
         let source = "* \"This is a narration.\"";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let narration = Narration::parse(&mut parser).expect("Failed to parse narration");
+        let narration = Parser::parse::<Narration>(&tokens).expect("Failed to parse narration");
 
         let expected = Narration {
             text: "This is a narration.".to_string(),
@@ -61,9 +59,7 @@ mod narration_tests {
     fn parses_narration_with_properties() {
         let source = "* \"This is a narration.\" { mood: happy, volume: loud }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-
-        let mut parser = Parser::new(&tokens);
-        let narration = Narration::parse(&mut parser).expect("Failed to parse narration");
+        let narration = Parser::parse::<Narration>(&tokens).expect("Failed to parse narration");
 
         let expected = Narration {
             text: "This is a narration.".to_string(),

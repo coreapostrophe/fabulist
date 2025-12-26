@@ -5,7 +5,7 @@ use fabc_lexer::{
     tokens::{Token, TokenKind},
 };
 
-use crate::{ast::story::Story, error::Error};
+use crate::error::Error;
 
 pub mod ast;
 pub mod error;
@@ -25,16 +25,17 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a Vec<Token<'a>>) -> Self {
-        Self {
+    pub fn parse<T>(tokens: &'a Vec<Token<'a>>) -> Result<T, Error>
+    where
+        T: Parsable,
+    {
+        let mut parser = Self {
             tokens,
             current: 0,
             save: None,
-        }
-    }
+        };
 
-    pub fn parse(&mut self) -> Result<Story, Error> {
-        Story::parse(self)
+        T::parse(&mut parser)
     }
 
     fn r#match(&mut self, expected: &[TokenKind<'a>]) -> bool {
@@ -168,15 +169,13 @@ impl<'a> Parser<'a> {
 mod tests {
     use fabc_lexer::Lexer;
 
-    use crate::Parser;
+    use crate::{ast::story::Story, Parser};
 
     #[test]
     fn parses_simple_story() {
         let source = fabc_reg_test::SIMPLE_STORY;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-
-        let mut parser = Parser::new(&tokens);
-        let ast = parser.parse();
+        let ast = Parser::parse::<Story>(&tokens);
 
         assert!(ast.is_ok());
     }
@@ -185,9 +184,7 @@ mod tests {
     fn parses_complex_story() {
         let source = fabc_reg_test::COMPLEX_STORY;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-
-        let mut parser = Parser::new(&tokens);
-        let ast = parser.parse();
+        let ast = Parser::parse::<Story>(&tokens);
 
         assert!(ast.is_ok());
     }
