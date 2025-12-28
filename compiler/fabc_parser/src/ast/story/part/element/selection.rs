@@ -1,12 +1,10 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::story::part::element::selection::choice::Choice, Parsable};
-
-pub mod choice;
+use crate::{ast::decl::quote::QuoteDecl, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct Selection {
-    pub choices: Vec<Choice>,
+    pub choices: Vec<QuoteDecl>,
 }
 
 impl Parsable for Selection {
@@ -14,8 +12,9 @@ impl Parsable for Selection {
         parser: &mut crate::Parser<'src, 'tok>,
     ) -> Result<Self, crate::error::Error> {
         let mut choices = Vec::new();
+
         while parser.peek() == &TokenKind::Minus {
-            let choice = Choice::parse(parser)?;
+            let choice = parser.prefixed(TokenKind::Minus, |parser| QuoteDecl::parse(parser))?;
             choices.push(choice);
         }
 
@@ -31,8 +30,9 @@ mod selection_tests {
 
     use crate::{
         ast::{
+            decl::quote::QuoteDecl,
             expr::{literal::Literal, Expr, Primary},
-            story::part::element::selection::{choice::Choice, Selection},
+            story::part::element::selection::Selection,
         },
         Parser,
     };
@@ -48,7 +48,7 @@ mod selection_tests {
 
         let expected = Selection {
             choices: vec![
-                Choice {
+                QuoteDecl {
                     text: "Go left.".to_string(),
                     properties: Some({
                         let mut map = HashMap::new();
@@ -63,7 +63,7 @@ mod selection_tests {
                         map
                     }),
                 },
-                Choice {
+                QuoteDecl {
                     text: "Go right.".to_string(),
                     properties: Some({
                         let mut map = HashMap::new();

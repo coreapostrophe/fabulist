@@ -62,16 +62,14 @@ mod story_tests {
 
     use crate::{
         ast::{
+            decl::quote::QuoteDecl,
             expr::{literal::Literal, Expr, Primary},
             stmt::module::ModuleStmt,
             story::{
                 metadata::Metadata,
                 part::{
                     element::{
-                        dialogue::{quote::Quote, Dialogue},
-                        narration::Narration,
-                        selection::{choice::Choice, Selection},
-                        Element,
+                        dialogue::Dialogue, narration::Narration, selection::Selection, Element,
                     },
                     Part,
                 },
@@ -163,11 +161,11 @@ mod story_tests {
                     Element::Dialogue(Dialogue {
                         speaker: "traveller".to_string(),
                         quotes: vec![
-                            Quote {
+                            QuoteDecl {
                                 text: "Hello there!".to_string(),
                                 properties: None,
                             },
-                            Quote {
+                            QuoteDecl {
                                 text: "Choose your path.".to_string(),
                                 properties: None,
                             },
@@ -175,7 +173,7 @@ mod story_tests {
                     }),
                     Element::Selection(Selection {
                         choices: vec![
-                            Choice {
+                            QuoteDecl {
                                 text: "Go left.".to_string(),
                                 properties: Some({
                                     let mut map = HashMap::new();
@@ -186,7 +184,7 @@ mod story_tests {
                                     map
                                 }),
                             },
-                            Choice {
+                            QuoteDecl {
                                 text: "Go right.".to_string(),
                                 properties: Some({
                                     let mut map = HashMap::new();

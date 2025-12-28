@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
-    ast::{decl::object::ObjectDecl, expr::Expr},
-    expect_token, Parsable,
+    ast::{decl::quote::QuoteDecl, expr::Expr},
+    Parsable,
 };
 
 #[derive(Debug, PartialEq)]
@@ -19,15 +19,12 @@ impl Parsable for Narration {
     ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Asterisk)?;
 
-        let text = expect_token!(parser, TokenKind::String, "string literal")?;
+        let quote = QuoteDecl::parse(parser)?;
 
-        let properties = if parser.peek() == &TokenKind::LeftBrace {
-            Some(ObjectDecl::parse(parser)?.map)
-        } else {
-            None
-        };
-
-        Ok(Narration { text, properties })
+        Ok(Narration {
+            text: quote.text,
+            properties: quote.properties,
+        })
     }
 }
 

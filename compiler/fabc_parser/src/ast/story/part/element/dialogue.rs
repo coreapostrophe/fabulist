@@ -1,13 +1,11 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::story::part::element::dialogue::quote::Quote, expect_token, Parsable};
-
-pub mod quote;
+use crate::{ast::decl::quote::QuoteDecl, expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct Dialogue {
     pub speaker: String,
-    pub quotes: Vec<Quote>,
+    pub quotes: Vec<QuoteDecl>,
 }
 
 impl Parsable for Dialogue {
@@ -21,7 +19,7 @@ impl Parsable for Dialogue {
 
         let mut quotes = Vec::new();
         while parser.peek() == &TokenKind::Greater {
-            let quote = Quote::parse(parser)?;
+            let quote = parser.prefixed(TokenKind::Greater, |parser| QuoteDecl::parse(parser))?;
             quotes.push(quote);
         }
 
@@ -37,8 +35,9 @@ mod dialogue_tests {
 
     use crate::{
         ast::{
+            decl::quote::QuoteDecl,
             expr::{literal::Literal, Expr, Primary},
-            story::part::element::dialogue::{quote::Quote, Dialogue},
+            story::part::element::dialogue::Dialogue,
         },
         Parser,
     };
@@ -56,7 +55,7 @@ mod dialogue_tests {
         let expected = Dialogue {
             speaker: "narrator".to_string(),
             quotes: vec![
-                Quote {
+                QuoteDecl {
                     text: "Hello there!".to_string(),
                     properties: Some({
                         let mut map = std::collections::HashMap::new();
@@ -71,7 +70,7 @@ mod dialogue_tests {
                         map
                     }),
                 },
-                Quote {
+                QuoteDecl {
                     text: "How are you?".to_string(),
                     properties: Some({
                         let mut map = HashMap::new();

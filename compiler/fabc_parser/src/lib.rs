@@ -84,6 +84,14 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         self.previous()
     }
 
+    fn prefixed<F, T>(&mut self, prefix: TokenKind<'src>, parser_fn: F) -> Result<T, Error>
+    where
+        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+    {
+        self.consume(prefix)?;
+        parser_fn(self)
+    }
+
     fn enclosed<F, T>(
         &mut self,
         start: TokenKind<'src>,
