@@ -6,7 +6,7 @@ use fabc_lexer::{
     Lexer,
 };
 
-use crate::error::Error;
+use crate::{ast::NodeCollection, error::Error};
 
 pub mod ast;
 pub mod error;
@@ -19,10 +19,16 @@ where
     fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error>;
 }
 
+pub struct ParserResult<T> {
+    pub ast: T,
+    pub node_collection: NodeCollection,
+}
+
 pub struct Parser<'src, 'tok> {
     tokens: &'tok [Token<'src>],
     current: usize,
     save: Option<usize>,
+    node_collection: NodeCollection,
 }
 
 impl<'src, 'tok> Parser<'src, 'tok> {
@@ -36,6 +42,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             tokens: &tokens,
             current: 0,
             save: None,
+            node_collection: NodeCollection::new(),
         };
 
         T::parse(&mut parser)
@@ -49,9 +56,29 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             tokens,
             current: 0,
             save: None,
+            node_collection: NodeCollection::new(),
         };
 
         T::parse(&mut parser)
+    }
+
+    pub fn collected_parse<T>(tokens: &'tok [Token<'src>]) -> Result<ParserResult<T>, Error>
+    where
+        T: Parsable,
+    {
+        let mut parser = Self {
+            tokens,
+            current: 0,
+            save: None,
+            node_collection: NodeCollection::new(),
+        };
+
+        let ast = T::parse(&mut parser)?;
+
+        Ok(ParserResult {
+            ast,
+            node_collection: parser.node_collection,
+        })
     }
 
     fn r#match(&mut self, expected: &[TokenKind<'src>]) -> bool {
