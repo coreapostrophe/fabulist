@@ -40,13 +40,7 @@ mod object_decl_tests {
 
     use fabc_lexer::Lexer;
 
-    use crate::{
-        ast::{
-            decl::object::ObjectDecl,
-            expr::{literal::Literal, Expr, Primary},
-        },
-        Parser,
-    };
+    use crate::{ast::decl::object::ObjectDecl, Parser};
 
     #[test]
     fn parses_object_decl() {
@@ -65,11 +59,15 @@ mod object_decl_tests {
                 let mut map = HashMap::new();
                 map.insert(
                     "key1".to_string(),
-                    Expr::Primary(Primary::Literal(Literal::String("value1".to_string()))),
+                    crate::ast::expr::Expr::Primary(crate::ast::expr::Primary::Literal(
+                        crate::ast::expr::literal::Literal::String("value1".to_string()),
+                    )),
                 );
                 map.insert(
                     "key2".to_string(),
-                    Expr::Primary(Primary::Literal(Literal::Number(42.0))),
+                    crate::ast::expr::Expr::Primary(crate::ast::expr::Primary::Literal(
+                        crate::ast::expr::literal::Literal::Number(42.0),
+                    )),
                 );
                 map
             },
