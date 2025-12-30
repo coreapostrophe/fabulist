@@ -34,6 +34,20 @@ pub enum Stmt {
     Module(ModuleStmt),
 }
 
+impl Stmt {
+    pub fn id(&self) -> usize {
+        match self {
+            Stmt::Expr(stmt) => stmt.id,
+            Stmt::Block(stmt) => stmt.id,
+            Stmt::Let(stmt) => stmt.id,
+            Stmt::Goto(stmt) => stmt.id,
+            Stmt::If(stmt) => stmt.id,
+            Stmt::Function(stmt) => stmt.id,
+            Stmt::Module(stmt) => stmt.id,
+        }
+    }
+}
+
 impl Parsable for Stmt {
     fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
         match parser.peek() {

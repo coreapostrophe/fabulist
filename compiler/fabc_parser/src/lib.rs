@@ -62,13 +62,13 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         T::parse(&mut parser)
     }
 
-    fn assign_id(&mut self) -> usize {
+    pub(crate) fn assign_id(&mut self) -> usize {
         let id = self.id_counter;
         self.id_counter += 1;
         id
     }
 
-    fn r#match(&mut self, expected: &[TokenKind<'src>]) -> bool {
+    pub(crate) fn r#match(&mut self, expected: &[TokenKind<'src>]) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -80,25 +80,29 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    fn previous(&self) -> &TokenKind<'src> {
+    pub(crate) fn previous(&self) -> &TokenKind<'src> {
         &self.tokens[self.current - 1].kind
     }
 
-    fn peek(&self) -> &TokenKind<'src> {
+    pub(crate) fn peek(&self) -> &TokenKind<'src> {
         if self.is_at_end() {
             return &TokenKind::EoF;
         }
         &self.tokens[self.current].kind
     }
 
-    fn advance(&mut self) -> &TokenKind<'src> {
+    pub(crate) fn advance(&mut self) -> &TokenKind<'src> {
         if !self.is_at_end() {
             self.current += 1;
         }
         self.previous()
     }
 
-    fn prefixed<F, T>(&mut self, prefix: TokenKind<'src>, parser_fn: F) -> Result<T, Error>
+    pub(crate) fn prefixed<F, T>(
+        &mut self,
+        prefix: TokenKind<'src>,
+        parser_fn: F,
+    ) -> Result<T, Error>
     where
         F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
@@ -106,7 +110,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         parser_fn(self)
     }
 
-    fn enclosed<F, T>(
+    pub(crate) fn enclosed<F, T>(
         &mut self,
         start: TokenKind<'src>,
         end: TokenKind<'src>,
@@ -121,7 +125,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         Ok(result)
     }
 
-    fn punctuated<F, T>(
+    pub(crate) fn punctuated<F, T>(
         &mut self,
         start: TokenKind<'src>,
         end: TokenKind<'src>,
@@ -145,7 +149,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         })
     }
 
-    fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
+    pub(crate) fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
     where
         F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
@@ -167,7 +171,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    fn consume(&mut self, expected: TokenKind<'src>) -> Result<&TokenKind<'src>, Error> {
+    pub(crate) fn consume(&mut self, expected: TokenKind<'src>) -> Result<&TokenKind<'src>, Error> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
@@ -178,7 +182,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    fn _synchronize(&mut self) {
+    pub(crate) fn _synchronize(&mut self) {
         self.advance();
 
         while !self.is_at_end() {
@@ -202,7 +206,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    fn is_at_end(&self) -> bool {
+    pub(crate) fn is_at_end(&self) -> bool {
         self.current >= self.tokens.len()
     }
 }

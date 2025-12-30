@@ -308,6 +308,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabc_analyzer"
+version = "0.1.0"
+dependencies = [
+ "fabc_parser",
+ "thiserror",
+]
+
+[[package]]
 name = "fabc_lexer"
 version = "0.1.0"
 dependencies = [
