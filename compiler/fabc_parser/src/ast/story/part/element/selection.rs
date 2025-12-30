@@ -51,37 +51,46 @@ mod selection_tests {
         let selection = Parser::parse::<Selection>(&tokens).expect("Failed to parse selection");
 
         let expected = Selection {
-            id: 4,
+            id: 7,
             choices: vec![
                 QuoteDecl {
-                    id: 1,
-                    text: "Go left.".to_string(),
-                    properties: Some(ObjectDecl {
-                        id: 0,
-                        map: {
-                            let mut map = HashMap::new();
-                            map.insert(
-                                "score".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::Number(10.0))),
-                            );
-                            map.insert(
-                                "health".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::Number(5.0))),
-                            );
-                            map
-                        },
-                    }),
-                },
-                QuoteDecl {
                     id: 3,
-                    text: "Go right.".to_string(),
+                    text: "Go left.".to_string(),
                     properties: Some(ObjectDecl {
                         id: 2,
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
                                 "score".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::Number(5.0))),
+                                Expr::Primary {
+                                    id: 0,
+                                    value: Primary::Literal(Literal::Number(10.0)),
+                                },
+                            );
+                            map.insert(
+                                "health".to_string(),
+                                Expr::Primary {
+                                    id: 1,
+                                    value: Primary::Literal(Literal::Number(5.0)),
+                                },
+                            );
+                            map
+                        },
+                    }),
+                },
+                QuoteDecl {
+                    id: 6,
+                    text: "Go right.".to_string(),
+                    properties: Some(ObjectDecl {
+                        id: 5,
+                        map: {
+                            let mut map = HashMap::new();
+                            map.insert(
+                                "score".to_string(),
+                                Expr::Primary {
+                                    id: 4,
+                                    value: Primary::Literal(Literal::Number(5.0)),
+                                },
                             );
                             map
                         },

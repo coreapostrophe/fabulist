@@ -58,42 +58,47 @@ mod dialogue_tests {
         let dialogue = Parser::parse::<Dialogue>(&tokens).expect("Failed to parse dialogue");
 
         let expected = Dialogue {
-            id: 4,
+            id: 7,
             speaker: "narrator".to_string(),
             quotes: vec![
                 QuoteDecl {
-                    id: 1,
-                    text: "Hello there!".to_string(),
-                    properties: Some(ObjectDecl {
-                        id: 0,
-                        map: {
-                            let mut map = HashMap::new();
-                            map.insert(
-                                "emotion".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::String(
-                                    "happy".to_string(),
-                                ))),
-                            );
-                            map.insert(
-                                "volume".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::Number(5.0))),
-                            );
-                            map
-                        },
-                    }),
-                },
-                QuoteDecl {
                     id: 3,
-                    text: "How are you?".to_string(),
+                    text: "Hello there!".to_string(),
                     properties: Some(ObjectDecl {
                         id: 2,
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
                                 "emotion".to_string(),
-                                Expr::Primary(Primary::Literal(Literal::String(
-                                    "curious".to_string(),
-                                ))),
+                                Expr::Primary {
+                                    id: 0,
+                                    value: Primary::Literal(Literal::String("happy".to_string())),
+                                },
+                            );
+                            map.insert(
+                                "volume".to_string(),
+                                Expr::Primary {
+                                    id: 1,
+                                    value: Primary::Literal(Literal::Number(5.0)),
+                                },
+                            );
+                            map
+                        },
+                    }),
+                },
+                QuoteDecl {
+                    id: 6,
+                    text: "How are you?".to_string(),
+                    properties: Some(ObjectDecl {
+                        id: 5,
+                        map: {
+                            let mut map = HashMap::new();
+                            map.insert(
+                                "emotion".to_string(),
+                                Expr::Primary {
+                                    id: 4,
+                                    value: Primary::Literal(Literal::String("curious".to_string())),
+                                },
                             );
                             map
                         },

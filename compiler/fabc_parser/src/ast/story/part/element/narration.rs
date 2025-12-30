@@ -61,25 +61,33 @@ mod narration_tests {
         let narration = Parser::parse::<Narration>(&tokens).expect("Failed to parse narration");
 
         let expected = Narration {
-            id: 2,
+            id: 6,
             quote: QuoteDecl {
-                id: 1,
+                id: 5,
                 text: "This is a narration.".to_string(),
                 properties: Some(ObjectDecl {
-                    id: 0,
+                    id: 4,
                     map: {
                         let mut map = std::collections::HashMap::new();
                         map.insert(
                             "mood".to_string(),
-                            Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                                "happy".to_string(),
-                            ))),
+                            Expr::Primary {
+                                id: 1,
+                                value: Primary::Primitive(Primitive::Identifier {
+                                    id: 0,
+                                    name: "happy".to_string(),
+                                }),
+                            },
                         );
                         map.insert(
                             "volume".to_string(),
-                            Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                                "loud".to_string(),
-                            ))),
+                            Expr::Primary {
+                                id: 3,
+                                value: Primary::Primitive(Primitive::Identifier {
+                                    id: 2,
+                                    name: "loud".to_string(),
+                                }),
+                            },
                         );
                         map
                     },

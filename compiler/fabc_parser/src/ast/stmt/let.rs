@@ -4,6 +4,7 @@ use crate::{ast::expr::Expr, error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct LetStmt {
+    pub id: usize,
     pub name: String,
     pub initializer: Expr,
 }
@@ -20,7 +21,11 @@ impl Parsable for LetStmt {
 
         parser.consume(TokenKind::Semicolon)?;
 
-        Ok(LetStmt { name, initializer })
+        Ok(LetStmt {
+            id: parser.assign_id(),
+            name,
+            initializer,
+        })
     }
 }
 
@@ -43,8 +48,12 @@ mod let_stmt_tests {
         let let_stmt = Parser::parse::<LetStmt>(&tokens).expect("Failed to parse");
 
         let expected = LetStmt {
+            id: 1,
             name: "x".to_string(),
-            initializer: Expr::Primary(Primary::Literal(Literal::Number(42.0))),
+            initializer: Expr::Primary {
+                id: 0,
+                value: Primary::Literal(Literal::Number(42.0)),
+            },
         };
 
         assert_eq!(let_stmt, expected);

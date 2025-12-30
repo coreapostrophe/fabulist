@@ -65,19 +65,25 @@ mod quote_decl_tests {
         let quote_decl = Parser::parse::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
-            id: 1,
+            id: 3,
             text: "This is a quote with properties.".to_string(),
             properties: Some(ObjectDecl {
-                id: 0,
+                id: 2,
                 map: {
                     let mut map = HashMap::new();
                     map.insert(
                         "author".to_string(),
-                        Expr::Primary(Primary::Literal(Literal::String("Alice".to_string()))),
+                        Expr::Primary {
+                            id: 0,
+                            value: Primary::Literal(Literal::String("Alice".to_string())),
+                        },
                     );
                     map.insert(
                         "length".to_string(),
-                        Expr::Primary(Primary::Literal(Literal::Number(30.0))),
+                        Expr::Primary {
+                            id: 1,
+                            value: Primary::Literal(Literal::Number(30.0)),
+                        },
                     );
                     map
                 },

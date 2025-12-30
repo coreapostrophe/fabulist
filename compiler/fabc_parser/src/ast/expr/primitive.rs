@@ -1,27 +1,33 @@
-use std::collections::HashMap;
-
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::{
-        decl::object::ObjectDecl,
-        expr::{Expr, Primary},
-        stmt::block::BlockStmt,
-    },
+    ast::{decl::object::ObjectDecl, expr::Expr, stmt::block::BlockStmt},
     error::Error,
     expect_token, Parsable,
 };
 
 #[derive(Debug, PartialEq)]
 pub enum Primitive {
-    Identifier(String),
-    Grouping(Box<Expr>),
-    Object(HashMap<String, Expr>),
+    Identifier {
+        id: usize,
+        name: String,
+    },
+    Grouping {
+        id: usize,
+        expr: Box<Expr>,
+    },
+    Object {
+        id: usize,
+        value: ObjectDecl,
+    },
     Closure {
-        params: Vec<String>,
+        id: usize,
+        params: Vec<Primitive>,
         body: BlockStmt,
     },
-    Context,
+    Context {
+        id: usize,
+    },
 }
 
 impl Parsable for Primitive {
@@ -33,39 +39,32 @@ impl Parsable for Primitive {
         match parser.peek() {
             TokenKind::Identifier(_) => {
                 let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
-                Ok(Primitive::Identifier(name))
+                Ok(Primitive::Identifier {
+                    id: parser.assign_id(),
+                    name,
+                })
             }
             TokenKind::Keyword(KeywordKind::Context) => {
                 parser.consume(TokenKind::Keyword(KeywordKind::Context))?;
-                Ok(Primitive::Context)
+                Ok(Primitive::Context {
+                    id: parser.assign_id(),
+                })
             }
             TokenKind::LeftParen => {
                 if let Some(closure) = parser.rollbacking(|parser| {
-                    let expr_tuple = parser.punctuated(
+                    let params = parser.punctuated(
                         TokenKind::LeftParen,
                         TokenKind::RightParen,
                         TokenKind::Comma,
-                        |parser| Expr::parse(parser),
+                        |parser| Primitive::parse(parser),
                     )?;
 
                     parser.consume(TokenKind::ArrowRight)?;
 
                     let body = Box::new(BlockStmt::parse(parser)?);
 
-                    let params = expr_tuple
-                        .into_iter()
-                        .map(|expr| match expr {
-                            Expr::Primary(Primary::Primitive(Primitive::Identifier(name))) => {
-                                Ok(name)
-                            }
-                            _ => Err(Error::ExpectedFound {
-                                expected: "identifier".to_string(),
-                                found: format!("{:?}", expr),
-                            }),
-                        })
-                        .collect::<Result<Vec<String>, Error>>()?;
-
                     Ok(Primitive::Closure {
+                        id: parser.assign_id(),
                         params,
                         body: *body,
                     })
@@ -76,12 +75,18 @@ impl Parsable for Primitive {
                         parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
                             Expr::parse(parser)
                         })?;
-                    Ok(Primitive::Grouping(Box::new(expr)))
+                    Ok(Primitive::Grouping {
+                        id: parser.assign_id(),
+                        expr: Box::new(expr),
+                    })
                 }
             }
             TokenKind::LeftBrace => {
-                let map = ObjectDecl::parse(parser)?.map;
-                Ok(Primitive::Object(map))
+                let object = ObjectDecl::parse(parser)?;
+                Ok(Primitive::Object {
+                    id: parser.assign_id(),
+                    value: object,
+                })
             }
             _ => Err(Error::UnhandledPrimitive),
         }
@@ -96,6 +101,7 @@ mod primitive_tests {
 
     use crate::{
         ast::{
+            decl::object::ObjectDecl,
             expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, Stmt},
         },
@@ -107,22 +113,35 @@ mod primitive_tests {
         let source = "foo";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
-        assert_eq!(primitive, Primitive::Identifier("foo".to_string()));
+        assert_eq!(
+            primitive,
+            Primitive::Identifier {
+                id: 0,
+                name: "foo".to_string(),
+            }
+        );
 
         let source = "(x)";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
         assert_eq!(
             primitive,
-            Primitive::Grouping(Box::new(Expr::Primary(Primary::Primitive(
-                Primitive::Identifier("x".to_string())
-            ))))
+            Primitive::Grouping {
+                id: 2,
+                expr: Box::new(Expr::Primary {
+                    id: 1,
+                    value: Primary::Primitive(Primitive::Identifier {
+                        id: 0,
+                        name: "x".to_string(),
+                    }),
+                }),
+            }
         );
 
         let source = "context";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
-        assert_eq!(primitive, Primitive::Context);
+        assert_eq!(primitive, Primitive::Context { id: 0 });
     }
 
     #[test]
@@ -131,18 +150,30 @@ mod primitive_tests {
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
 
-        let expected = Primitive::Object({
-            let mut map = HashMap::new();
-            map.insert(
-                "key1".to_string(),
-                Expr::Primary(Primary::Literal(Literal::Number(42.0))),
-            );
-            map.insert(
-                "key2".to_string(),
-                Expr::Primary(Primary::Literal(Literal::Boolean(true))),
-            );
-            map
-        });
+        let expected = Primitive::Object {
+            id: 3,
+            value: ObjectDecl {
+                id: 2,
+                map: {
+                    let mut map = HashMap::new();
+                    map.insert(
+                        "key1".to_string(),
+                        Expr::Primary {
+                            id: 0,
+                            value: Primary::Literal(Literal::Number(42.0)),
+                        },
+                    );
+                    map.insert(
+                        "key2".to_string(),
+                        Expr::Primary {
+                            id: 1,
+                            value: Primary::Literal(Literal::Boolean(true)),
+                        },
+                    );
+                    map
+                },
+            },
+        };
         assert_eq!(primitive, expected);
     }
 
@@ -153,17 +184,38 @@ mod primitive_tests {
         let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Closure {
-            params: vec!["x".to_string(), "y".to_string()],
+            id: 9,
+            params: vec![
+                Primitive::Identifier {
+                    id: 0,
+                    name: "x".to_string(),
+                },
+                Primitive::Identifier {
+                    id: 1,
+                    name: "y".to_string(),
+                },
+            ],
             body: BlockStmt {
+                id: 8,
                 statements: vec![Stmt::Expr(ExprStmt {
+                    id: 7,
                     expr: Expr::Binary {
-                        left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                            "x".to_string(),
-                        )))),
+                        id: 6,
+                        left: Box::new(Expr::Primary {
+                            id: 3,
+                            value: Primary::Primitive(Primitive::Identifier {
+                                id: 2,
+                                name: "x".to_string(),
+                            }),
+                        }),
                         operator: BinaryOperator::Add,
-                        right: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                            "y".to_string(),
-                        )))),
+                        right: Box::new(Expr::Primary {
+                            id: 5,
+                            value: Primary::Primitive(Primitive::Identifier {
+                                id: 4,
+                                name: "y".to_string(),
+                            }),
+                        }),
                     },
                 })],
             },

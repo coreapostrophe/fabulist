@@ -39,7 +39,7 @@ mod metadata_tests {
     };
 
     #[test]
-    fn parses_metadat() {
+    fn parses_metadata() {
         let source = r#"
             Story {
                 title: "My Story",
@@ -49,14 +49,17 @@ mod metadata_tests {
         let metadata = Parser::parse::<Metadata>(&tokens).expect("Failed to parse metadata");
 
         let expected = Metadata {
-            id: 1,
+            id: 2,
             object: ObjectDecl {
-                id: 0,
+                id: 1,
                 map: {
                     let mut map = HashMap::new();
                     map.insert(
                         "title".to_string(),
-                        Expr::Primary(Primary::Literal(Literal::String("My Story".to_string()))),
+                        Expr::Primary {
+                            id: 0,
+                            value: Primary::Literal(Literal::String("My Story".to_string())),
+                        },
                     );
                     map
                 },

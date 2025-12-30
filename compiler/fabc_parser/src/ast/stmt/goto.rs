@@ -4,6 +4,7 @@ use crate::{ast::expr::Expr, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct GotoStmt {
+    pub id: usize,
     pub target: Box<Expr>,
 }
 
@@ -15,6 +16,7 @@ impl Parsable for GotoStmt {
         parser.consume(TokenKind::Semicolon)?;
 
         Ok(GotoStmt {
+            id: parser.assign_id(),
             target: Box::new(target),
         })
     }
@@ -39,13 +41,23 @@ mod goto_stmt_tests {
         let goto_stmt = Parser::parse::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
 
         let expected = GotoStmt {
+            id: 5,
             target: Box::new(Expr::MemberAccess {
-                left: Box::new(Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                    "module_ns".to_string(),
-                )))),
-                members: vec![Expr::Primary(Primary::Primitive(Primitive::Identifier(
-                    "part_ident".to_string(),
-                )))],
+                id: 4,
+                left: Box::new(Expr::Primary {
+                    id: 1,
+                    value: Primary::Primitive(Primitive::Identifier {
+                        id: 0,
+                        name: "module_ns".to_string(),
+                    }),
+                }),
+                members: vec![Expr::Primary {
+                    id: 3,
+                    value: Primary::Primitive(Primitive::Identifier {
+                        id: 2,
+                        name: "part_ident".to_string(),
+                    }),
+                }],
             }),
         };
 

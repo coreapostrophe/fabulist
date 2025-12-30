@@ -19,10 +19,15 @@ where
     fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error>;
 }
 
+pub struct Save {
+    current: usize,
+    id_counter: usize,
+}
+
 pub struct Parser<'src, 'tok> {
     tokens: &'tok [Token<'src>],
     current: usize,
-    save: Option<usize>,
+    save: Option<Save>,
     id_counter: usize,
 }
 
@@ -144,14 +149,18 @@ impl<'src, 'tok> Parser<'src, 'tok> {
     where
         F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
-        self.save = Some(self.current);
+        self.save = Some(Save {
+            current: self.current,
+            id_counter: self.id_counter,
+        });
 
         if let Ok(result) = parser_fn(self) {
             self.save = None;
             Some(result)
         } else {
-            if let Some(saved_position) = self.save {
-                self.current = saved_position;
+            if let Some(saved_position) = &self.save {
+                self.current = saved_position.current;
+                self.id_counter = saved_position.id_counter;
             }
             self.save = None;
             None

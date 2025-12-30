@@ -95,7 +95,7 @@ mod story_tests {
         let story = Parser::parse::<Story>(&tokens).expect("Failed to parse story");
 
         let expected = Story {
-            id: 4,
+            id: 5,
             modules: Some(vec![
                 ModuleStmt {
                     id: 0,
@@ -109,16 +109,19 @@ mod story_tests {
                 },
             ]),
             metadata: Some(Metadata {
-                id: 3,
+                id: 4,
                 object: ObjectDecl {
-                    id: 2,
+                    id: 3,
                     map: {
                         let mut map = HashMap::new();
                         map.insert(
                             "description".to_string(),
-                            Expr::Primary(Primary::Literal(Literal::String(
-                                "This is a test story.".to_string(),
-                            ))),
+                            Expr::Primary {
+                                id: 2,
+                                value: Primary::Literal(Literal::String(
+                                    "This is a test story.".to_string(),
+                                )),
+                            },
                         );
                         map
                     },
@@ -157,16 +160,17 @@ mod story_tests {
                 alias: Some("dialogues".to_string()),
             }]),
             metadata: Some(Metadata {
-                id: 2,
+                id: 3,
                 object: ObjectDecl {
-                    id: 1,
+                    id: 2,
                     map: {
                         let mut map = HashMap::new();
                         map.insert(
                             "start".to_string(),
-                            Expr::Primary(Primary::Literal(Literal::String(
-                                "dialogue_1".to_string(),
-                            ))),
+                            Expr::Primary {
+                                id: 1,
+                                value: Primary::Literal(Literal::String("dialogue_1".to_string())),
+                            },
                         );
                         map
                     },
@@ -176,78 +180,71 @@ mod story_tests {
                 id: 16,
                 ident: "dialogue_1".to_string(),
                 elements: vec![
-                    Element::Narration {
+                    Element::Narration(Narration {
                         id: 5,
-                        value: Narration {
+                        quote: QuoteDecl {
                             id: 4,
-                            quote: QuoteDecl {
-                                id: 3,
-                                text: "Welcome to the story!".to_string(),
+                            text: "Welcome to the story!".to_string(),
+                            properties: None,
+                        },
+                    }),
+                    Element::Dialogue(Dialogue {
+                        id: 8,
+                        speaker: "traveller".to_string(),
+                        quotes: vec![
+                            QuoteDecl {
+                                id: 6,
+                                text: "Hello there!".to_string(),
                                 properties: None,
                             },
-                        },
-                    },
-                    Element::Dialogue {
-                        id: 9,
-                        value: Dialogue {
-                            id: 8,
-                            speaker: "traveller".to_string(),
-                            quotes: vec![
-                                QuoteDecl {
-                                    id: 6,
-                                    text: "Hello there!".to_string(),
-                                    properties: None,
-                                },
-                                QuoteDecl {
-                                    id: 7,
-                                    text: "Choose your path.".to_string(),
-                                    properties: None,
-                                },
-                            ],
-                        },
-                    },
-                    Element::Selection {
+                            QuoteDecl {
+                                id: 7,
+                                text: "Choose your path.".to_string(),
+                                properties: None,
+                            },
+                        ],
+                    }),
+                    Element::Selection(Selection {
                         id: 15,
-                        value: Selection {
-                            id: 14,
-                            choices: vec![
-                                QuoteDecl {
-                                    id: 11,
-                                    text: "Go left.".to_string(),
-                                    properties: Some(ObjectDecl {
-                                        id: 10,
-                                        map: {
-                                            let mut map = HashMap::new();
-                                            map.insert(
-                                                "score".to_string(),
-                                                Expr::Primary(Primary::Literal(Literal::Number(
-                                                    10.0,
-                                                ))),
-                                            );
-                                            map
-                                        },
-                                    }),
-                                },
-                                QuoteDecl {
+                        choices: vec![
+                            QuoteDecl {
+                                id: 11,
+                                text: "Go left.".to_string(),
+                                properties: Some(ObjectDecl {
+                                    id: 10,
+                                    map: {
+                                        let mut map = HashMap::new();
+                                        map.insert(
+                                            "score".to_string(),
+                                            Expr::Primary {
+                                                id: 9,
+                                                value: Primary::Literal(Literal::Number(10.0)),
+                                            },
+                                        );
+                                        map
+                                    },
+                                }),
+                            },
+                            QuoteDecl {
+                                id: 14,
+                                text: "Go right.".to_string(),
+                                properties: Some(ObjectDecl {
                                     id: 13,
-                                    text: "Go right.".to_string(),
-                                    properties: Some(ObjectDecl {
-                                        id: 12,
-                                        map: {
-                                            let mut map = HashMap::new();
-                                            map.insert(
-                                                "score".to_string(),
-                                                Expr::Primary(Primary::Literal(Literal::Number(
-                                                    5.0,
-                                                ))),
-                                            );
-                                            map
-                                        },
-                                    }),
-                                },
-                            ],
-                        },
-                    },
+                                    map: {
+                                        let mut map = HashMap::new();
+                                        map.insert(
+                                            "score".to_string(),
+                                            Expr::Primary {
+                                                id: 12,
+                                                value: Primary::Literal(Literal::Number(5.0)),
+                                            },
+                                        );
+                                        map
+                                    },
+                                }),
+                            },
+                        ],
+                    }),
                 ],
             }],
         };

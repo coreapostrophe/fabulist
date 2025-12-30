@@ -13,6 +13,7 @@ pub enum ElseClause {
 
 #[derive(Debug, PartialEq)]
 pub struct IfStmt {
+    pub id: usize,
     pub condition: Expr,
     pub then_branch: Box<BlockStmt>,
     pub else_branch: Option<ElseClause>,
@@ -41,6 +42,7 @@ impl Parsable for IfStmt {
         };
 
         Ok(IfStmt {
+            id: parser.assign_id(),
             condition,
             then_branch,
             else_branch,
@@ -72,8 +74,15 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                condition: Expr::Primary(Primary::Literal(Literal::Boolean(true))),
-                then_branch: Box::new(BlockStmt { statements: vec![] }),
+                id: 2,
+                condition: Expr::Primary {
+                    id: 0,
+                    value: Primary::Literal(Literal::Boolean(true)),
+                },
+                then_branch: Box::new(BlockStmt {
+                    id: 1,
+                    statements: vec![]
+                }),
                 else_branch: None,
             }
         );
@@ -88,9 +97,17 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                condition: Expr::Primary(Primary::Literal(Literal::Boolean(false))),
-                then_branch: Box::new(BlockStmt { statements: vec![] }),
+                id: 3,
+                condition: Expr::Primary {
+                    id: 0,
+                    value: Primary::Literal(Literal::Boolean(false)),
+                },
+                then_branch: Box::new(BlockStmt {
+                    id: 1,
+                    statements: vec![]
+                }),
                 else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
+                    id: 2,
                     statements: vec![]
                 }))),
             }

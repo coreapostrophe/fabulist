@@ -4,6 +4,7 @@ use crate::{ast::stmt::Stmt, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct BlockStmt {
+    pub id: usize,
     pub statements: Vec<Stmt>,
 }
 
@@ -20,7 +21,10 @@ impl Parsable for BlockStmt {
 
         parser.consume(TokenKind::RightBrace)?;
 
-        Ok(BlockStmt { statements })
+        Ok(BlockStmt {
+            id: parser.assign_id(),
+            statements,
+        })
     }
 }
 
@@ -44,17 +48,27 @@ mod block_stmt_tests {
             Parser::parse::<BlockStmt>(&tokens).expect("Failed to parse block statement");
 
         let expected = BlockStmt {
+            id: 4,
             statements: vec![
                 Stmt::Let(LetStmt {
+                    id: 1,
                     name: "a".to_string(),
-                    initializer: Expr::Primary(Primary::Literal(Literal::Number(1.0))),
+                    initializer: Expr::Primary {
+                        id: 0,
+                        value: Primary::Literal(Literal::Number(1.0)),
+                    },
                 }),
                 Stmt::Let(LetStmt {
+                    id: 3,
                     name: "b".to_string(),
-                    initializer: Expr::Primary(Primary::Literal(Literal::Number(2.0))),
+                    initializer: Expr::Primary {
+                        id: 2,
+                        value: Primary::Literal(Literal::Number(2.0)),
+                    },
                 }),
             ],
         };
+
         assert_eq!(block_stmt, expected);
     }
 }

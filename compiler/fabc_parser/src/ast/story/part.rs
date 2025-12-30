@@ -65,19 +65,16 @@ mod part_tests {
         let part = Parser::parse::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
-            id: 3,
+            id: 2,
             ident: "intro".to_string(),
-            elements: vec![Element::Narration {
-                id: 2,
-                value: Narration {
-                    id: 1,
-                    quote: QuoteDecl {
-                        id: 0,
-                        text: "This is a narration.".to_string(),
-                        properties: None,
-                    },
+            elements: vec![Element::Narration(Narration {
+                id: 1,
+                quote: QuoteDecl {
+                    id: 0,
+                    text: "This is a narration.".to_string(),
+                    properties: None,
                 },
-            }],
+            })],
         };
 
         assert_eq!(part, expected);

@@ -4,6 +4,7 @@ use crate::{ast::stmt::block::BlockStmt, expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct FunctionStmt {
+    pub id: usize,
     pub name: String,
     pub parameters: Vec<String>,
     pub body: Box<BlockStmt>,
@@ -30,6 +31,7 @@ impl Parsable for FunctionStmt {
         let body = Box::new(BlockStmt::parse(parser)?);
 
         Ok(FunctionStmt {
+            id: parser.assign_id(),
             name,
             parameters,
             body,
@@ -58,18 +60,30 @@ mod function_stmt_tests {
         assert_eq!(
             function_stmt,
             FunctionStmt {
+                id: 7,
                 name: "add".to_string(),
                 parameters: vec!["a".to_string(), "b".to_string()],
                 body: Box::new(BlockStmt {
+                    id: 6,
                     statements: vec![Stmt::Expr(ExprStmt {
+                        id: 5,
                         expr: Expr::Binary {
-                            left: Box::new(Expr::Primary(Primary::Primitive(
-                                Primitive::Identifier("a".to_string())
-                            ))),
+                            id: 4,
+                            left: Box::new(Expr::Primary {
+                                id: 1,
+                                value: Primary::Primitive(Primitive::Identifier {
+                                    id: 0,
+                                    name: "a".to_string(),
+                                },),
+                            }),
                             operator: BinaryOperator::Add,
-                            right: Box::new(Expr::Primary(Primary::Primitive(
-                                Primitive::Identifier("b".to_string())
-                            ))),
+                            right: Box::new(Expr::Primary {
+                                id: 3,
+                                value: Primary::Primitive(Primitive::Identifier {
+                                    id: 2,
+                                    name: "b".to_string(),
+                                },)
+                            }),
                         },
                     })],
                 }),

@@ -44,7 +44,13 @@ mod object_decl_tests {
 
     use fabc_lexer::Lexer;
 
-    use crate::{ast::decl::object::ObjectDecl, Parser};
+    use crate::{
+        ast::{
+            decl::object::ObjectDecl,
+            expr::{literal::Literal, Expr, Primary},
+        },
+        Parser,
+    };
 
     #[test]
     fn parses_object_decl() {
@@ -59,20 +65,22 @@ mod object_decl_tests {
             Parser::parse::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 
         let expected = ObjectDecl {
-            id: 0,
+            id: 2,
             map: {
                 let mut map = HashMap::new();
                 map.insert(
                     "key1".to_string(),
-                    crate::ast::expr::Expr::Primary(crate::ast::expr::Primary::Literal(
-                        crate::ast::expr::literal::Literal::String("value1".to_string()),
-                    )),
+                    Expr::Primary {
+                        id: 0,
+                        value: Primary::Literal(Literal::String("value1".to_string())),
+                    },
                 );
                 map.insert(
                     "key2".to_string(),
-                    crate::ast::expr::Expr::Primary(crate::ast::expr::Primary::Literal(
-                        crate::ast::expr::literal::Literal::Number(42.0),
-                    )),
+                    Expr::Primary {
+                        id: 1,
+                        value: Primary::Literal(Literal::Number(42.0)),
+                    },
                 );
                 map
             },
