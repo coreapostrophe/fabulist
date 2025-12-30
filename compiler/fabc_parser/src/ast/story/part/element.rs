@@ -12,9 +12,9 @@ pub mod selection;
 
 #[derive(Debug, PartialEq)]
 pub enum Element {
-    Narration(Narration),
-    Dialogue(Dialogue),
-    Selection(Selection),
+    Narration { id: usize, value: Narration },
+    Dialogue { id: usize, value: Dialogue },
+    Selection { id: usize, value: Selection },
 }
 
 impl Parsable for Element {
@@ -22,9 +22,27 @@ impl Parsable for Element {
         parser: &mut crate::Parser<'src, 'tok>,
     ) -> Result<Self, crate::error::Error> {
         match parser.peek() {
-            TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
-            TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),
-            TokenKind::Asterisk => Ok(Element::Narration(Narration::parse(parser)?)),
+            TokenKind::Minus => {
+                let value = Selection::parse(parser)?;
+                Ok(Element::Selection {
+                    id: parser.assign_id(),
+                    value,
+                })
+            }
+            TokenKind::LeftBracket => {
+                let value = Dialogue::parse(parser)?;
+                Ok(Element::Dialogue {
+                    id: parser.assign_id(),
+                    value,
+                })
+            }
+            TokenKind::Asterisk => {
+                let value = Narration::parse(parser)?;
+                Ok(Element::Narration {
+                    id: parser.assign_id(),
+                    value,
+                })
+            }
             _ => Err(Error::UnhandledElement),
         }
     }

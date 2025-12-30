@@ -23,6 +23,7 @@ pub struct Parser<'src, 'tok> {
     tokens: &'tok [Token<'src>],
     current: usize,
     save: Option<usize>,
+    id_counter: usize,
 }
 
 impl<'src, 'tok> Parser<'src, 'tok> {
@@ -36,6 +37,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             tokens: &tokens,
             current: 0,
             save: None,
+            id_counter: 0,
         };
 
         T::parse(&mut parser)
@@ -49,9 +51,16 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             tokens,
             current: 0,
             save: None,
+            id_counter: 0,
         };
 
         T::parse(&mut parser)
+    }
+
+    fn assign_id(&mut self) -> usize {
+        let id = self.id_counter;
+        self.id_counter += 1;
+        id
     }
 
     fn r#match(&mut self, expected: &[TokenKind<'src>]) -> bool {

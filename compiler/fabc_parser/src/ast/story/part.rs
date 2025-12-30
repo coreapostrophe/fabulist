@@ -6,7 +6,8 @@ pub mod element;
 
 #[derive(Debug, PartialEq)]
 pub struct Part {
-    pub id: String,
+    pub id: usize,
+    pub ident: String,
     pub elements: Vec<Element>,
 }
 
@@ -16,7 +17,7 @@ impl Parsable for Part {
     ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Pound)?;
 
-        let id = expect_token!(parser, TokenKind::Identifier, "identifier")?;
+        let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
         let mut elements = Vec::new();
 
@@ -31,7 +32,11 @@ impl Parsable for Part {
             elements.push(element);
         }
 
-        Ok(Part { id, elements })
+        Ok(Part {
+            id: parser.assign_id(),
+            ident,
+            elements,
+        })
     }
 }
 
@@ -40,9 +45,12 @@ mod part_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::story::part::{
-            element::{narration::Narration, Element},
-            Part,
+        ast::{
+            decl::quote::QuoteDecl,
+            story::part::{
+                element::{narration::Narration, Element},
+                Part,
+            },
         },
         Parser,
     };
@@ -57,11 +65,19 @@ mod part_tests {
         let part = Parser::parse::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
-            id: "intro".to_string(),
-            elements: vec![Element::Narration(Narration {
-                text: "This is a narration.".to_string(),
-                properties: None,
-            })],
+            id: 3,
+            ident: "intro".to_string(),
+            elements: vec![Element::Narration {
+                id: 2,
+                value: Narration {
+                    id: 1,
+                    quote: QuoteDecl {
+                        id: 0,
+                        text: "This is a narration.".to_string(),
+                        properties: None,
+                    },
+                },
+            }],
         };
 
         assert_eq!(part, expected);

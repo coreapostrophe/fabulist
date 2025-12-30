@@ -6,6 +6,7 @@ use crate::{ast::expr::Expr, expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct ObjectDecl {
+    pub id: usize,
     pub map: HashMap<String, Expr>,
 }
 
@@ -30,7 +31,10 @@ impl Parsable for ObjectDecl {
             map.insert(key, value);
         }
 
-        Ok(ObjectDecl { map })
+        Ok(ObjectDecl {
+            id: parser.assign_id(),
+            map,
+        })
     }
 }
 
@@ -55,6 +59,7 @@ mod object_decl_tests {
             Parser::parse::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 
         let expected = ObjectDecl {
+            id: 0,
             map: {
                 let mut map = HashMap::new();
                 map.insert(

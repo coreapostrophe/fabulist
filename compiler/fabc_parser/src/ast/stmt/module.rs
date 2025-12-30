@@ -4,6 +4,7 @@ use crate::{expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct ModuleStmt {
+    pub id: usize,
     pub path: String,
     pub alias: Option<String>,
 }
@@ -28,7 +29,11 @@ impl Parsable for ModuleStmt {
 
         parser.consume(TokenKind::Semicolon)?;
 
-        Ok(ModuleStmt { path, alias })
+        Ok(ModuleStmt {
+            id: parser.assign_id(),
+            path,
+            alias,
+        })
     }
 }
 
@@ -46,6 +51,7 @@ mod module_stmt_tests {
             Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {
+            id: 0,
             path: "my/module/path".to_string(),
             alias: None,
         };
@@ -61,6 +67,7 @@ mod module_stmt_tests {
             Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
 
         let expected = ModuleStmt {
+            id: 0,
             path: "my/module/path".to_string(),
             alias: Some("my_alias".to_string()),
         };

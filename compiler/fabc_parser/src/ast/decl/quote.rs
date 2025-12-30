@@ -1,11 +1,12 @@
-use std::collections::HashMap;
+use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::expr::Expr, expect_token, Parsable};
+use crate::{ast::decl::object::ObjectDecl, expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct QuoteDecl {
+    pub id: usize,
     pub text: String,
-    pub properties: Option<HashMap<String, Expr>>,
+    pub properties: Option<ObjectDecl>,
 }
 
 impl Parsable for QuoteDecl {
@@ -14,13 +15,17 @@ impl Parsable for QuoteDecl {
     ) -> Result<Self, crate::error::Error> {
         let text = expect_token!(parser, fabc_lexer::tokens::TokenKind::String, "quote text")?;
 
-        let properties = if parser.peek() == &fabc_lexer::tokens::TokenKind::LeftBrace {
-            Some(crate::ast::decl::object::ObjectDecl::parse(parser)?.map)
+        let properties = if parser.peek() == &TokenKind::LeftBrace {
+            Some(ObjectDecl::parse(parser)?)
         } else {
             None
         };
 
-        Ok(QuoteDecl { text, properties })
+        Ok(QuoteDecl {
+            id: parser.assign_id(),
+            text,
+            properties,
+        })
     }
 }
 
@@ -32,7 +37,7 @@ mod quote_decl_tests {
 
     use crate::{
         ast::{
-            decl::quote::QuoteDecl,
+            decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
         },
         Parser,
@@ -45,6 +50,7 @@ mod quote_decl_tests {
         let quote_decl = Parser::parse::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
+            id: 0,
             text: "This is a quote.".to_string(),
             properties: None,
         };
@@ -59,18 +65,22 @@ mod quote_decl_tests {
         let quote_decl = Parser::parse::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
+            id: 1,
             text: "This is a quote with properties.".to_string(),
-            properties: Some({
-                let mut map = HashMap::new();
-                map.insert(
-                    "author".to_string(),
-                    Expr::Primary(Primary::Literal(Literal::String("Alice".to_string()))),
-                );
-                map.insert(
-                    "length".to_string(),
-                    Expr::Primary(Primary::Literal(Literal::Number(30.0))),
-                );
-                map
+            properties: Some(ObjectDecl {
+                id: 0,
+                map: {
+                    let mut map = HashMap::new();
+                    map.insert(
+                        "author".to_string(),
+                        Expr::Primary(Primary::Literal(Literal::String("Alice".to_string()))),
+                    );
+                    map.insert(
+                        "length".to_string(),
+                        Expr::Primary(Primary::Literal(Literal::Number(30.0))),
+                    );
+                    map
+                },
             }),
         };
         assert_eq!(quote_decl, expected);

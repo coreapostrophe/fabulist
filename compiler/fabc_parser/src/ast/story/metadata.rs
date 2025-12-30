@@ -1,15 +1,11 @@
-use std::collections::HashMap;
-
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{
-    ast::{decl::object::ObjectDecl, expr::Expr},
-    Parsable,
-};
+use crate::{ast::decl::object::ObjectDecl, Parsable};
 
 #[derive(Debug, PartialEq)]
 pub struct Metadata {
-    pub map: HashMap<String, Expr>,
+    pub id: usize,
+    pub object: ObjectDecl,
 }
 
 impl Parsable for Metadata {
@@ -18,9 +14,12 @@ impl Parsable for Metadata {
     ) -> Result<Self, crate::error::Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Story))?;
 
-        let map = ObjectDecl::parse(parser)?.map;
+        let object = ObjectDecl::parse(parser)?;
 
-        Ok(Metadata { map })
+        Ok(Metadata {
+            id: parser.assign_id(),
+            object,
+        })
     }
 }
 
@@ -32,6 +31,7 @@ mod metadata_tests {
 
     use crate::{
         ast::{
+            decl::object::ObjectDecl,
             expr::{literal::Literal, Expr, Primary},
             story::metadata::Metadata,
         },
@@ -48,15 +48,21 @@ mod metadata_tests {
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
         let metadata = Parser::parse::<Metadata>(&tokens).expect("Failed to parse metadata");
 
-        let expected_map = {
-            let mut map = HashMap::new();
-            map.insert(
-                "title".to_string(),
-                Expr::Primary(Primary::Literal(Literal::String("My Story".to_string()))),
-            );
-            map
+        let expected = Metadata {
+            id: 1,
+            object: ObjectDecl {
+                id: 0,
+                map: {
+                    let mut map = HashMap::new();
+                    map.insert(
+                        "title".to_string(),
+                        Expr::Primary(Primary::Literal(Literal::String("My Story".to_string()))),
+                    );
+                    map
+                },
+            },
         };
 
-        assert_eq!(metadata.map, expected_map);
+        assert_eq!(metadata, expected);
     }
 }
