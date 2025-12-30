@@ -17,15 +17,15 @@ pub struct Analyzer {
 }
 
 impl Analyzer {
-    pub fn analyze<T>(ast: &T) -> Self
+    pub fn analyze<T>(ast: &T) -> Result<Self, Error>
     where
         T: Parsable + Analyzable,
     {
         let mut analyzer = Self {
             reachability_map: HashMap::new(),
         };
-        ast.analyze(&mut analyzer);
-        analyzer
+        ast.analyze(&mut analyzer)?;
+        Ok(analyzer)
     }
     pub fn get_reachability(&self, node_id: &usize) -> Option<&Reachability> {
         self.reachability_map.get(node_id)
