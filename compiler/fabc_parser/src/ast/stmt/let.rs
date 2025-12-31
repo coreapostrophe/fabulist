@@ -10,7 +10,7 @@ pub struct LetStmt {
 }
 
 impl Parsable for LetStmt {
-    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Let))?;
 
         let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;

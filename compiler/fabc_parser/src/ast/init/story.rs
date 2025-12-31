@@ -2,7 +2,8 @@ use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::init::story::{metadata::Metadata, part::Part},
-    Parsable,
+    error::Error,
+    Parsable, Parser,
 };
 
 pub mod metadata;
@@ -16,9 +17,7 @@ pub struct StoryInit {
 }
 
 impl Parsable for StoryInit {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         let metadata = if parser.peek() == &TokenKind::Keyword(KeywordKind::Story) {
             let metadata = Metadata::parse(parser)?;
             Some(metadata)

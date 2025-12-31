@@ -16,7 +16,7 @@ pub enum Init {
 }
 
 impl Parsable for Init {
-    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         match parser.peek() {
             TokenKind::Keyword(KeywordKind::Story) => Ok(Init::Story(StoryInit::parse(parser)?)),
             TokenKind::Keyword(KeywordKind::Module) => Ok(Init::Module(ModuleInit::parse(parser)?)),

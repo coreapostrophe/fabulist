@@ -40,7 +40,7 @@ impl Stmt {
 }
 
 impl Parsable for Stmt {
-    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         match parser.peek() {
             TokenKind::Keyword(KeywordKind::Goto) => Ok(Stmt::Goto(GotoStmt::parse(parser)?)),
             TokenKind::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),

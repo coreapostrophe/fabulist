@@ -5,7 +5,7 @@ use crate::{
         dialogue::Dialogue, narration::Narration, selection::Selection,
     },
     error::Error,
-    Parsable,
+    Parsable, Parser,
 };
 
 pub mod dialogue;
@@ -20,9 +20,7 @@ pub enum Element {
 }
 
 impl Parsable for Element {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         match parser.peek() {
             TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
             TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),

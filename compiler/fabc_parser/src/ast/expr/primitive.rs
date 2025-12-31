@@ -3,7 +3,7 @@ use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 use crate::{
     ast::{decl::object::ObjectDecl, expr::Expr, stmt::block::BlockStmt},
     error::Error,
-    expect_token, Parsable,
+    expect_token, Parsable, Parser,
 };
 
 #[derive(Debug, PartialEq)]
@@ -31,7 +31,7 @@ pub enum Primitive {
 }
 
 impl Parsable for Primitive {
-    fn parse<'src, 'tok>(parser: &mut crate::Parser<'src, 'tok>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         if parser.is_at_end() {
             return Err(Error::UnexpectedEndOfInput);
         }

@@ -1,6 +1,8 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::init::story::part::element::Element, expect_token, Parsable};
+use crate::{
+    ast::init::story::part::element::Element, error::Error, expect_token, Parsable, Parser,
+};
 
 pub mod element;
 
@@ -12,9 +14,7 @@ pub struct Part {
 }
 
 impl Parsable for Part {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Pound)?;
 
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;

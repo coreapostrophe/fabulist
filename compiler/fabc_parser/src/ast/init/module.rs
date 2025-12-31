@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{expect_token, Parsable};
+use crate::{error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct ModuleInit {
@@ -10,9 +10,7 @@ pub struct ModuleInit {
 }
 
 impl Parsable for ModuleInit {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Module))?;
 
         let path = expect_token!(parser, TokenKind::String, "module string path")?;

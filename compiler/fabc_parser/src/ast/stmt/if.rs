@@ -2,7 +2,8 @@ use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{expr::Expr, stmt::block::BlockStmt},
-    Parsable,
+    error::Error,
+    Parsable, Parser,
 };
 
 #[derive(Debug, PartialEq)]
@@ -20,9 +21,7 @@ pub struct IfStmt {
 }
 
 impl Parsable for IfStmt {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::If))?;
 
         let condition = parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {

@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{error::Error, Parsable};
+use crate::{error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
@@ -11,7 +11,7 @@ pub enum Literal {
 }
 
 impl Parsable for Literal {
-    fn parse<'src, 'tok>(parser: &mut crate::Parser<'src, 'tok>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         match parser.advance() {
             TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
             TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),

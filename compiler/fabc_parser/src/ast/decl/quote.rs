@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::object::ObjectDecl, expect_token, Parsable};
+use crate::{ast::decl::object::ObjectDecl, error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct QuoteDecl {
@@ -10,10 +10,8 @@ pub struct QuoteDecl {
 }
 
 impl Parsable for QuoteDecl {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
-        let text = expect_token!(parser, fabc_lexer::tokens::TokenKind::String, "quote text")?;
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+        let text = expect_token!(parser, TokenKind::String, "quote text")?;
 
         let properties = if parser.peek() == &TokenKind::LeftBrace {
             Some(ObjectDecl::parse(parser)?)

@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, Parsable};
+use crate::{ast::decl::quote::QuoteDecl, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Narration {
@@ -9,9 +9,7 @@ pub struct Narration {
 }
 
 impl Parsable for Narration {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Asterisk)?;
 
         let quote = QuoteDecl::parse(parser)?;

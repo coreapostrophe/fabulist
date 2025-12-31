@@ -1,6 +1,6 @@
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{ast::decl::object::ObjectDecl, Parsable};
+use crate::{ast::decl::object::ObjectDecl, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Metadata {
@@ -9,9 +9,7 @@ pub struct Metadata {
 }
 
 impl Parsable for Metadata {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Story))?;
 
         let object = ObjectDecl::parse(parser)?;

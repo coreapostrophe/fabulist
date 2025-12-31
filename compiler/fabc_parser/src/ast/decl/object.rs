@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::expr::Expr, expect_token, Parsable};
+use crate::{ast::expr::Expr, error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct ObjectDecl {
@@ -11,9 +11,7 @@ pub struct ObjectDecl {
 }
 
 impl Parsable for ObjectDecl {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         let map_vec = parser.punctuated(
             TokenKind::LeftBrace,
             TokenKind::RightBrace,

@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, Parsable};
+use crate::{ast::decl::quote::QuoteDecl, error::Error, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Selection {
@@ -9,9 +9,7 @@ pub struct Selection {
 }
 
 impl Parsable for Selection {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         let mut choices = Vec::new();
 
         while parser.peek() == &TokenKind::Minus {

@@ -10,14 +10,13 @@ use crate::{ast::init::Init, error::Error};
 
 pub mod ast;
 pub mod error;
-pub mod error2;
 mod macros;
 
 pub trait Parsable
 where
     Self: Sized,
 {
-    fn parse<'src, 'tok>(parser: &mut Parser<'src, 'tok>) -> Result<Self, Error>;
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error>;
 }
 
 pub struct Save {
@@ -25,16 +24,14 @@ pub struct Save {
     id_counter: usize,
 }
 
-pub struct Parser<'src, 'tok> {
-    tokens: &'tok [Token<'src>],
+pub struct Parser<'src> {
+    tokens: &'src [Token<'src>],
     current: usize,
     save: Option<Save>,
     id_counter: usize,
-    #[allow(unused)] // Todo: remove when error handling is implemented
-    errors: Vec<Error>,
 }
 
-impl<'src, 'tok> Parser<'src, 'tok> {
+impl<'src> Parser<'src> {
     pub fn parse_ast_str<T>(source: &str) -> Result<T, Error>
     where
         T: Parsable,
@@ -43,7 +40,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         Parser::parse_ast::<T>(&tokens)
     }
 
-    pub fn parse_ast<T>(tokens: &'tok [Token<'src>]) -> Result<T, Error>
+    pub fn parse_ast<T>(tokens: &[Token<'src>]) -> Result<T, Error>
     where
         T: Parsable,
     {
@@ -52,7 +49,6 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             current: 0,
             save: None,
             id_counter: 0,
-            errors: Vec::new(),
         };
 
         T::parse(&mut parser)
@@ -63,13 +59,12 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         Parser::parse(&tokens)
     }
 
-    pub fn parse(tokens: &'tok [Token<'src>]) -> Result<Vec<Init>, Error> {
+    pub fn parse(tokens: &[Token<'src>]) -> Result<Vec<Init>, Error> {
         let mut parser = Parser {
             tokens,
             current: 0,
             save: None,
             id_counter: 0,
-            errors: Vec::new(),
         };
 
         let mut inits = Vec::new();
@@ -124,7 +119,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         parser_fn: F,
     ) -> Result<T, Error>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src>) -> Result<T, Error>,
     {
         self.consume(prefix)?;
         parser_fn(self)
@@ -137,7 +132,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         parser_fn: F,
     ) -> Result<T, Error>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src>) -> Result<T, Error>,
     {
         self.consume(start)?;
         let result = parser_fn(self)?;
@@ -153,7 +148,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         parser_fn: F,
     ) -> Result<Vec<T>, Error>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src>) -> Result<T, Error>,
     {
         self.enclosed(start, end.clone(), |parser| {
             let mut items = Vec::new();
@@ -171,7 +166,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
 
     pub(crate) fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: Fn(&mut Parser<'src>) -> Result<T, Error>,
     {
         self.save = Some(Save {
             current: self.current,

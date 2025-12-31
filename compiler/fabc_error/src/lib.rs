@@ -40,6 +40,11 @@ impl Span {
 
 pub struct Error {
     pub kind: ErrorKind,
-    pub message: String,
     pub span: Span,
+}
+
+impl Error {
+    pub fn new(kind: ErrorKind, span: Span) -> Self {
+        Self { kind, span }
+    }
 }

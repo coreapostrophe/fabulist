@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, expect_token, Parsable};
+use crate::{ast::decl::quote::QuoteDecl, error::Error, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Dialogue {
@@ -10,9 +10,7 @@ pub struct Dialogue {
 }
 
 impl Parsable for Dialogue {
-    fn parse<'src, 'tok>(
-        parser: &mut crate::Parser<'src, 'tok>,
-    ) -> Result<Self, crate::error::Error> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
         let speaker =
             parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
                 expect_token!(parser, TokenKind::Identifier, "speaker identifier")
