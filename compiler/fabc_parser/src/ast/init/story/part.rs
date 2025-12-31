@@ -1,6 +1,6 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::story::part::element::Element, expect_token, Parsable};
+use crate::{ast::init::story::part::element::Element, expect_token, Parsable};
 
 pub mod element;
 
@@ -47,7 +47,7 @@ mod part_tests {
     use crate::{
         ast::{
             decl::quote::QuoteDecl,
-            story::part::{
+            init::story::part::{
                 element::{narration::Narration, Element},
                 Part,
             },
@@ -62,7 +62,7 @@ mod part_tests {
             * "This is a narration."
         "##;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let part = Parser::parse::<Part>(&tokens).expect("Failed to parse part");
+        let part = Parser::parse_ast::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
             id: 2,

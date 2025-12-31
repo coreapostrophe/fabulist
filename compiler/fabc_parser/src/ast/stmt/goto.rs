@@ -38,7 +38,8 @@ mod goto_stmt_tests {
     fn parses_goto_statements() {
         let source = "goto module_ns.part_ident;";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let goto_stmt = Parser::parse::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
+        let goto_stmt =
+            Parser::parse_ast::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
 
         let expected = GotoStmt {
             id: 5,

@@ -112,7 +112,7 @@ mod primitive_tests {
     fn parses_basic_primitives() {
         let source = "foo";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
         assert_eq!(
             primitive,
             Primitive::Identifier {
@@ -123,7 +123,7 @@ mod primitive_tests {
 
         let source = "(x)";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
         assert_eq!(
             primitive,
             Primitive::Grouping {
@@ -140,7 +140,7 @@ mod primitive_tests {
 
         let source = "context";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
         assert_eq!(primitive, Primitive::Context { id: 0 });
     }
 
@@ -148,7 +148,7 @@ mod primitive_tests {
     fn parses_object_primitive() {
         let source = "{ key1: 42, key2: true }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Object {
             id: 3,
@@ -181,7 +181,7 @@ mod primitive_tests {
     fn parses_closure_primitive() {
         let source = "(x, y) => { x + y; }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let primitive = Parser::parse::<Primitive>(&tokens).expect("Failed to parse primitive");
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Closure {
             id: 9,

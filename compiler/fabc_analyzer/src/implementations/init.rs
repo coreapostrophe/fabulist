@@ -1,23 +1,27 @@
-use fabc_parser::ast::story::{
-    metadata::Metadata,
-    part::{
-        element::{dialogue::Dialogue, narration::Narration, selection::Selection, Element},
-        Part,
+use fabc_parser::ast::init::{
+    module::ModuleInit,
+    story::{
+        metadata::Metadata,
+        part::{
+            element::{dialogue::Dialogue, narration::Narration, selection::Selection, Element},
+            Part,
+        },
+        StoryInit,
     },
-    Story,
 };
 
 use crate::{error::Error, Analyzable, Analyzer};
 
-impl Analyzable for Story {
+impl Analyzable for ModuleInit {
+    fn analyze(&self, _analyzer: &mut Analyzer) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
+impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
         if let Some(metadata) = &self.metadata {
             metadata.analyze(analyzer)?;
-        }
-        if let Some(modules) = &self.modules {
-            modules
-                .iter()
-                .try_for_each(|module_smt| module_smt.analyze(analyzer))?;
         }
         self.parts
             .iter()

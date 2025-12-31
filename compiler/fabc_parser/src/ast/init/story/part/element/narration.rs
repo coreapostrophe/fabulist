@@ -31,7 +31,7 @@ mod narration_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{primitive::Primitive, Expr, Primary},
-            story::part::element::narration::Narration,
+            init::story::part::element::narration::Narration,
         },
         Parser,
     };
@@ -40,7 +40,7 @@ mod narration_tests {
     fn parses_narration_without_properties() {
         let source = "* \"This is a narration.\"";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let narration = Parser::parse::<Narration>(&tokens).expect("Failed to parse narration");
+        let narration = Parser::parse_ast::<Narration>(&tokens).expect("Failed to parse narration");
 
         let expected = Narration {
             id: 1,
@@ -58,7 +58,7 @@ mod narration_tests {
     fn parses_narration_with_properties() {
         let source = "* \"This is a narration.\" { mood: happy, volume: loud }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let narration = Parser::parse::<Narration>(&tokens).expect("Failed to parse narration");
+        let narration = Parser::parse_ast::<Narration>(&tokens).expect("Failed to parse narration");
 
         let expected = Narration {
             id: 6,

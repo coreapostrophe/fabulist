@@ -1,33 +1,39 @@
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, Parsable};
+use crate::{ast::decl::quote::QuoteDecl, expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
-pub struct Selection {
+pub struct Dialogue {
     pub id: usize,
-    pub choices: Vec<QuoteDecl>,
+    pub speaker: String,
+    pub quotes: Vec<QuoteDecl>,
 }
 
-impl Parsable for Selection {
+impl Parsable for Dialogue {
     fn parse<'src, 'tok>(
         parser: &mut crate::Parser<'src, 'tok>,
     ) -> Result<Self, crate::error::Error> {
-        let mut choices = Vec::new();
+        let speaker =
+            parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
+                expect_token!(parser, TokenKind::Identifier, "speaker identifier")
+            })?;
 
-        while parser.peek() == &TokenKind::Minus {
-            let choice = parser.prefixed(TokenKind::Minus, |parser| QuoteDecl::parse(parser))?;
-            choices.push(choice);
+        let mut quotes = Vec::new();
+        while parser.peek() == &TokenKind::Greater {
+            let quote = parser.prefixed(TokenKind::Greater, |parser| QuoteDecl::parse(parser))?;
+            quotes.push(quote);
         }
 
-        Ok(Selection {
+        Ok(Dialogue {
             id: parser.assign_id(),
-            choices,
+            speaker,
+            quotes,
         })
     }
 }
 
 #[cfg(test)]
-mod selection_tests {
+mod dialogue_tests {
     use std::collections::HashMap;
 
     use fabc_lexer::Lexer;
@@ -36,39 +42,41 @@ mod selection_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
-            story::part::element::selection::Selection,
+            init::story::part::element::dialogue::Dialogue,
         },
         Parser,
     };
 
     #[test]
-    fn parses_selection_with_multiple_choices() {
+    fn parses_dialogue_element() {
         let source = r#"
-            - "Go left." { score: 10, health: 5 }
-            - "Go right." { score: 5 }
+            [narrator]
+            > "Hello there!" { emotion: "happy", volume: 5 }
+            > "How are you?" { emotion: "curious" }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let selection = Parser::parse::<Selection>(&tokens).expect("Failed to parse selection");
+        let dialogue = Parser::parse_ast::<Dialogue>(&tokens).expect("Failed to parse dialogue");
 
-        let expected = Selection {
+        let expected = Dialogue {
             id: 7,
-            choices: vec![
+            speaker: "narrator".to_string(),
+            quotes: vec![
                 QuoteDecl {
                     id: 3,
-                    text: "Go left.".to_string(),
+                    text: "Hello there!".to_string(),
                     properties: Some(ObjectDecl {
                         id: 2,
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
-                                "score".to_string(),
+                                "emotion".to_string(),
                                 Expr::Primary {
                                     id: 0,
-                                    value: Primary::Literal(Literal::Number(10.0)),
+                                    value: Primary::Literal(Literal::String("happy".to_string())),
                                 },
                             );
                             map.insert(
-                                "health".to_string(),
+                                "volume".to_string(),
                                 Expr::Primary {
                                     id: 1,
                                     value: Primary::Literal(Literal::Number(5.0)),
@@ -80,16 +88,16 @@ mod selection_tests {
                 },
                 QuoteDecl {
                     id: 6,
-                    text: "Go right.".to_string(),
+                    text: "How are you?".to_string(),
                     properties: Some(ObjectDecl {
                         id: 5,
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
-                                "score".to_string(),
+                                "emotion".to_string(),
                                 Expr::Primary {
                                     id: 4,
-                                    value: Primary::Literal(Literal::Number(5.0)),
+                                    value: Primary::Literal(Literal::String("curious".to_string())),
                                 },
                             );
                             map
@@ -99,6 +107,6 @@ mod selection_tests {
             ],
         };
 
-        assert_eq!(selection, expected);
+        assert_eq!(dialogue, expected);
     }
 }

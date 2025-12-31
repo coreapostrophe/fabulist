@@ -35,7 +35,8 @@ mod expr_stmt_tests {
     fn parses_expr_statements() {
         let source = "x + 1;";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr_stmt = Parser::parse::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
+        let expr_stmt =
+            Parser::parse_ast::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
 
         let expected = ExprStmt {
             id: 4,

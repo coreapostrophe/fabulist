@@ -69,7 +69,7 @@ mod if_stmt_tests {
     fn parses_if_stmt_without_else() {
         let source = "if (true) { }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let if_stmt = Parser::parse::<IfStmt>(&tokens).expect("Failed to parse if statement");
+        let if_stmt = Parser::parse_ast::<IfStmt>(&tokens).expect("Failed to parse if statement");
 
         assert_eq!(
             if_stmt,
@@ -92,7 +92,7 @@ mod if_stmt_tests {
     fn parses_if_stmt_with_else_block() {
         let source = "if (false) { } else { }";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let if_stmt = Parser::parse::<IfStmt>(&tokens).expect("Failed to parse if statement");
+        let if_stmt = Parser::parse_ast::<IfStmt>(&tokens).expect("Failed to parse if statement");
 
         assert_eq!(
             if_stmt,

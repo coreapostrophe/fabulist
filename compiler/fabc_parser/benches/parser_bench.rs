@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use fabc_lexer::Lexer;
-use fabc_parser::{ast::story::Story, Parser};
+use fabc_parser::{ast::init::story::StoryInit, Parser};
 
 fn parser_performance(c: &mut Criterion) {
     let source = fabc_reg_test::SIMPLE_STORY;
@@ -12,7 +12,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_simple_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let _ast = Parser::parse::<Story>(black_box(tokens)).unwrap();
+            let _ast = Parser::parse_ast::<StoryInit>(black_box(tokens)).unwrap();
         })
     });
 
@@ -21,7 +21,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_complex_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let _ast = Parser::parse::<Story>(black_box(tokens)).unwrap();
+            let _ast = Parser::parse_ast::<StoryInit>(black_box(tokens)).unwrap();
         })
     });
 
@@ -36,7 +36,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let _ast = Parser::parse_str::<Story>(black_box(source)).unwrap();
+                let _ast = Parser::parse_ast_str::<StoryInit>(black_box(source)).unwrap();
             })
         },
     );
@@ -46,7 +46,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let _ast = Parser::parse_str::<Story>(black_box(source)).unwrap();
+                let _ast = Parser::parse_ast_str::<StoryInit>(black_box(source)).unwrap();
             })
         },
     );

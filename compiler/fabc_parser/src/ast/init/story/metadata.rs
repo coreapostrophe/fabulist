@@ -33,7 +33,7 @@ mod metadata_tests {
         ast::{
             decl::object::ObjectDecl,
             expr::{literal::Literal, Expr, Primary},
-            story::metadata::Metadata,
+            init::story::metadata::Metadata,
         },
         Parser,
     };
@@ -46,7 +46,7 @@ mod metadata_tests {
             }
         "#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let metadata = Parser::parse::<Metadata>(&tokens).expect("Failed to parse metadata");
+        let metadata = Parser::parse_ast::<Metadata>(&tokens).expect("Failed to parse metadata");
 
         let expected = Metadata {
             id: 2,

@@ -1,7 +1,9 @@
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
-    ast::story::part::element::{dialogue::Dialogue, narration::Narration, selection::Selection},
+    ast::init::story::part::element::{
+        dialogue::Dialogue, narration::Narration, selection::Selection,
+    },
     error::Error,
     Parsable,
 };

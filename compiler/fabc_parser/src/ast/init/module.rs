@@ -3,13 +3,13 @@ use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 use crate::{expect_token, Parsable};
 
 #[derive(Debug, PartialEq)]
-pub struct ModuleStmt {
+pub struct ModuleInit {
     pub id: usize,
     pub path: String,
     pub alias: Option<String>,
 }
 
-impl Parsable for ModuleStmt {
+impl Parsable for ModuleInit {
     fn parse<'src, 'tok>(
         parser: &mut crate::Parser<'src, 'tok>,
     ) -> Result<Self, crate::error::Error> {
@@ -29,7 +29,7 @@ impl Parsable for ModuleStmt {
 
         parser.consume(TokenKind::Semicolon)?;
 
-        Ok(ModuleStmt {
+        Ok(ModuleInit {
             id: parser.assign_id(),
             path,
             alias,
@@ -41,37 +41,36 @@ impl Parsable for ModuleStmt {
 mod module_stmt_tests {
     use fabc_lexer::Lexer;
 
-    use crate::{ast::stmt::module::ModuleStmt, Parser};
+    use crate::{ast::init::module::ModuleInit, Parser};
 
     #[test]
-    fn parses_module_stmt_without_alias() {
+    fn parses_module_init_without_alias() {
         let source = r#"module "my/module/path";"#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let module_stmt =
-            Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
-
-        let expected = ModuleStmt {
+        let module_init =
+            Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
+        let expected = ModuleInit {
             id: 0,
             path: "my/module/path".to_string(),
             alias: None,
         };
 
-        assert_eq!(module_stmt, expected);
+        assert_eq!(module_init, expected);
     }
 
     #[test]
-    fn parses_module_stmt_with_alias() {
+    fn parses_module_init_with_alias() {
         let source = r#"module "my/module/path" as my_alias;"#;
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
-        let module_stmt =
-            Parser::parse::<ModuleStmt>(&tokens).expect("Failed to parse module statement");
+        let module_init =
+            Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
 
-        let expected = ModuleStmt {
+        let expected = ModuleInit {
             id: 0,
             path: "my/module/path".to_string(),
             alias: Some("my_alias".to_string()),
         };
 
-        assert_eq!(module_stmt, expected);
+        assert_eq!(module_init, expected);
     }
 }

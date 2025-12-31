@@ -30,7 +30,7 @@ impl Analyzer {
     pub fn get_reachability(&self, node_id: &usize) -> Option<&Reachability> {
         self.reachability_map.get(node_id)
     }
-    pub(crate) fn override_reachability(&mut self, node_id: usize, reachability: Reachability) {
+    pub(crate) fn _override_reachability(&mut self, node_id: usize, reachability: Reachability) {
         self.reachability_map.insert(node_id, reachability);
     }
     pub(crate) fn set_reachability_if_absent(

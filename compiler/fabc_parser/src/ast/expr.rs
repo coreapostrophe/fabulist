@@ -349,7 +349,7 @@ mod expr_tests {
     fn parses_arithmetic_binary_expr() {
         let source = "1 + 2 * 3 / 4";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize source");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             id: 6,
@@ -387,7 +387,7 @@ mod expr_tests {
     fn parses_equality_expr() {
         let source = "10 == 20 != 30";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             id: 4,
@@ -417,7 +417,7 @@ mod expr_tests {
     fn parses_comparison_expr() {
         let source = "5 > 3 < 9 >= 2 <= 10";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             id: 8,
@@ -463,7 +463,7 @@ mod expr_tests {
     fn parses_call_expr() {
         let source = "func(arg1, arg2)";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Call {
             id: 6,
@@ -499,7 +499,7 @@ mod expr_tests {
     fn parses_member_access_expr() {
         let source = "obj.prop1.prop2";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::MemberAccess {
             id: 6,
@@ -535,7 +535,7 @@ mod expr_tests {
     fn parses_unary_expr() {
         let source = "-!42";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Unary {
             id: 2,
@@ -557,7 +557,7 @@ mod expr_tests {
     fn parses_logical_expr() {
         let source = "true and false or true";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
             id: 4,
@@ -587,7 +587,7 @@ mod expr_tests {
     fn parses_assignment_expr() {
         let source = "x = 10 + 20";
         let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
-        let expr = Parser::parse::<Expr>(&tokens).expect("Failed to parse expression");
+        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Assignment {
             id: 5,
