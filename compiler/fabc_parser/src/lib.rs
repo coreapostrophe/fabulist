@@ -10,6 +10,7 @@ use crate::{ast::init::Init, error::Error};
 
 pub mod ast;
 pub mod error;
+pub mod error2;
 mod macros;
 
 pub trait Parsable
@@ -29,6 +30,8 @@ pub struct Parser<'src, 'tok> {
     current: usize,
     save: Option<Save>,
     id_counter: usize,
+    #[allow(unused)] // Todo: remove when error handling is implemented
+    errors: Vec<Error>,
 }
 
 impl<'src, 'tok> Parser<'src, 'tok> {
@@ -49,6 +52,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             current: 0,
             save: None,
             id_counter: 0,
+            errors: Vec::new(),
         };
 
         T::parse(&mut parser)
@@ -65,6 +69,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             current: 0,
             save: None,
             id_counter: 0,
+            errors: Vec::new(),
         };
 
         let mut inits = Vec::new();

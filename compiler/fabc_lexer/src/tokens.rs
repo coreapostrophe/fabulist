@@ -3,6 +3,13 @@ use std::fmt::Display;
 use crate::keywords::KeywordKind;
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ErrorKind {
+    UnrecognizedCharacter,
+    UnterminatedString,
+    InvalidNumber,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind<'a> {
     // Single-character tokens
     LeftParen,
@@ -38,7 +45,7 @@ pub enum TokenKind<'a> {
     Number(f64),
     Keyword(KeywordKind),
 
-    Error,
+    Error(ErrorKind),
     EoF,
 }
 
@@ -73,7 +80,7 @@ impl<'a> Display for TokenKind<'a> {
             TokenKind::String(value) => write!(f, "string `{}`", value),
             TokenKind::Number(value) => write!(f, "number `{}`", value),
             TokenKind::Keyword(kind) => write!(f, "keyword `{}`", kind),
-            TokenKind::Error => write!(f, "error"),
+            TokenKind::Error(kind) => write!(f, "error `{:?}`", kind),
             TokenKind::EoF => write!(f, "EOF"),
         }
     }
@@ -84,4 +91,5 @@ pub struct Token<'a> {
     pub kind: TokenKind<'a>,
     pub line: usize,
     pub column: usize,
+    pub length: usize,
 }

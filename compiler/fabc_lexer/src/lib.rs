@@ -1,6 +1,6 @@
 use crate::{
     keywords::KeywordKind,
-    tokens::{Token, TokenKind},
+    tokens::{ErrorKind, Token, TokenKind},
 };
 
 pub mod keywords;
@@ -30,16 +30,21 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn push_token(&mut self, kind: TokenKind<'a>) {
-        let column = if TokenKind::EoF == kind {
-            self.current
-        } else {
-            self.start
+        let column = match kind {
+            TokenKind::EoF => self.current,
+            _ => self.start,
+        };
+
+        let length = match kind {
+            TokenKind::EoF => 0,
+            _ => self.current - self.start,
         };
 
         self.tokens.push(Token {
             kind,
             line: self.line,
             column,
+            length,
         });
     }
 
@@ -126,7 +131,7 @@ impl<'a> Lexer<'a> {
             '"' => self.string(),
             '0'..='9' => self.number(),
             'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
-            _ => self.push_token(TokenKind::Error),
+            _ => self.push_token(TokenKind::Error(ErrorKind::UnrecognizedCharacter)),
         }
     }
 
@@ -171,7 +176,7 @@ impl<'a> Lexer<'a> {
         if let Ok(number) = number_str.parse::<f64>() {
             self.push_token(TokenKind::Number(number));
         } else {
-            self.push_token(TokenKind::Error);
+            self.push_token(TokenKind::Error(ErrorKind::InvalidNumber));
         }
     }
 
@@ -184,7 +189,7 @@ impl<'a> Lexer<'a> {
         }
 
         if self.is_at_end() {
-            self.push_token(TokenKind::Error);
+            self.push_token(TokenKind::Error(ErrorKind::UnterminatedString));
         } else {
             self.advance();
             let value = &self.source[self.start + 1..self.current - 1];
@@ -243,121 +248,145 @@ mod lexer_tests {
                 kind: TokenKind::LeftParen,
                 line: 1,
                 column: 0,
+                length: 1,
             },
             Token {
                 kind: TokenKind::RightParen,
                 line: 1,
                 column: 2,
+                length: 1,
             },
             Token {
                 kind: TokenKind::LeftBrace,
                 line: 1,
                 column: 4,
+                length: 1,
             },
             Token {
                 kind: TokenKind::RightBrace,
                 line: 1,
                 column: 6,
+                length: 1,
             },
             Token {
                 kind: TokenKind::LeftBracket,
                 line: 1,
                 column: 8,
+                length: 1,
             },
             Token {
                 kind: TokenKind::RightBracket,
                 line: 1,
                 column: 10,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Comma,
                 line: 1,
                 column: 12,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Dot,
                 line: 1,
                 column: 14,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Minus,
                 line: 1,
                 column: 16,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Plus,
                 line: 1,
                 column: 18,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Asterisk,
                 line: 1,
                 column: 20,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Colon,
                 line: 1,
                 column: 22,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Semicolon,
                 line: 1,
                 column: 24,
+                length: 1,
             },
             Token {
                 kind: TokenKind::Bang,
                 line: 1,
                 column: 26,
+                length: 1,
             },
             Token {
                 kind: TokenKind::BangEqual,
                 line: 1,
                 column: 28,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Equal,
                 line: 1,
                 column: 31,
+                length: 1,
             },
             Token {
                 kind: TokenKind::EqualEqual,
                 line: 1,
                 column: 33,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Less,
                 line: 1,
                 column: 36,
+                length: 1,
             },
             Token {
                 kind: TokenKind::LessEqual,
                 line: 1,
                 column: 38,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Greater,
                 line: 1,
                 column: 41,
+                length: 1,
             },
             Token {
                 kind: TokenKind::GreaterEqual,
                 line: 1,
                 column: 43,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Slash,
                 line: 1,
                 column: 46,
+                length: 1,
             },
             Token {
                 kind: TokenKind::ArrowRight,
                 line: 1,
                 column: 48,
+                length: 2,
             },
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
                 column: 50,
+                length: 0,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -372,81 +401,97 @@ mod lexer_tests {
                 kind: TokenKind::Keyword(KeywordKind::Let),
                 line: 1,
                 column: 0,
+                length: 3,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Fn),
                 line: 1,
                 column: 4,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::If),
                 line: 1,
                 column: 7,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Else),
                 line: 1,
                 column: 10,
+                length: 4,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Return),
                 line: 1,
                 column: 15,
+                length: 6,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Goto),
                 line: 1,
                 column: 22,
+                length: 4,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::True),
                 line: 1,
                 column: 27,
+                length: 4,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::False),
                 line: 1,
                 column: 32,
+                length: 5,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::None),
                 line: 1,
                 column: 38,
+                length: 4,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::While),
                 line: 1,
                 column: 43,
+                length: 5,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::For),
                 line: 1,
                 column: 49,
+                length: 3,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::And),
                 line: 1,
                 column: 53,
+                length: 3,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Or),
                 line: 1,
                 column: 57,
+                length: 2,
             },
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Context),
                 line: 1,
                 column: 60,
+                length: 7,
             },
             Token {
                 kind: TokenKind::Identifier("myVar"),
                 line: 1,
                 column: 68,
+                length: 5,
             },
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
                 column: 73,
+                length: 0,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -461,21 +506,25 @@ mod lexer_tests {
                 kind: TokenKind::String("hello"),
                 line: 1,
                 column: 0,
+                length: 7,
             },
             Token {
                 kind: TokenKind::Number(123.0),
                 line: 1,
                 column: 8,
+                length: 3,
             },
             Token {
                 kind: TokenKind::Number(45.67),
                 line: 1,
                 column: 12,
+                length: 5,
             },
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
                 column: 17,
+                length: 0,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -487,19 +536,22 @@ mod lexer_tests {
         let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {
-                kind: TokenKind::Error,
+                kind: TokenKind::Error(ErrorKind::UnrecognizedCharacter),
                 line: 1,
                 column: 0,
+                length: 1,
             },
             Token {
-                kind: TokenKind::Error,
+                kind: TokenKind::Error(ErrorKind::UnterminatedString),
                 line: 1,
                 column: 2,
+                length: 6,
             },
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
                 column: 8,
+                length: 0,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -508,14 +560,18 @@ mod lexer_tests {
     #[test]
     fn tokenizes_simple_story() {
         let tokens = Lexer::tokenize(fabc_reg_test::SIMPLE_STORY);
-        assert!(tokens.iter().all(|token| token.kind != TokenKind::Error));
+        assert!(tokens
+            .iter()
+            .all(|token| !matches!(token.kind, TokenKind::Error(_))));
         assert!(!tokens.is_empty());
     }
 
     #[test]
     fn tokenizes_complex_story() {
         let tokens = Lexer::tokenize(fabc_reg_test::COMPLEX_STORY);
-        assert!(tokens.iter().all(|token| token.kind != TokenKind::Error));
+        assert!(tokens
+            .iter()
+            .all(|token| !matches!(token.kind, TokenKind::Error(_))));
         assert!(!tokens.is_empty());
     }
 }
