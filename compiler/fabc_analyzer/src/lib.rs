@@ -27,17 +27,10 @@ impl Analyzer {
         ast.analyze(&mut analyzer)?;
         Ok(analyzer)
     }
-    pub fn get_reachability(&self, node_id: &usize) -> Option<&Reachability> {
-        self.reachability_map.get(node_id)
+    pub fn get_reachability(&self, node_id: usize) -> Option<&Reachability> {
+        self.reachability_map.get(&node_id)
     }
-    pub(crate) fn _override_reachability(&mut self, node_id: usize, reachability: Reachability) {
-        self.reachability_map.insert(node_id, reachability);
-    }
-    pub(crate) fn set_reachability_if_absent(
-        &mut self,
-        node_id: usize,
-        reachability: Reachability,
-    ) {
-        self.reachability_map.entry(node_id).or_insert(reachability);
+    pub(crate) fn set_reachability(&mut self, node_id: usize) -> &mut Reachability {
+        self.reachability_map.entry(node_id).or_default()
     }
 }
