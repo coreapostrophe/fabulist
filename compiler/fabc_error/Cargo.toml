@@ -6,3 +6,5 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+anstyle = "1.0.13"
+fabc_lexer = { path = "../fabc_lexer" }

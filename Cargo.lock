@@ -318,6 +318,10 @@ dependencies = [
 [[package]]
 name = "fabc_error"
 version = "0.1.0"
+dependencies = [
+ "anstyle",
+ "fabc_lexer",
+]
 
 [[package]]
 name = "fabc_lexer"
