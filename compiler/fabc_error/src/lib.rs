@@ -6,9 +6,9 @@ pub enum ErrorKind {
 }
 
 impl ErrorKind {
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> &'static str {
         match self {
-            ErrorKind::ExpectedType { .. } => "Type mismatch".to_string(),
+            ErrorKind::ExpectedType { .. } => "Type mismatch",
         }
     }
     pub fn message(&self) -> String {
@@ -72,46 +72,34 @@ impl Error {
         Self { kind, span }
     }
     pub fn format(&self, source: &str) -> String {
-        let (start_line, end_line) = (self.span.start().line(), self.span.end().line());
-        let lines = source
-            .lines()
-            .enumerate()
-            .filter(|(i, _)| (start_line..=end_line).contains(&(i + 1)))
-            .map(|(_, str)| str)
-            .collect::<Vec<&str>>();
+        let start_line = self.span.start().line();
+        let end_line = self.span.end().line();
+        let (first_line, last_line) = Self::span_lines(source, start_line, end_line);
+        let message = self.kind.message();
 
-        let caption = format!(
-            "{}Error: {}{}",
-            Self::ERROR_COLOR,
-            self.kind.name(),
-            anstyle::Reset
-        );
-        let formatted_lines = if lines.len() == 1 {
+        let formatted_lines = if start_line == end_line {
             format!(
-                "{}\n{} {}",
-                Self::format_line_header(None),
+                "{} {}",
                 Self::format_line(
                     start_line,
-                    lines[0],
+                    first_line,
                     self.span.start().col(),
                     self.span.end().col()
                 ),
-                Self::format_annotation(&self.kind.message())
+                Self::format_annotation(&message)
             )
         } else {
             let first_line = Self::format_line(
                 start_line,
-                lines[0],
+                first_line,
                 self.span.start().col(),
-                lines[0].len() + 1,
+                first_line.len() + 1,
             );
-            let last_line_leading_whitespace_len = lines[lines.len() - 1]
-                .chars()
-                .take_while(|c| c.is_whitespace())
-                .count();
+            let last_line_leading_whitespace_len =
+                last_line.chars().take_while(|c| c.is_whitespace()).count();
             let last_line = Self::format_line(
                 end_line,
-                lines[lines.len() - 1],
+                last_line,
                 last_line_leading_whitespace_len + 1,
                 self.span.end().col(),
             );
@@ -121,11 +109,17 @@ impl Error {
                 first_line,
                 Self::format_line_continuation(),
                 last_line,
-                Self::format_annotation(&self.kind.message())
+                Self::format_annotation(&message)
             )
         };
 
-        format!("{}\n{}", caption, formatted_lines)
+        format!(
+            "{}Error: {}{}\n{}",
+            Self::ERROR_COLOR,
+            self.kind.name(),
+            anstyle::Reset,
+            formatted_lines
+        )
     }
     fn format_annotation(content: &str) -> String {
         format!("{}{}{}", Self::INFO_COLOR, content, anstyle::Reset)
@@ -169,6 +163,26 @@ impl Error {
             anstyle::Reset,
             offset = Self::LINE_OFFSET + 2
         )
+    }
+    fn span_lines(source: &str, start_line: usize, end_line: usize) -> (&str, &str) {
+        let mut first = "";
+        let mut last = "";
+
+        for (idx, line) in source.lines().enumerate() {
+            let line_num = idx + 1;
+            if line_num == start_line {
+                first = line;
+            }
+            if line_num == end_line {
+                last = line;
+                break;
+            }
+            if line_num > end_line {
+                break;
+            }
+        }
+
+        (first, last)
     }
 }
 
