@@ -11,7 +11,7 @@ pub struct ObjectDecl {
 }
 
 impl Parsable for ObjectDecl {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let map_vec = parser.punctuated(
             TokenKind::LeftBrace,
             TokenKind::RightBrace,

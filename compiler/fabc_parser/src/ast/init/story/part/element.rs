@@ -20,7 +20,7 @@ pub enum Element {
 }
 
 impl Parsable for Element {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {
             TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
             TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),

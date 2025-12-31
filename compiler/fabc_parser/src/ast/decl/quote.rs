@@ -10,7 +10,7 @@ pub struct QuoteDecl {
 }
 
 impl Parsable for QuoteDecl {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let text = expect_token!(parser, TokenKind::String, "quote text")?;
 
         let properties = if parser.peek() == &TokenKind::LeftBrace {

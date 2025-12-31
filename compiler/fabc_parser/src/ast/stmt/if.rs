@@ -21,7 +21,7 @@ pub struct IfStmt {
 }
 
 impl Parsable for IfStmt {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::If))?;
 
         let condition = parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {

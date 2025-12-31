@@ -9,7 +9,7 @@ pub struct Metadata {
 }
 
 impl Parsable for Metadata {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Story))?;
 
         let object = ObjectDecl::parse(parser)?;

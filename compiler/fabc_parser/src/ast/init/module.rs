@@ -10,7 +10,7 @@ pub struct ModuleInit {
 }
 
 impl Parsable for ModuleInit {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Module))?;
 
         let path = expect_token!(parser, TokenKind::String, "module string path")?;

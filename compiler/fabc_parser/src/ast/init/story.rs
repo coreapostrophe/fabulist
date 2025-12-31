@@ -17,7 +17,7 @@ pub struct StoryInit {
 }
 
 impl Parsable for StoryInit {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let metadata = if parser.peek() == &TokenKind::Keyword(KeywordKind::Story) {
             let metadata = Metadata::parse(parser)?;
             Some(metadata)

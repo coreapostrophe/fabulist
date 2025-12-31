@@ -9,7 +9,7 @@ pub struct GotoStmt {
 }
 
 impl Parsable for GotoStmt {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Keyword(KeywordKind::Goto))?;
 
         let target = Expr::parse(parser)?;

@@ -10,7 +10,7 @@ pub struct Dialogue {
 }
 
 impl Parsable for Dialogue {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let speaker =
             parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
                 expect_token!(parser, TokenKind::Identifier, "speaker identifier")

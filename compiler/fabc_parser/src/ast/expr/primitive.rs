@@ -31,7 +31,7 @@ pub enum Primitive {
 }
 
 impl Parsable for Primitive {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         if parser.is_at_end() {
             return Err(Error::UnexpectedEndOfInput);
         }

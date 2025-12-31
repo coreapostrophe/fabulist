@@ -9,7 +9,7 @@ pub struct ExprStmt {
 }
 
 impl Parsable for ExprStmt {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let expr = Expr::parse(parser)?;
         parser.consume(TokenKind::Semicolon)?;
         Ok(ExprStmt {

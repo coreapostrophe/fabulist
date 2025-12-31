@@ -9,7 +9,7 @@ pub struct Narration {
 }
 
 impl Parsable for Narration {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Asterisk)?;
 
         let quote = QuoteDecl::parse(parser)?;

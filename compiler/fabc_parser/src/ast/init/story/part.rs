@@ -14,7 +14,7 @@ pub struct Part {
 }
 
 impl Parsable for Part {
-    fn parse(parser: &mut Parser<'_>) -> Result<Self, Error> {
+    fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Pound)?;
 
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
