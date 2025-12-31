@@ -10,7 +10,7 @@ pub enum ErrorKind {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenKind<'a> {
+pub enum TokenKind<'src> {
     // Single-character tokens
     LeftParen,
     RightParen,
@@ -40,8 +40,8 @@ pub enum TokenKind<'a> {
     ArrowRight,
 
     // Literals
-    Identifier(&'a str),
-    String(&'a str),
+    Identifier(&'src str),
+    String(&'src str),
     Number(f64),
     Keyword(KeywordKind),
 
@@ -49,7 +49,7 @@ pub enum TokenKind<'a> {
     EoF,
 }
 
-impl<'a> Display for TokenKind<'a> {
+impl<'src> Display for TokenKind<'src> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenKind::LeftParen => write!(f, "("),
@@ -87,8 +87,8 @@ impl<'a> Display for TokenKind<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Token<'a> {
-    pub kind: TokenKind<'a>,
+pub struct Token<'src> {
+    pub kind: TokenKind<'src>,
     pub line: usize,
     pub column: usize,
     pub length: usize,

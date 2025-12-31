@@ -6,16 +6,16 @@ use crate::{
 pub mod keywords;
 pub mod tokens;
 
-pub struct Lexer<'a> {
-    tokens: Vec<Token<'a>>,
-    source: &'a str,
+pub struct Lexer<'src> {
+    tokens: Vec<Token<'src>>,
+    source: &'src str,
     start: usize,
     current: usize,
     line: usize,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn tokenize(input: &'a str) -> Vec<Token<'a>> {
+impl<'src> Lexer<'src> {
+    pub fn tokenize(input: &'src str) -> Vec<Token<'src>> {
         let mut lexer = Self {
             tokens: Vec::new(),
             source: input,
@@ -29,7 +29,7 @@ impl<'a> Lexer<'a> {
         lexer.tokens
     }
 
-    pub fn push_token(&mut self, kind: TokenKind<'a>) {
+    pub fn push_token(&mut self, kind: TokenKind<'src>) {
         let column = match kind {
             TokenKind::EoF => self.current,
             _ => self.start,
