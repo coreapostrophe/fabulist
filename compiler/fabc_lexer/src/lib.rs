@@ -30,10 +30,16 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn push_token(&mut self, kind: TokenKind<'a>) {
+        let column = if TokenKind::EoF == kind {
+            self.current
+        } else {
+            self.start
+        };
+
         self.tokens.push(Token {
             kind,
             line: self.line,
-            column: self.start,
+            column,
         });
     }
 
@@ -351,7 +357,7 @@ mod lexer_tests {
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
-                column: 48,
+                column: 50,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -440,7 +446,7 @@ mod lexer_tests {
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
-                column: 68,
+                column: 73,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -469,7 +475,7 @@ mod lexer_tests {
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
-                column: 12,
+                column: 17,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
@@ -493,7 +499,7 @@ mod lexer_tests {
             Token {
                 kind: TokenKind::EoF,
                 line: 1,
-                column: 2,
+                column: 8,
             },
         ];
         assert_eq!(*tokens, expected_tokens);
