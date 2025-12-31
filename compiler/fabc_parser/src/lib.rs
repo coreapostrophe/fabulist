@@ -36,7 +36,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
     where
         T: Parsable,
     {
-        let tokens = Lexer::tokenize(source)?;
+        let tokens = Lexer::tokenize(source);
         Parser::parse_ast::<T>(&tokens)
     }
 
@@ -55,7 +55,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
     }
 
     pub fn parse_str(source: &str) -> Result<Vec<Init>, Error> {
-        let tokens = Lexer::tokenize(source)?;
+        let tokens = Lexer::tokenize(source);
         Parser::parse(&tokens)
     }
 
@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn parses_simple_story() {
         let source = fabc_reg_test::SIMPLE_STORY;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let story = Parser::parse(&tokens);
 
         assert!(story.is_ok());
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn parses_complex_story() {
         let source = fabc_reg_test::COMPLEX_STORY;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let story = Parser::parse(&tokens);
 
         assert!(story.is_ok());

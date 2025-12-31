@@ -45,7 +45,7 @@ mod metadata_tests {
                 title: "My Story",
             }
         "#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let metadata = Parser::parse_ast::<Metadata>(&tokens).expect("Failed to parse metadata");
 
         let expected = Metadata {

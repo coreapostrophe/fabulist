@@ -32,27 +32,27 @@ mod literal_tests {
     #[test]
     fn parses_literals() {
         let source = "42";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
         assert_eq!(literal, Literal::Number(42.0));
 
         let source = "\"hello\"";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
         assert_eq!(literal, Literal::String("hello".to_string()));
 
         let source = "true";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
         assert_eq!(literal, Literal::Boolean(true));
 
         let source = "false";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
         assert_eq!(literal, Literal::Boolean(false));
 
         let source = "none";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
         assert_eq!(literal, Literal::None);
     }

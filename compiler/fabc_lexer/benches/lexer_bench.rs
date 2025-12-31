@@ -11,8 +11,7 @@ fn lexer_performance(c: &mut Criterion) {
         fabc_reg_test::SIMPLE_STORY,
         |b, source| {
             b.iter(|| {
-                let _tokens =
-                    Lexer::tokenize(black_box(source)).expect("Failed to tokenize source code");
+                let _tokens = Lexer::tokenize(black_box(source));
             })
         },
     );
@@ -22,8 +21,7 @@ fn lexer_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let _tokens =
-                    Lexer::tokenize(black_box(source)).expect("Failed to tokenize source code");
+                let _tokens = Lexer::tokenize(black_box(source));
             });
         },
     );

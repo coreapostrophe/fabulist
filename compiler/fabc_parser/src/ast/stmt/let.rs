@@ -44,7 +44,7 @@ mod let_stmt_tests {
     #[test]
     fn parses_let_statements() {
         let source = "let x = 42;";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let let_stmt = Parser::parse_ast::<LetStmt>(&tokens).expect("Failed to parse");
 
         let expected = LetStmt {

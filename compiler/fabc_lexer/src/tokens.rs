@@ -38,6 +38,7 @@ pub enum TokenKind<'a> {
     Number(f64),
     Keyword(KeywordKind),
 
+    Error,
     EoF,
 }
 
@@ -72,6 +73,7 @@ impl<'a> Display for TokenKind<'a> {
             TokenKind::String(value) => write!(f, "string `{}`", value),
             TokenKind::Number(value) => write!(f, "number `{}`", value),
             TokenKind::Keyword(kind) => write!(f, "keyword `{}`", kind),
+            TokenKind::Error => write!(f, "error"),
             TokenKind::EoF => write!(f, "EOF"),
         }
     }

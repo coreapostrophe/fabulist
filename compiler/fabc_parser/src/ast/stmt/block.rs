@@ -43,7 +43,7 @@ mod block_stmt_tests {
     #[test]
     fn parses_block_statements() {
         let source = "{ let a = 1; let b = 2; }";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let block_stmt =
             Parser::parse_ast::<BlockStmt>(&tokens).expect("Failed to parse block statement");
 

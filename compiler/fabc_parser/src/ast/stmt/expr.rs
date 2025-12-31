@@ -34,7 +34,7 @@ mod expr_stmt_tests {
     #[test]
     fn parses_expr_statements() {
         let source = "x + 1;";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let expr_stmt =
             Parser::parse_ast::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
 

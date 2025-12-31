@@ -46,7 +46,7 @@ mod module_stmt_tests {
     #[test]
     fn parses_module_init_without_alias() {
         let source = r#"module "my/module/path";"#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let module_init =
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
         let expected = ModuleInit {
@@ -61,7 +61,7 @@ mod module_stmt_tests {
     #[test]
     fn parses_module_init_with_alias() {
         let source = r#"module "my/module/path" as my_alias;"#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let module_init =
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
 

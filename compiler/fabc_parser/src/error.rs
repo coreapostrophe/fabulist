@@ -24,6 +24,4 @@ pub enum Error {
     InvalidBinaryOperator,
     #[error("Expected `{expected}`, found `{found}`")]
     ExpectedFound { expected: String, found: String },
-    #[error("Lexer error: {0}")]
-    LexerError(#[from] fabc_lexer::error::Error),
 }

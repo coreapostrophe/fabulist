@@ -46,7 +46,7 @@ mod quote_decl_tests {
     #[test]
     fn parses_quote_decl_without_properties() {
         let source = "\"This is a quote.\"";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
@@ -61,7 +61,7 @@ mod quote_decl_tests {
     #[test]
     fn parses_quote_decl_with_properties() {
         let source = "\"This is a quote with properties.\" { author: \"Alice\", length: 30 }";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {

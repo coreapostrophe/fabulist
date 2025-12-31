@@ -60,7 +60,7 @@ mod object_decl_tests {
                 key2: 42
             }
         "#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let object_decl =
             Parser::parse_ast::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 

@@ -71,7 +71,7 @@ mod story_tests {
                 description: "This is a test story."
             }
         "#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let story = Parser::parse_ast::<StoryInit>(&tokens).expect("Failed to parse story");
 
         let expected = StoryInit {
@@ -115,7 +115,7 @@ mod story_tests {
                 - "Go left." { score: 10 }
                 - "Go right." { score: 5 }
         "#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let story = Parser::parse_ast::<StoryInit>(&tokens).expect("Failed to parse story");
 
         let expected = StoryInit {

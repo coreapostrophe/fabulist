@@ -1,10 +1,8 @@
 use crate::{
-    error::Error,
     keywords::KeywordKind,
     tokens::{Token, TokenKind},
 };
 
-pub mod error;
 pub mod keywords;
 pub mod tokens;
 
@@ -17,7 +15,7 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn tokenize(input: &'a str) -> Result<Vec<Token<'a>>, Error> {
+    pub fn tokenize(input: &'a str) -> Vec<Token<'a>> {
         let mut lexer = Self {
             tokens: Vec::new(),
             source: input,
@@ -26,9 +24,9 @@ impl<'a> Lexer<'a> {
             line: 1,
         };
 
-        lexer.scan_tokens()?;
+        lexer.scan_tokens();
 
-        Ok(lexer.tokens)
+        lexer.tokens
     }
 
     pub fn push_token(&mut self, kind: TokenKind<'a>) {
@@ -39,18 +37,16 @@ impl<'a> Lexer<'a> {
         });
     }
 
-    fn scan_tokens(&mut self) -> Result<(), Error> {
+    fn scan_tokens(&mut self) {
         while !self.is_at_end() {
             self.reset_start();
-            self.scan_token()?;
+            self.scan_token();
         }
         self.push_token(TokenKind::EoF);
-
-        Ok(())
     }
 
-    pub fn scan_token(&mut self) -> Result<(), Error> {
-        let c = self.advance()?;
+    pub fn scan_token(&mut self) {
+        let c = self.advance();
 
         match c {
             // Single-character tokens.
@@ -71,30 +67,30 @@ impl<'a> Lexer<'a> {
 
             // Double-character tokens.
             '!' => {
-                if self.r#match('=')? {
+                if self.r#match('=') {
                     self.push_token(TokenKind::BangEqual)
                 } else {
                     self.push_token(TokenKind::Bang)
                 }
             }
             '=' => {
-                if self.r#match('=')? {
+                if self.r#match('=') {
                     self.push_token(TokenKind::EqualEqual)
-                } else if self.r#match('>')? {
+                } else if self.r#match('>') {
                     self.push_token(TokenKind::ArrowRight)
                 } else {
                     self.push_token(TokenKind::Equal)
                 }
             }
             '<' => {
-                if self.r#match('=')? {
+                if self.r#match('=') {
                     self.push_token(TokenKind::LessEqual)
                 } else {
                     self.push_token(TokenKind::Less)
                 }
             }
             '>' => {
-                if self.r#match('=')? {
+                if self.r#match('=') {
                     self.push_token(TokenKind::GreaterEqual)
                 } else {
                     self.push_token(TokenKind::Greater)
@@ -103,9 +99,9 @@ impl<'a> Lexer<'a> {
 
             // Comments and whitespace.
             '/' => {
-                if self.r#match('/')? {
+                if self.r#match('/') {
                     while self.peek() != '\n' && !self.is_at_end() {
-                        self.advance()?;
+                        self.advance();
                     }
                 } else {
                     self.push_token(TokenKind::Slash)
@@ -116,18 +112,16 @@ impl<'a> Lexer<'a> {
                     if c == '\n' {
                         self.line += 1;
                     }
-                    self.advance()?;
+                    self.advance();
                 }
             }
 
             // Literals.
-            '"' => self.string()?,
-            '0'..='9' => self.number()?,
-            'a'..='z' | 'A'..='Z' | '_' => self.identifier()?,
-            _ => return Err(Error::UnexpectedCharacter(c)),
+            '"' => self.string(),
+            '0'..='9' => self.number(),
+            'a'..='z' | 'A'..='Z' | '_' => self.identifier(),
+            _ => self.push_token(TokenKind::Error),
         }
-
-        Ok(())
     }
 
     fn is_white_space(&self) -> bool {
@@ -138,9 +132,9 @@ impl<'a> Lexer<'a> {
         self.start = self.current;
     }
 
-    fn identifier(&mut self) -> Result<(), Error> {
+    fn identifier(&mut self) {
         while self.peek().is_ascii_alphanumeric() || self.peek() == '_' {
-            self.advance()?;
+            self.advance();
         }
 
         let text = &self.source[self.start..self.current];
@@ -151,59 +145,53 @@ impl<'a> Lexer<'a> {
         } else {
             self.push_token(TokenKind::Identifier(text));
         }
-
-        Ok(())
     }
 
-    fn number(&mut self) -> Result<(), Error> {
+    fn number(&mut self) {
         while self.peek().is_ascii_digit() {
-            self.advance()?;
+            self.advance();
         }
 
         if self.peek() == '.' && self.peek_next().is_ascii_digit() {
-            self.advance()?;
+            self.advance();
 
             while self.peek().is_ascii_digit() {
-                self.advance()?;
+                self.advance();
             }
         }
 
         let number_str = &self.source[self.start..self.current];
 
-        self.push_token(TokenKind::Number(
-            number_str.parse().map_err(|_| Error::UnableToParseNumber)?,
-        ));
-
-        Ok(())
+        if let Ok(number) = number_str.parse::<f64>() {
+            self.push_token(TokenKind::Number(number));
+        } else {
+            self.push_token(TokenKind::Error);
+        }
     }
 
-    fn string(&mut self) -> Result<(), Error> {
+    fn string(&mut self) {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.line += 1;
             }
-            self.advance()?;
+            self.advance();
         }
 
         if self.is_at_end() {
-            return Err(Error::UnterminatedString);
+            self.push_token(TokenKind::Error);
+        } else {
+            self.advance();
+            let value = &self.source[self.start + 1..self.current - 1];
+            self.push_token(TokenKind::String(value));
         }
-
-        self.advance()?;
-
-        let value = &self.source[self.start + 1..self.current - 1];
-
-        self.push_token(TokenKind::String(value));
-
-        Ok(())
     }
 
-    fn r#match(&mut self, expected: char) -> Result<bool, Error> {
+    fn r#match(&mut self, expected: char) -> bool {
         if self.peek() != expected {
-            return Ok(false);
+            return false;
         }
-        self.advance()?;
-        Ok(true)
+        self.advance();
+        true
     }
 
     fn peek(&self) -> char {
@@ -222,13 +210,13 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn advance(&mut self) -> Result<char, Error> {
+    fn advance(&mut self) -> char {
         if self.is_at_end() {
-            return Err(Error::UnexpectedEndOfInput);
+            return '\0';
         }
         let ch = self.peek();
         self.current += 1;
-        Ok(ch)
+        ch
     }
 
     fn is_at_end(&self) -> bool {
@@ -243,7 +231,7 @@ mod lexer_tests {
     #[test]
     fn test_simple_tokens() {
         let source = "( ) { } [ ] , . - + * : ; ! != = == < <= > >= / =>";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::LeftParen,
@@ -372,7 +360,7 @@ mod lexer_tests {
     #[test]
     fn test_keywords_and_identifiers() {
         let source = "let fn if else return goto true false none while for and or context myVar";
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::Keyword(KeywordKind::Let),
@@ -461,7 +449,7 @@ mod lexer_tests {
     #[test]
     fn test_string_and_number_literals() {
         let source = r#""hello" 123 45.67"#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize");
+        let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {
                 kind: TokenKind::String("hello"),
@@ -485,5 +473,43 @@ mod lexer_tests {
             },
         ];
         assert_eq!(*tokens, expected_tokens);
+    }
+
+    #[test]
+    fn test_error_token() {
+        let source = "@ \"fasfa";
+        let tokens = Lexer::tokenize(source);
+        let expected_tokens = vec![
+            Token {
+                kind: TokenKind::Error,
+                line: 1,
+                column: 0,
+            },
+            Token {
+                kind: TokenKind::Error,
+                line: 1,
+                column: 2,
+            },
+            Token {
+                kind: TokenKind::EoF,
+                line: 1,
+                column: 2,
+            },
+        ];
+        assert_eq!(*tokens, expected_tokens);
+    }
+
+    #[test]
+    fn tokenizes_simple_story() {
+        let tokens = Lexer::tokenize(fabc_reg_test::SIMPLE_STORY);
+        assert!(tokens.iter().all(|token| token.kind != TokenKind::Error));
+        assert!(!tokens.is_empty());
+    }
+
+    #[test]
+    fn tokenizes_complex_story() {
+        let tokens = Lexer::tokenize(fabc_reg_test::COMPLEX_STORY);
+        assert!(tokens.iter().all(|token| token.kind != TokenKind::Error));
+        assert!(!tokens.is_empty());
     }
 }

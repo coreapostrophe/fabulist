@@ -54,7 +54,7 @@ mod dialogue_tests {
             > "Hello there!" { emotion: "happy", volume: 5 }
             > "How are you?" { emotion: "curious" }
         "#;
-        let tokens = Lexer::tokenize(source).expect("Failed to tokenize source code");
+        let tokens = Lexer::tokenize(source);
         let dialogue = Parser::parse_ast::<Dialogue>(&tokens).expect("Failed to parse dialogue");
 
         let expected = Dialogue {
