@@ -1,8 +1,7 @@
+use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{
-    ast::init::story::part::element::Element, error::Error, expect_token, Parsable, Parser,
-};
+use crate::{ast::init::story::part::element::Element, expect_token, Parsable, Parser};
 
 pub mod element;
 

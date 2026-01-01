@@ -1,8 +1,8 @@
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::{decl::object::ObjectDecl, expr::Expr, stmt::block::BlockStmt},
-    error::Error,
     expect_token, Parsable, Parser,
 };
 
@@ -32,10 +32,6 @@ pub enum Primitive {
 
 impl Parsable for Primitive {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
-        if parser.is_at_end() {
-            return Err(Error::UnexpectedEndOfInput);
-        }
-
         match parser.peek() {
             TokenKind::Identifier(_) => {
                 let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
@@ -88,7 +84,12 @@ impl Parsable for Primitive {
                     value: object,
                 })
             }
-            _ => Err(Error::UnhandledPrimitive),
+            _ => Err(Error::new(
+                ErrorKind::UnrecognizedPrimitive {
+                    primitive: parser.peek().to_string(),
+                },
+                parser.current_token(),
+            )),
         }
     }
 }

@@ -1,6 +1,7 @@
+use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::object::ObjectDecl, error::Error, expect_token, Parsable, Parser};
+use crate::{ast::decl::object::ObjectDecl, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct QuoteDecl {

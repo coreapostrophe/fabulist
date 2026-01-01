@@ -4,10 +4,13 @@ macro_rules! expect_token {
         if let $variant(value) = $parser.advance() {
             Ok(value.to_string())
         } else {
-            Err($crate::error::Error::ExpectedFound {
-                expected: $expected.to_string(),
-                found: $parser.previous().to_string(),
-            })
+            Err(fabc_error::Error::new(
+                fabc_error::kind::ErrorKind::ExpectedToken {
+                    expected: $expected.to_string(),
+                    found: $parser.previous().to_string(),
+                },
+                $parser.current_token(),
+            ))
         }
     }};
 }

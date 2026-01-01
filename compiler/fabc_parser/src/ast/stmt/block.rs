@@ -1,6 +1,7 @@
+use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::stmt::Stmt, error::Error, Parsable, Parser};
+use crate::{ast::stmt::Stmt, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct BlockStmt {

@@ -1,8 +1,8 @@
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::init::{module::ModuleInit, story::StoryInit},
-    error::Error,
     Parsable, Parser,
 };
 
@@ -20,7 +20,12 @@ impl Parsable for Init {
         match parser.peek() {
             TokenKind::Keyword(KeywordKind::Story) => Ok(Init::Story(StoryInit::parse(parser)?)),
             TokenKind::Keyword(KeywordKind::Module) => Ok(Init::Module(ModuleInit::parse(parser)?)),
-            _ => Err(Error::UnhandledInitiator),
+            _ => Err(Error::new(
+                ErrorKind::UnrecognizedInitiator {
+                    initiator: parser.peek().to_string(),
+                },
+                parser.current_token(),
+            )),
         }
     }
 }

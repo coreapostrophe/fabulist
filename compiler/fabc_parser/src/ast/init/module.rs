@@ -1,6 +1,7 @@
+use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{error::Error, expect_token, Parsable, Parser};
+use crate::{expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct ModuleInit {

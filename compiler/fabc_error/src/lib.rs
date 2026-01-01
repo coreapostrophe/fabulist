@@ -1,26 +1,12 @@
 use anstyle::{Ansi256Color, AnsiColor, Color, Style};
+use fabc_lexer::tokens::Token;
 use std::fmt::Write;
 
-#[derive(Debug, Clone)]
-pub enum ErrorKind {
-    ExpectedType { expected: String, found: String },
-}
+use crate::kind::ErrorKind;
 
-impl ErrorKind {
-    pub fn name(&self) -> &'static str {
-        match self {
-            ErrorKind::ExpectedType { .. } => "Type mismatch",
-        }
-    }
-    pub fn message(&self) -> String {
-        match self {
-            ErrorKind::ExpectedType { expected, found } => {
-                format!("Expected type '{}', found '{}'", expected, found)
-            }
-        }
-    }
-}
+pub mod kind;
 
+#[derive(Debug)]
 pub struct LineCol(usize, usize);
 
 impl LineCol {
@@ -33,8 +19,15 @@ impl LineCol {
     pub fn col(&self) -> usize {
         self.1
     }
+    pub fn from_token(token: &Token<'_>) -> Self {
+        Self::new(token.line, token.column)
+    }
+    pub fn from_token_end(token: &Token<'_>) -> Self {
+        Self::new(token.line, token.column + token.length)
+    }
 }
 
+#[derive(Debug)]
 pub struct Span {
     start: LineCol,
     end: LineCol,
@@ -52,6 +45,19 @@ impl Span {
     }
 }
 
+impl From<(LineCol, LineCol)> for Span {
+    fn from((start, end): (LineCol, LineCol)) -> Self {
+        Self::new(start, end)
+    }
+}
+
+impl From<&Token<'_>> for Span {
+    fn from(token: &Token<'_>) -> Self {
+        Self::new(LineCol::from_token(token), LineCol::from_token_end(token))
+    }
+}
+
+#[derive(Debug)]
 pub struct Error {
     pub kind: ErrorKind,
     pub span: Span,
@@ -70,8 +76,11 @@ impl Error {
         .bold();
     const CODE_COLOR: Style = Style::new().fg_color(Some(Color::Ansi(AnsiColor::White)));
 
-    pub fn new(kind: ErrorKind, span: Span) -> Self {
-        Self { kind, span }
+    pub fn new(kind: ErrorKind, span: impl Into<Span>) -> Self {
+        Self {
+            kind,
+            span: span.into(),
+        }
     }
 
     pub fn format(&self, source: &str) -> String {
@@ -225,7 +234,7 @@ mod error_tests {
                 let x: i32 = "hello";
             }
         "#;
-        let kind = ErrorKind::ExpectedType {
+        let kind = ErrorKind::ExpectedToken {
             expected: "i32".to_string(),
             found: "string".to_string(),
         };
@@ -236,11 +245,11 @@ mod error_tests {
         assert_eq!(
             formatted,
             concat!(
-                "\u{1b}[1m\u{1b}[38;5;160merror: Type mismatch\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
+                "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected token\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
                 "      |\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    3 |\u{1b}[0m\u{1b}[37m            ",
                 "    let x: i32 = \"hello\";\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      ",
                 "|\u{1b}[0m\u{1b}[1m\u{1b}[94m                             ",
-                "^^^^^^^\u{1b}[0m \u{1b}[1m\u{1b}[94mExpected type 'i32', found 'string'\u{1b}[0m"
+                "^^^^^^^\u{1b}[0m \u{1b}[1m\u{1b}[94mExpected 'i32', found 'string'\u{1b}[0m"
             )
         )
     }
@@ -255,7 +264,7 @@ mod error_tests {
                 );
             }
         "#;
-        let kind = ErrorKind::ExpectedType {
+        let kind = ErrorKind::ExpectedToken {
             expected: "i32".to_string(),
             found: "string".to_string(),
         };
@@ -266,14 +275,14 @@ mod error_tests {
         assert_eq!(
             formatted,
             concat!(
-            "\u{1b}[1m\u{1b}[38;5;160merror: Type mismatch\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
+            "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected token\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
             "      |\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    3 |\u{1b}[0m\u{1b}[37m            ",
             "    let x: i32 = some_function(\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      ",
             "|\u{1b}[0m\u{1b}[1m\u{1b}[94m                             ^^^^^^^^^^^^^^",
             "\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    ...\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      ",
             "|\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    6 |\u{1b}[0m\u{1b}[37m                ",
             ");\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      |\u{1b}[0m\u{1b}[1m\u{1b}[94m                ",
-            "^^\u{1b}[0m \u{1b}[1m\u{1b}[94mExpected type 'i32', found 'string'\u{1b}[0m")
+            "^^\u{1b}[0m \u{1b}[1m\u{1b}[94mExpected 'i32', found 'string'\u{1b}[0m")
         )
     }
 }

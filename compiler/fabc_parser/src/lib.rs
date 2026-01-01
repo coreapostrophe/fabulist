@@ -1,16 +1,23 @@
 use std::slice;
 
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{
     keywords::KeywordKind,
     tokens::{Token, TokenKind},
     Lexer,
 };
 
-use crate::{ast::init::Init, error::Error};
+use crate::ast::init::Init;
 
 pub mod ast;
-pub mod error;
 mod macros;
+
+pub trait InvariantParseable
+where
+    Self: Sized,
+{
+    fn invariant_parse(parser: &mut Parser<'_, '_>) -> Self;
+}
 
 pub trait Parsable
 where
@@ -24,36 +31,21 @@ pub struct Save {
     id_counter: usize,
 }
 
+pub struct ParserResult<T> {
+    pub result: T,
+    pub errors: Vec<Error>,
+}
+
 pub struct Parser<'src, 'tok> {
     tokens: &'tok [Token<'src>],
     current: usize,
     save: Option<Save>,
     id_counter: usize,
+    #[allow(unused)]
+    errors: Vec<Error>,
 }
 
 impl<'src, 'tok> Parser<'src, 'tok> {
-    pub fn parse_ast_str<T>(source: &str) -> Result<T, Error>
-    where
-        T: Parsable,
-    {
-        let tokens = Lexer::tokenize(source);
-        Parser::parse_ast::<T>(&tokens)
-    }
-
-    pub fn parse_ast<T>(tokens: &[Token<'src>]) -> Result<T, Error>
-    where
-        T: Parsable,
-    {
-        let mut parser = Parser {
-            tokens,
-            current: 0,
-            save: None,
-            id_counter: 0,
-        };
-
-        T::parse(&mut parser)
-    }
-
     pub fn parse_str(source: &str) -> Result<Vec<Init>, Error> {
         let tokens = Lexer::tokenize(source);
         Parser::parse(&tokens)
@@ -65,6 +57,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             current: 0,
             save: None,
             id_counter: 0,
+            errors: Vec::new(),
         };
 
         let mut inits = Vec::new();
@@ -75,6 +68,35 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
 
         Ok(inits)
+    }
+
+    #[cfg(test)]
+    pub fn parse_ast_str<T>(source: &str) -> Result<T, Error>
+    where
+        T: Parsable,
+    {
+        let tokens = Lexer::tokenize(source);
+        Parser::parse_ast::<T>(&tokens)
+    }
+
+    #[cfg(test)]
+    pub fn parse_ast<T>(tokens: &[Token<'src>]) -> Result<T, Error>
+    where
+        T: Parsable,
+    {
+        let mut parser = Parser {
+            tokens,
+            current: 0,
+            save: None,
+            id_counter: 0,
+            errors: Vec::new(),
+        };
+
+        T::parse(&mut parser)
+    }
+
+    pub(crate) fn _push_error(&mut self, error: fabc_error::Error) {
+        self.errors.push(error);
     }
 
     pub(crate) fn assign_id(&mut self) -> usize {
@@ -99,11 +121,19 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         &self.tokens[self.current - 1].kind
     }
 
+    pub(crate) fn previous_token(&self) -> &Token<'src> {
+        &self.tokens[self.current - 1]
+    }
+
     pub(crate) fn peek(&self) -> &TokenKind<'src> {
         if self.is_at_end() {
             return &TokenKind::EoF;
         }
         &self.tokens[self.current].kind
+    }
+
+    pub(crate) fn current_token(&self) -> &Token<'src> {
+        &self.tokens[self.current]
     }
 
     pub(crate) fn advance(&mut self) -> &TokenKind<'src> {
@@ -190,10 +220,13 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         if self.peek() == &expected {
             Ok(self.advance())
         } else {
-            Err(Error::ExpectedFound {
-                expected: expected.to_string(),
-                found: self.peek().to_string(),
-            })
+            Err(Error::new(
+                ErrorKind::ExpectedToken {
+                    expected: expected.to_string(),
+                    found: self.peek().to_string(),
+                },
+                self.current_token(),
+            ))
         }
     }
 

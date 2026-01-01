@@ -1,8 +1,11 @@
-use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
+use fabc_error::{kind::ErrorKind, Error};
+use fabc_lexer::{
+    keywords::KeywordKind,
+    tokens::{Token, TokenKind},
+};
 
 use crate::{
     ast::expr::{literal::Literal, primitive::Primitive},
-    error::Error,
     Parsable, Parser,
 };
 
@@ -25,11 +28,11 @@ pub enum BinaryOperator {
     Or,
 }
 
-impl TryFrom<&TokenKind<'_>> for BinaryOperator {
+impl TryFrom<&Token<'_>> for BinaryOperator {
     type Error = Error;
 
-    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
-        match token {
+    fn try_from(token: &Token<'_>) -> Result<Self, Self::Error> {
+        match token.kind {
             TokenKind::EqualEqual => Ok(BinaryOperator::EqualEqual),
             TokenKind::BangEqual => Ok(BinaryOperator::NotEqual),
             TokenKind::Greater => Ok(BinaryOperator::Greater),
@@ -40,7 +43,12 @@ impl TryFrom<&TokenKind<'_>> for BinaryOperator {
             TokenKind::Minus => Ok(BinaryOperator::Subtraction),
             TokenKind::Asterisk => Ok(BinaryOperator::Multiply),
             TokenKind::Slash => Ok(BinaryOperator::Divide),
-            _ => Err(Error::InvalidBinaryOperator),
+            _ => Err(Error::new(
+                ErrorKind::InvalidOperator {
+                    operator: token.kind.to_string(),
+                },
+                token,
+            )),
         }
     }
 }
@@ -51,14 +59,19 @@ pub enum UnaryOperator {
     Negate,
 }
 
-impl TryFrom<&TokenKind<'_>> for UnaryOperator {
+impl TryFrom<&Token<'_>> for UnaryOperator {
     type Error = Error;
 
-    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
-        match token {
+    fn try_from(token: &Token<'_>) -> Result<Self, Self::Error> {
+        match token.kind {
             TokenKind::Bang => Ok(UnaryOperator::Not),
             TokenKind::Minus => Ok(UnaryOperator::Negate),
-            _ => Err(Error::InvalidUnaryOperator),
+            _ => Err(Error::new(
+                ErrorKind::InvalidOperator {
+                    operator: token.kind.to_string(),
+                },
+                token,
+            )),
         }
     }
 }
@@ -69,14 +82,19 @@ pub enum LogicalOperator {
     Or,
 }
 
-impl TryFrom<&TokenKind<'_>> for LogicalOperator {
+impl TryFrom<&Token<'_>> for LogicalOperator {
     type Error = Error;
 
-    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
-        match token {
+    fn try_from(token: &Token<'_>) -> Result<Self, Self::Error> {
+        match token.kind {
             TokenKind::Keyword(KeywordKind::And) => Ok(LogicalOperator::And),
             TokenKind::Keyword(KeywordKind::Or) => Ok(LogicalOperator::Or),
-            _ => Err(Error::InvalidLogicalOperator),
+            _ => Err(Error::new(
+                ErrorKind::InvalidOperator {
+                    operator: token.kind.to_string(),
+                },
+                token,
+            )),
         }
     }
 }
@@ -148,7 +166,7 @@ impl Expr {
             TokenKind::Keyword(KeywordKind::And),
             TokenKind::Keyword(KeywordKind::Or),
         ]) {
-            let operator = LogicalOperator::try_from(parser.previous())?;
+            let operator = LogicalOperator::try_from(parser.previous_token())?;
             let right = Self::equality(parser)?;
             expr = Expr::Binary {
                 id: parser.assign_id(),
@@ -168,7 +186,7 @@ impl Expr {
         let mut expr = Self::comparison(parser)?;
 
         while parser.r#match(&[TokenKind::BangEqual, TokenKind::EqualEqual]) {
-            let operator = BinaryOperator::try_from(parser.previous())?;
+            let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::comparison(parser)?;
             expr = Expr::Binary {
                 id: parser.assign_id(),
@@ -190,7 +208,7 @@ impl Expr {
             TokenKind::Less,
             TokenKind::LessEqual,
         ]) {
-            let operator = BinaryOperator::try_from(parser.previous())?;
+            let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::term(parser)?;
             expr = Expr::Binary {
                 id: parser.assign_id(),
@@ -207,7 +225,7 @@ impl Expr {
         let mut expr = Self::factor(parser)?;
 
         while parser.r#match(&[TokenKind::Minus, TokenKind::Plus]) {
-            let operator = BinaryOperator::try_from(parser.previous())?;
+            let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::factor(parser)?;
             expr = Expr::Binary {
                 id: parser.assign_id(),
@@ -224,7 +242,7 @@ impl Expr {
         let mut expr = Self::unary(parser)?;
 
         while parser.r#match(&[TokenKind::Slash, TokenKind::Asterisk]) {
-            let operator = BinaryOperator::try_from(parser.previous())?;
+            let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
             expr = Expr::Binary {
                 id: parser.assign_id(),
@@ -239,7 +257,7 @@ impl Expr {
 
     fn unary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         if parser.r#match(&[TokenKind::Bang, TokenKind::Minus]) {
-            let operator = UnaryOperator::try_from(parser.previous())?;
+            let operator = UnaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
             return Ok(Expr::Unary {
                 id: parser.assign_id(),
@@ -296,10 +314,6 @@ impl Expr {
     }
 
     fn primary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
-        if parser.is_at_end() {
-            return Err(Error::UnexpectedEndOfInput);
-        }
-
         match parser.peek() {
             // Literals
             TokenKind::String(_)
@@ -323,7 +337,12 @@ impl Expr {
                     value: Primary::Primitive(primitive),
                 })
             }
-            _ => Err(Error::UnhandledPrimaryExpression),
+            _ => Err(Error::new(
+                ErrorKind::UnrecognizedPrimary {
+                    primary: parser.peek().to_string(),
+                },
+                parser.current_token(),
+            )),
         }
     }
 }

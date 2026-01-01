@@ -1,6 +1,7 @@
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{error::Error, Parsable, Parser};
+use crate::{Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
@@ -18,7 +19,12 @@ impl Parsable for Literal {
             TokenKind::String(value) => Ok(Literal::String(value.to_string())),
             TokenKind::Number(value) => Ok(Literal::Number(*value)),
             TokenKind::Keyword(KeywordKind::None) => Ok(Literal::None),
-            _ => Err(Error::UnhandledLiteral),
+            _ => Err(Error::new(
+                ErrorKind::UnrecognizedLiteral {
+                    literal: parser.previous().to_string(),
+                },
+                parser.current_token(),
+            )),
         }
     }
 }

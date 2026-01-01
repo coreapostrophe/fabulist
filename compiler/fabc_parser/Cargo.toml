@@ -9,12 +9,12 @@ license.workspace = true
 thiserror.workspace = true
 
 fabc_lexer = { path = "../fabc_lexer" }
+fabc_error = { path = "../fabc_error" }
 
 [dev-dependencies]
 criterion.workspace = true
 
 fabc_reg_test = { path = "../fabc_reg_test" }
-
 [[bench]]
 name = "parser_bench"
 harness = false

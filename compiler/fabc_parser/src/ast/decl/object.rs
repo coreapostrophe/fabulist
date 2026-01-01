@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
+use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::expr::Expr, error::Error, expect_token, Parsable, Parser};
+use crate::{ast::expr::Expr, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct ObjectDecl {

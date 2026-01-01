@@ -1,6 +1,7 @@
+use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, error::Error, expect_token, Parsable, Parser};
+use crate::{ast::decl::quote::QuoteDecl, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct Dialogue {

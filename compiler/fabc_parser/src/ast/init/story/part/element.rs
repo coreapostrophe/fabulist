@@ -1,10 +1,10 @@
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
     ast::init::story::part::element::{
         dialogue::Dialogue, narration::Narration, selection::Selection,
     },
-    error::Error,
     Parsable, Parser,
 };
 
@@ -25,7 +25,12 @@ impl Parsable for Element {
             TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
             TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),
             TokenKind::Asterisk => Ok(Element::Narration(Narration::parse(parser)?)),
-            _ => Err(Error::UnhandledElement),
+            _ => Err(Error::new(
+                ErrorKind::UnrecognizedElement {
+                    element: parser.peek().to_string(),
+                },
+                parser.current_token(),
+            )),
         }
     }
 }

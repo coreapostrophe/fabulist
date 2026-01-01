@@ -1,8 +1,8 @@
+use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::init::story::{metadata::Metadata, part::Part},
-    error::Error,
     Parsable, Parser,
 };
 

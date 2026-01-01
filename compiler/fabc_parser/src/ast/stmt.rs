@@ -1,8 +1,8 @@
+use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
     ast::stmt::{block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt},
-    error::Error,
     Parsable, Parser,
 };
 

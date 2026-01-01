@@ -337,6 +337,7 @@ name = "fabc_parser"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "fabc_error",
  "fabc_lexer",
  "fabc_reg_test",
  "thiserror",
