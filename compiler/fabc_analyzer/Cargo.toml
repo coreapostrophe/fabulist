@@ -6,6 +6,5 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-thiserror.workspace = true
-
+fabc_error = { path = "../fabc_error" }
 fabc_parser = { path = "../fabc_parser" }

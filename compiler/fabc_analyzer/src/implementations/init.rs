@@ -10,80 +10,67 @@ use fabc_parser::ast::init::{
     },
 };
 
-use crate::{error::Error, Analyzable, Analyzer};
+use crate::{Analyzable, Analyzer};
 
 impl Analyzable for ModuleInit {
-    fn analyze(&self, _analyzer: &mut Analyzer) -> Result<(), Error> {
-        Ok(())
-    }
+    fn analyze(&self, _analyzer: &mut Analyzer) {}
 }
 
 impl Analyzable for StoryInit {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         if let Some(metadata) = &self.metadata {
-            metadata.analyze(analyzer)?;
+            metadata.analyze(analyzer);
         }
-        self.parts
-            .iter()
-            .try_for_each(|part| part.analyze(analyzer))?;
-        Ok(())
+        self.parts.iter().for_each(|part| part.analyze(analyzer));
     }
 }
 
 impl Analyzable for Metadata {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
-        self.object.analyze(analyzer)?;
-        Ok(())
+    fn analyze(&self, analyzer: &mut Analyzer) {
+        self.object.analyze(analyzer);
     }
 }
 
 impl Analyzable for Part {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         self.elements
             .iter()
-            .try_for_each(|element| element.analyze(analyzer))?;
-        Ok(())
+            .for_each(|element| element.analyze(analyzer));
     }
 }
 
 impl Analyzable for Element {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         match self {
             Element::Dialogue(dialogue_element) => {
-                dialogue_element.analyze(analyzer)?;
+                dialogue_element.analyze(analyzer);
             }
             Element::Narration(narration_element) => {
-                narration_element.analyze(analyzer)?;
+                narration_element.analyze(analyzer);
             }
             Element::Selection(selection_element) => {
-                selection_element.analyze(analyzer)?;
+                selection_element.analyze(analyzer);
             }
         }
-        Ok(())
     }
 }
 
 impl Analyzable for Dialogue {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
-        self.quotes
-            .iter()
-            .try_for_each(|quote| quote.analyze(analyzer))?;
-        Ok(())
+    fn analyze(&self, analyzer: &mut Analyzer) {
+        self.quotes.iter().for_each(|quote| quote.analyze(analyzer));
     }
 }
 
 impl Analyzable for Narration {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
-        self.quote.analyze(analyzer)?;
-        Ok(())
+    fn analyze(&self, analyzer: &mut Analyzer) {
+        self.quote.analyze(analyzer);
     }
 }
 
 impl Analyzable for Selection {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         self.choices
             .iter()
-            .try_for_each(|choice| choice.analyze(analyzer))?;
-        Ok(())
+            .for_each(|choice| choice.analyze(analyzer));
     }
 }

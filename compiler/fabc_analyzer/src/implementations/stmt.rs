@@ -2,10 +2,10 @@ use fabc_parser::ast::stmt::{
     block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt, Stmt,
 };
 
-use crate::{error::Error, Analyzable, Analyzer};
+use crate::{Analyzable, Analyzer};
 
 impl Analyzable for Stmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         match self {
             Stmt::Expr(expr_stmt) => expr_stmt.analyze(analyzer),
             Stmt::Block(block_stmt) => block_stmt.analyze(analyzer),
@@ -15,14 +15,13 @@ impl Analyzable for Stmt {
 }
 
 impl Analyzable for ExprStmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         analyzer.set_reachability(self.id);
-        Ok(())
     }
 }
 
 impl Analyzable for BlockStmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         analyzer.set_reachability(self.id).set_is_reachable(true);
 
         let reachable_first_statement = analyzer
@@ -35,28 +34,23 @@ impl Analyzable for BlockStmt {
                 .set_reachability(statement.id())
                 .set_is_reachable(true);
         }
-
-        Ok(())
     }
 }
 
 impl Analyzable for GotoStmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         analyzer.set_reachability(self.id);
-        Ok(())
     }
 }
 
 impl Analyzable for IfStmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         analyzer.set_reachability(self.id);
-        Ok(())
     }
 }
 
 impl Analyzable for LetStmt {
-    fn analyze(&self, analyzer: &mut Analyzer) -> Result<(), Error> {
+    fn analyze(&self, analyzer: &mut Analyzer) {
         analyzer.set_reachability(self.id);
-        Ok(())
     }
 }

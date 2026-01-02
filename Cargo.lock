@@ -311,8 +311,8 @@ dependencies = [
 name = "fabc_analyzer"
 version = "0.1.0"
 dependencies = [
+ "fabc_error",
  "fabc_parser",
- "thiserror",
 ]
 
 [[package]]
@@ -329,7 +329,6 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "fabc_reg_test",
- "thiserror",
 ]
 
 [[package]]
@@ -340,7 +339,6 @@ dependencies = [
  "fabc_error",
  "fabc_lexer",
  "fabc_reg_test",
- "thiserror",
 ]
 
 [[package]]
