@@ -12,7 +12,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_simple_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let _ast = Parser::parse(black_box(tokens)).unwrap();
+            let _result = Parser::parse(black_box(tokens));
         })
     });
 
@@ -21,7 +21,7 @@ fn parser_performance(c: &mut Criterion) {
 
     group.bench_with_input("parses_complex_story", &tokens, |b, tokens| {
         b.iter(|| {
-            let _ast = Parser::parse(black_box(tokens)).unwrap();
+            let _result = Parser::parse(black_box(tokens));
         })
     });
 
@@ -36,7 +36,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let _ast = Parser::parse_str(black_box(source)).unwrap();
+                let _result = Parser::parse_str(black_box(source));
             })
         },
     );
@@ -46,7 +46,7 @@ fn full_parsing_performance(c: &mut Criterion) {
         fabc_reg_test::COMPLEX_STORY,
         |b, source| {
             b.iter(|| {
-                let _ast = Parser::parse_str(black_box(source)).unwrap();
+                let _result = Parser::parse_str(black_box(source));
             })
         },
     );
