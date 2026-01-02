@@ -118,13 +118,13 @@ impl<'src> Lexer<'src> {
                     self.push_token(TokenKind::Slash)
                 }
             }
-            ' ' | '\r' | '\t' | '\n' => {
+            ' ' | '\r' | '\t' => {
                 while self.is_white_space() {
-                    if c == '\n' {
-                        self.line += 1;
-                    }
                     self.advance();
                 }
+            }
+            '\n' => {
+                self.line += 1;
             }
 
             // Literals.
@@ -136,7 +136,7 @@ impl<'src> Lexer<'src> {
     }
 
     fn is_white_space(&self) -> bool {
-        matches!(self.peek(), ' ' | '\r' | '\t' | '\n')
+        matches!(self.peek(), ' ' | '\r' | '\t')
     }
 
     fn reset_start(&mut self) {

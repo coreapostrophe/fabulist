@@ -23,6 +23,7 @@ pub struct Save {
     id_counter: usize,
 }
 
+#[derive(Debug)]
 pub struct ParserResult<T> {
     pub result: T,
     pub errors: Vec<Error>,
@@ -263,7 +264,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
 }
 
 #[cfg(test)]
-mod tests {
+mod library_tests {
     use fabc_lexer::Lexer;
 
     use crate::Parser;
