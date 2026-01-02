@@ -2,7 +2,6 @@ use std::slice;
 
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{
-    keywords::KeywordKind,
     tokens::{Token, TokenKind},
     Lexer,
 };
@@ -11,13 +10,6 @@ use crate::ast::init::Init;
 
 pub mod ast;
 mod macros;
-
-pub trait InvariantParseable
-where
-    Self: Sized,
-{
-    fn invariant_parse(parser: &mut Parser<'_, '_>) -> Self;
-}
 
 pub trait Parsable
 where
@@ -46,12 +38,12 @@ pub struct Parser<'src, 'tok> {
 }
 
 impl<'src, 'tok> Parser<'src, 'tok> {
-    pub fn parse_str(source: &str) -> Result<Vec<Init>, Error> {
+    pub fn parse_str(source: &str) -> ParserResult<Vec<Init>> {
         let tokens = Lexer::tokenize(source);
         Parser::parse(&tokens)
     }
 
-    pub fn parse(tokens: &[Token<'src>]) -> Result<Vec<Init>, Error> {
+    pub fn parse(tokens: &[Token<'src>]) -> ParserResult<Vec<Init>> {
         let mut parser = Parser {
             tokens,
             current: 0,
@@ -60,14 +52,12 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             errors: Vec::new(),
         };
 
-        let mut inits = Vec::new();
+        let inits = parser.invariant_parse::<Init>(Init::SYNC_DELIMITERS, &[], false);
 
-        while !parser.is_at_end() && parser.peek() != &TokenKind::EoF {
-            let init = Init::parse(&mut parser)?;
-            inits.push(init);
+        ParserResult {
+            result: inits,
+            errors: parser.errors,
         }
-
-        Ok(inits)
     }
 
     #[cfg(test)]
@@ -95,7 +85,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         T::parse(&mut parser)
     }
 
-    pub(crate) fn _push_error(&mut self, error: fabc_error::Error) {
+    pub(crate) fn push_error(&mut self, error: fabc_error::Error) {
         self.errors.push(error);
     }
 
@@ -230,32 +220,45 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    pub(crate) fn _synchronize(&mut self) {
-        self.advance();
+    pub(crate) fn invariant_parse<T>(
+        &mut self,
+        sync_delimiters: &[TokenKind<'src>],
+        sync_end_tokens: &[TokenKind<'src>],
+        consume_delimiter: bool,
+    ) -> Vec<T>
+    where
+        T: Parsable,
+    {
+        let mut ast_list = Vec::new();
 
-        while !self.is_at_end() {
-            if let TokenKind::Semicolon = self.previous() {
-                return;
+        while if !sync_end_tokens.is_empty() {
+            !self.is_terminated() && !sync_end_tokens.contains(self.peek())
+        } else {
+            !self.is_terminated()
+        } {
+            match T::parse(self) {
+                Ok(parsed_ast) => ast_list.push(parsed_ast),
+                Err(error) => {
+                    self.push_error(error);
+                    while !self.is_terminated() && !sync_delimiters.contains(self.peek()) {
+                        self.advance();
+                    }
+                    if !self.is_terminated() && consume_delimiter {
+                        self.advance();
+                    }
+                }
             }
-
-            if let TokenKind::Keyword(
-                KeywordKind::Let
-                | KeywordKind::Fn
-                | KeywordKind::For
-                | KeywordKind::If
-                | KeywordKind::While
-                | KeywordKind::Return,
-            ) = self.peek()
-            {
-                return;
-            }
-
-            self.advance();
         }
+
+        ast_list
     }
 
     pub(crate) fn is_at_end(&self) -> bool {
         self.current >= self.tokens.len()
+    }
+
+    pub(crate) fn is_terminated(&self) -> bool {
+        self.is_at_end() || self.peek() == &TokenKind::EoF
     }
 }
 
@@ -271,7 +274,7 @@ mod tests {
         let tokens = Lexer::tokenize(source);
         let story = Parser::parse(&tokens);
 
-        assert!(story.is_ok());
+        assert!(story.errors.is_empty());
     }
 
     #[test]
@@ -280,6 +283,6 @@ mod tests {
         let tokens = Lexer::tokenize(source);
         let story = Parser::parse(&tokens);
 
-        assert!(story.is_ok());
+        assert!(story.errors.is_empty());
     }
 }

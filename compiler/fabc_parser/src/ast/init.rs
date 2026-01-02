@@ -15,6 +15,13 @@ pub enum Init {
     Module(ModuleInit),
 }
 
+impl Init {
+    pub const SYNC_DELIMITERS: &[TokenKind<'_>] = &[
+        TokenKind::Keyword(KeywordKind::Story),
+        TokenKind::Keyword(KeywordKind::Module),
+    ];
+}
+
 impl Parsable for Init {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {

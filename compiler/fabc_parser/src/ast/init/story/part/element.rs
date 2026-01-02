@@ -19,6 +19,14 @@ pub enum Element {
     Selection(Selection),
 }
 
+impl Element {
+    pub const SYNC_DELIMITERS: &[TokenKind<'_>] = &[
+        TokenKind::Minus,
+        TokenKind::LeftBracket,
+        TokenKind::Asterisk,
+    ];
+}
+
 impl Parsable for Element {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {

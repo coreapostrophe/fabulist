@@ -12,24 +12,18 @@ pub struct Part {
     pub elements: Vec<Element>,
 }
 
+impl Part {
+    pub const SYNC_DELIMITERS: &[TokenKind<'_>] = &[TokenKind::Pound];
+}
+
 impl Parsable for Part {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Pound)?;
 
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
-        let mut elements = Vec::new();
-
-        while [
-            TokenKind::Asterisk,
-            TokenKind::LeftBracket,
-            TokenKind::Minus,
-        ]
-        .contains(parser.peek())
-        {
-            let element = Element::parse(parser)?;
-            elements.push(element);
-        }
+        let elements =
+            parser.invariant_parse(Element::SYNC_DELIMITERS, Part::SYNC_DELIMITERS, false);
 
         Ok(Part {
             id: parser.assign_id(),

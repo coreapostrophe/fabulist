@@ -2,7 +2,10 @@ use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::init::story::{metadata::Metadata, part::Part},
+    ast::init::{
+        story::{metadata::Metadata, part::Part},
+        Init,
+    },
     Parsable, Parser,
 };
 
@@ -25,7 +28,8 @@ impl Parsable for StoryInit {
             None
         };
 
-        let mut parts = Vec::new();
+        let mut parts = parser.invariant_parse(Part::SYNC_DELIMITERS, Init::SYNC_DELIMITERS, false);
+
         while parser.peek() == &TokenKind::Pound {
             let part = Part::parse(parser)?;
             parts.push(part);

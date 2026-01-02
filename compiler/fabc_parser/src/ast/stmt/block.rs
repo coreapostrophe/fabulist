@@ -11,14 +11,10 @@ pub struct BlockStmt {
 
 impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
-        let mut statements = Vec::new();
-
         parser.consume(TokenKind::LeftBrace)?;
 
-        while !parser.is_at_end() && parser.peek() != &TokenKind::RightBrace {
-            let stmt = Stmt::parse(parser)?;
-            statements.push(stmt);
-        }
+        let statements =
+            parser.invariant_parse(&[TokenKind::Semicolon], &[TokenKind::RightBrace], true);
 
         parser.consume(TokenKind::RightBrace)?;
 
