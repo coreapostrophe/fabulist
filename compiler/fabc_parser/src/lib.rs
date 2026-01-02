@@ -155,9 +155,15 @@ impl<'src, 'tok> Parser<'src, 'tok> {
     where
         F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
+        let delimiter_start_index = self.current;
         self.consume(start)?;
         let result = parser_fn(self)?;
-        self.consume(end)?;
+        if self.consume(end).is_err() {
+            return Err(Error::new(
+                ErrorKind::UnclosedDelimiter,
+                &self.tokens[delimiter_start_index],
+            ));
+        }
         Ok(result)
     }
 

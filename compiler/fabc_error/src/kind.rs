@@ -7,6 +7,7 @@ pub enum ErrorKind {
     UnrecognizedPrimary { primary: String },
     UnrecognizedInitiator { initiator: String },
     InvalidOperator { operator: String },
+    UnclosedDelimiter,
 }
 
 impl ErrorKind {
@@ -19,6 +20,7 @@ impl ErrorKind {
             ErrorKind::UnrecognizedPrimary { .. } => "Unrecognized primary",
             ErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
+            ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
         }
     }
     pub fn message(&self) -> String {
@@ -44,6 +46,7 @@ impl ErrorKind {
             ErrorKind::InvalidOperator { operator } => {
                 format!("Invalid operator '{}'", operator)
             }
+            ErrorKind::UnclosedDelimiter => "Unclosed delimiter found".to_string(),
         }
     }
 }
