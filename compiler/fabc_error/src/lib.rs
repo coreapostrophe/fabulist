@@ -234,7 +234,7 @@ mod error_tests {
                 let x: i32 = "hello";
             }
         "#;
-        let kind = ErrorKind::ExpectedToken {
+        let kind = ErrorKind::ExpectedSymbol {
             expected: "i32".to_string(),
             found: "string".to_string(),
         };
@@ -245,7 +245,7 @@ mod error_tests {
         assert_eq!(
             formatted,
             concat!(
-                "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected token\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
+                "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected symbol\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
                 "      |\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    3 |\u{1b}[0m\u{1b}[37m            ",
                 "    let x: i32 = \"hello\";\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      ",
                 "|\u{1b}[0m\u{1b}[1m\u{1b}[94m                             ",
@@ -264,7 +264,7 @@ mod error_tests {
                 );
             }
         "#;
-        let kind = ErrorKind::ExpectedToken {
+        let kind = ErrorKind::ExpectedSymbol {
             expected: "i32".to_string(),
             found: "string".to_string(),
         };
@@ -275,7 +275,7 @@ mod error_tests {
         assert_eq!(
             formatted,
             concat!(
-            "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected token\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
+            "\u{1b}[1m\u{1b}[38;5;160merror: Unexpected symbol\u{1b}[0m\n\u{1b}[1m\u{1b}[90m",
             "      |\u{1b}[0m\n\u{1b}[1m\u{1b}[90m    3 |\u{1b}[0m\u{1b}[37m            ",
             "    let x: i32 = some_function(\u{1b}[0m\n\u{1b}[1m\u{1b}[90m      ",
             "|\u{1b}[0m\u{1b}[1m\u{1b}[94m                             ^^^^^^^^^^^^^^",

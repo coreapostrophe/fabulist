@@ -218,7 +218,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             Ok(self.advance())
         } else {
             Err(Error::new(
-                ErrorKind::ExpectedToken {
+                ErrorKind::ExpectedSymbol {
                     expected: expected.to_string(),
                     found: self.peek().to_string(),
                 },

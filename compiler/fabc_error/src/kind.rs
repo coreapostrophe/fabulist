@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub enum ErrorKind {
-    ExpectedToken { expected: String, found: String },
+    ExpectedSymbol { expected: String, found: String },
     UnrecognizedLiteral { literal: String },
     UnrecognizedPrimitive { primitive: String },
     UnrecognizedElement { element: String },
@@ -13,7 +13,7 @@ pub enum ErrorKind {
 impl ErrorKind {
     pub fn name(&self) -> &'static str {
         match self {
-            ErrorKind::ExpectedToken { .. } => "Unexpected token",
+            ErrorKind::ExpectedSymbol { .. } => "Unexpected symbol",
             ErrorKind::UnrecognizedLiteral { .. } => "Unrecognized literal",
             ErrorKind::UnrecognizedPrimitive { .. } => "Unrecognized primitive",
             ErrorKind::UnrecognizedElement { .. } => "Unrecognized element",
@@ -25,7 +25,7 @@ impl ErrorKind {
     }
     pub fn message(&self) -> String {
         match self {
-            ErrorKind::ExpectedToken { expected, found } => {
+            ErrorKind::ExpectedSymbol { expected, found } => {
                 format!("Expected '{}', found '{}'", expected, found)
             }
             ErrorKind::UnrecognizedLiteral { literal } => {
