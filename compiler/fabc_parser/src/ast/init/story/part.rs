@@ -1,13 +1,16 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::init::story::part::element::Element, expect_token, Parsable, Parser};
+use crate::{
+    ast::{init::story::part::element::Element, NodeInfo},
+    expect_token, Parsable, Parser,
+};
 
 pub mod element;
 
 #[derive(Debug, PartialEq)]
 pub struct Part {
-    pub id: usize,
+    pub info: NodeInfo,
     pub ident: String,
     pub elements: Vec<Element>,
 }
@@ -26,7 +29,9 @@ impl Parsable for Part {
             parser.invariant_parse(Element::SYNC_DELIMITERS, Part::SYNC_DELIMITERS, false);
 
         Ok(Part {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             ident,
             elements,
         })
@@ -44,6 +49,7 @@ mod part_tests {
                 element::{narration::NarrationElement, Element},
                 Part,
             },
+            NodeInfo,
         },
         Parser,
     };
@@ -58,12 +64,12 @@ mod part_tests {
         let part = Parser::parse_ast::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
-            id: 2,
+            info: NodeInfo { id: 2 },
             ident: "intro".to_string(),
             elements: vec![Element::Narration(NarrationElement {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 quote: QuoteDecl {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     text: "This is a narration.".to_string(),
                     properties: None,
                 },

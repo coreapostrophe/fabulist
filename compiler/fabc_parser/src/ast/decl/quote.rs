@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::object::ObjectDecl, expect_token, Parsable, Parser};
+use crate::{
+    ast::{decl::object::ObjectDecl, NodeInfo},
+    expect_token, Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct QuoteDecl {
-    pub id: usize,
+    pub info: NodeInfo,
     pub text: String,
     pub properties: Option<ObjectDecl>,
 }
@@ -21,7 +24,9 @@ impl Parsable for QuoteDecl {
         };
 
         Ok(QuoteDecl {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             text,
             properties,
         })
@@ -38,6 +43,7 @@ mod quote_decl_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
+            NodeInfo,
         },
         Parser,
     };
@@ -49,7 +55,7 @@ mod quote_decl_tests {
         let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
-            id: 0,
+            info: NodeInfo { id: 0 },
             text: "This is a quote.".to_string(),
             properties: None,
         };
@@ -64,23 +70,23 @@ mod quote_decl_tests {
         let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
 
         let expected = QuoteDecl {
-            id: 3,
+            info: NodeInfo { id: 3 },
             text: "This is a quote with properties.".to_string(),
             properties: Some(ObjectDecl {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 map: {
                     let mut map = HashMap::new();
                     map.insert(
                         "author".to_string(),
                         Expr::Primary {
-                            id: 0,
+                            info: NodeInfo { id: 0 },
                             value: Primary::Literal(Literal::String("Alice".to_string())),
                         },
                     );
                     map.insert(
                         "length".to_string(),
                         Expr::Primary {
-                            id: 1,
+                            info: NodeInfo { id: 1 },
                             value: Primary::Literal(Literal::Number(30.0)),
                         },
                     );

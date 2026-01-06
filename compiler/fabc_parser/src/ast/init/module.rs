@@ -1,11 +1,11 @@
 use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{expect_token, Parsable, Parser};
+use crate::{ast::NodeInfo, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub struct ModuleInit {
-    pub id: usize,
+    pub info: NodeInfo,
     pub path: String,
     pub alias: Option<String>,
 }
@@ -29,7 +29,9 @@ impl Parsable for ModuleInit {
         parser.consume(TokenKind::Semicolon)?;
 
         Ok(ModuleInit {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             path,
             alias,
         })
@@ -40,7 +42,10 @@ impl Parsable for ModuleInit {
 mod module_stmt_tests {
     use fabc_lexer::Lexer;
 
-    use crate::{ast::init::module::ModuleInit, Parser};
+    use crate::{
+        ast::{init::module::ModuleInit, NodeInfo},
+        Parser,
+    };
 
     #[test]
     fn parses_module_init_without_alias() {
@@ -49,7 +54,7 @@ mod module_stmt_tests {
         let module_init =
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
         let expected = ModuleInit {
-            id: 0,
+            info: NodeInfo { id: 0 },
             path: "my/module/path".to_string(),
             alias: None,
         };
@@ -65,7 +70,7 @@ mod module_stmt_tests {
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
 
         let expected = ModuleInit {
-            id: 0,
+            info: NodeInfo { id: 0 },
             path: "my/module/path".to_string(),
             alias: Some("my_alias".to_string()),
         };

@@ -2,9 +2,12 @@ use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::init::{
-        story::{metadata::Metadata, part::Part},
-        Init,
+    ast::{
+        init::{
+            story::{metadata::Metadata, part::Part},
+            Init,
+        },
+        NodeInfo,
     },
     Parsable, Parser,
 };
@@ -14,7 +17,7 @@ pub mod part;
 
 #[derive(Debug, PartialEq)]
 pub struct StoryInit {
-    pub id: usize,
+    pub info: NodeInfo,
     pub metadata: Option<Metadata>,
     pub parts: Vec<Part>,
 }
@@ -36,7 +39,9 @@ impl Parsable for StoryInit {
         }
 
         Ok(StoryInit {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             metadata,
             parts,
         })
@@ -64,6 +69,7 @@ mod story_tests {
                 },
                 StoryInit,
             },
+            NodeInfo,
         },
         Parser,
     };
@@ -79,17 +85,17 @@ mod story_tests {
         let story = Parser::parse_ast::<StoryInit>(&tokens).expect("Failed to parse story");
 
         let expected = StoryInit {
-            id: 3,
+            info: NodeInfo { id: 3 },
             metadata: Some(Metadata {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 object: ObjectDecl {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     map: {
                         let mut map = HashMap::new();
                         map.insert(
                             "description".to_string(),
                             Expr::Primary {
-                                id: 0,
+                                info: NodeInfo { id: 0 },
                                 value: Primary::Literal(Literal::String(
                                     "This is a test story.".to_string(),
                                 )),
@@ -123,17 +129,17 @@ mod story_tests {
         let story = Parser::parse_ast::<StoryInit>(&tokens).expect("Failed to parse story");
 
         let expected = StoryInit {
-            id: 16,
+            info: NodeInfo { id: 16 },
             metadata: Some(Metadata {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 object: ObjectDecl {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     map: {
                         let mut map = HashMap::new();
                         map.insert(
                             "start".to_string(),
                             Expr::Primary {
-                                id: 0,
+                                info: NodeInfo { id: 0 },
                                 value: Primary::Literal(Literal::String("dialogue_1".to_string())),
                             },
                         );
@@ -142,47 +148,47 @@ mod story_tests {
                 },
             }),
             parts: vec![Part {
-                id: 15,
+                info: NodeInfo { id: 15 },
                 ident: "dialogue_1".to_string(),
                 elements: vec![
                     Element::Narration(NarrationElement {
-                        id: 4,
+                        info: NodeInfo { id: 4 },
                         quote: QuoteDecl {
-                            id: 3,
+                            info: NodeInfo { id: 3 },
                             text: "Welcome to the story!".to_string(),
                             properties: None,
                         },
                     }),
                     Element::Dialogue(DialogueElement {
-                        id: 7,
+                        info: NodeInfo { id: 7 },
                         speaker: "traveller".to_string(),
                         quotes: vec![
                             QuoteDecl {
-                                id: 5,
+                                info: NodeInfo { id: 5 },
                                 text: "Hello there!".to_string(),
                                 properties: None,
                             },
                             QuoteDecl {
-                                id: 6,
+                                info: NodeInfo { id: 6 },
                                 text: "Choose your path.".to_string(),
                                 properties: None,
                             },
                         ],
                     }),
                     Element::Selection(SelectionElement {
-                        id: 14,
+                        info: NodeInfo { id: 14 },
                         choices: vec![
                             QuoteDecl {
-                                id: 10,
+                                info: NodeInfo { id: 10 },
                                 text: "Go left.".to_string(),
                                 properties: Some(ObjectDecl {
-                                    id: 9,
+                                    info: NodeInfo { id: 9 },
                                     map: {
                                         let mut map = HashMap::new();
                                         map.insert(
                                             "score".to_string(),
                                             Expr::Primary {
-                                                id: 8,
+                                                info: NodeInfo { id: 8 },
                                                 value: Primary::Literal(Literal::Number(10.0)),
                                             },
                                         );
@@ -191,16 +197,16 @@ mod story_tests {
                                 }),
                             },
                             QuoteDecl {
-                                id: 13,
+                                info: NodeInfo { id: 13 },
                                 text: "Go right.".to_string(),
                                 properties: Some(ObjectDecl {
-                                    id: 12,
+                                    info: NodeInfo { id: 12 },
                                     map: {
                                         let mut map = HashMap::new();
                                         map.insert(
                                             "score".to_string(),
                                             Expr::Primary {
-                                                id: 11,
+                                                info: NodeInfo { id: 11 },
                                                 value: Primary::Literal(Literal::Number(5.0)),
                                             },
                                         );

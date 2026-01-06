@@ -5,7 +5,10 @@ use fabc_lexer::{
 };
 
 use crate::{
-    ast::expr::{literal::Literal, primitive::Primitive},
+    ast::{
+        expr::{literal::Literal, primitive::Primitive},
+        NodeInfo,
+    },
     Parsable, Parser,
 };
 
@@ -108,37 +111,37 @@ pub enum Primary {
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Binary {
-        id: usize,
+        info: NodeInfo,
         left: Box<Expr>,
         operator: BinaryOperator,
         right: Box<Expr>,
     },
     Unary {
-        id: usize,
+        info: NodeInfo,
         operator: UnaryOperator,
         right: Box<Expr>,
     },
     Assignment {
-        id: usize,
+        info: NodeInfo,
         name: Box<Expr>,
         value: Box<Expr>,
     },
     MemberAccess {
-        id: usize,
+        info: NodeInfo,
         left: Box<Expr>,
         members: Vec<Expr>,
     },
     Call {
-        id: usize,
+        info: NodeInfo,
         callee: Box<Expr>,
         arguments: Vec<Expr>,
     },
     Primary {
-        id: usize,
+        info: NodeInfo,
         value: Primary,
     },
     Grouping {
-        id: usize,
+        info: NodeInfo,
         expression: Box<Expr>,
     },
 }
@@ -150,7 +153,9 @@ impl Expr {
         if parser.r#match(&[TokenKind::Equal]) {
             let value = Self::assignment(parser)?;
             expr = Expr::Assignment {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 name: Box::new(expr),
                 value: Box::new(value),
             }
@@ -169,7 +174,9 @@ impl Expr {
             let operator = LogicalOperator::try_from(parser.previous_token())?;
             let right = Self::equality(parser)?;
             expr = Expr::Binary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 operator: match operator {
                     LogicalOperator::And => BinaryOperator::And,
@@ -189,7 +196,9 @@ impl Expr {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::comparison(parser)?;
             expr = Expr::Binary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
@@ -211,7 +220,9 @@ impl Expr {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::term(parser)?;
             expr = Expr::Binary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
@@ -228,7 +239,9 @@ impl Expr {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::factor(parser)?;
             expr = Expr::Binary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
@@ -245,7 +258,9 @@ impl Expr {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
             expr = Expr::Binary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 operator,
                 right: Box::new(right),
@@ -260,7 +275,9 @@ impl Expr {
             let operator = UnaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
             return Ok(Expr::Unary {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 operator,
                 right: Box::new(right),
             });
@@ -284,7 +301,9 @@ impl Expr {
                 }
             }
             expr = Expr::MemberAccess {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 left: Box::new(expr),
                 members,
             };
@@ -304,7 +323,9 @@ impl Expr {
                 |parser| Expr::parse(parser),
             )?;
             expr = Expr::Call {
-                id: parser.assign_id(),
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                },
                 callee: Box::new(expr),
                 arguments,
             };
@@ -321,7 +342,9 @@ impl Expr {
             | TokenKind::Keyword(KeywordKind::True | KeywordKind::False | KeywordKind::None) => {
                 let literal = Literal::parse(parser)?;
                 Ok(Expr::Primary {
-                    id: parser.assign_id(),
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                    },
                     value: Primary::Literal(literal),
                 })
             }
@@ -333,7 +356,9 @@ impl Expr {
             | TokenKind::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
                 Ok(Expr::Primary {
-                    id: parser.assign_id(),
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                    },
                     value: Primary::Primitive(primitive),
                 })
             }
@@ -358,8 +383,12 @@ mod expr_tests {
     use fabc_lexer::Lexer;
 
     use crate::{
-        ast::expr::{
-            literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
+        ast::{
+            expr::{
+                literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary,
+                UnaryOperator,
+            },
+            NodeInfo,
         },
         Parser,
     };
@@ -371,29 +400,29 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            id: 6,
+            info: NodeInfo { id: 6 },
             left: Box::new(Expr::Primary {
-                id: 0,
+                info: NodeInfo { id: 0 },
                 value: Primary::Literal(Literal::Number(1.0)),
             }),
             operator: BinaryOperator::Add,
             right: Box::new(Expr::Binary {
-                id: 5,
+                info: NodeInfo { id: 5 },
                 left: Box::new(Expr::Binary {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     left: Box::new(Expr::Primary {
-                        id: 1,
+                        info: NodeInfo { id: 1 },
                         value: Primary::Literal(Literal::Number(2.0)),
                     }),
                     operator: BinaryOperator::Multiply,
                     right: Box::new(Expr::Primary {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         value: Primary::Literal(Literal::Number(3.0)),
                     }),
                 }),
                 operator: BinaryOperator::Divide,
                 right: Box::new(Expr::Primary {
-                    id: 4,
+                    info: NodeInfo { id: 4 },
                     value: Primary::Literal(Literal::Number(4.0)),
                 }),
             }),
@@ -409,22 +438,22 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            id: 4,
+            info: NodeInfo { id: 4 },
             left: Box::new(Expr::Binary {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 left: Box::new(Expr::Primary {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     value: Primary::Literal(Literal::Number(10.0)),
                 }),
                 operator: BinaryOperator::EqualEqual,
                 right: Box::new(Expr::Primary {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     value: Primary::Literal(Literal::Number(20.0)),
                 }),
             }),
             operator: BinaryOperator::NotEqual,
             right: Box::new(Expr::Primary {
-                id: 3,
+                info: NodeInfo { id: 3 },
                 value: Primary::Literal(Literal::Number(30.0)),
             }),
         };
@@ -439,38 +468,38 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            id: 8,
+            info: NodeInfo { id: 8 },
             left: Box::new(Expr::Binary {
-                id: 6,
+                info: NodeInfo { id: 6 },
                 left: Box::new(Expr::Binary {
-                    id: 4,
+                    info: NodeInfo { id: 4 },
                     left: Box::new(Expr::Binary {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         left: Box::new(Expr::Primary {
-                            id: 0,
+                            info: NodeInfo { id: 0 },
                             value: Primary::Literal(Literal::Number(5.0)),
                         }),
                         operator: BinaryOperator::Greater,
                         right: Box::new(Expr::Primary {
-                            id: 1,
+                            info: NodeInfo { id: 1 },
                             value: Primary::Literal(Literal::Number(3.0)),
                         }),
                     }),
                     operator: BinaryOperator::Less,
                     right: Box::new(Expr::Primary {
-                        id: 3,
+                        info: NodeInfo { id: 3 },
                         value: Primary::Literal(Literal::Number(9.0)),
                     }),
                 }),
                 operator: BinaryOperator::GreaterEqual,
                 right: Box::new(Expr::Primary {
-                    id: 5,
+                    info: NodeInfo { id: 5 },
                     value: Primary::Literal(Literal::Number(2.0)),
                 }),
             }),
             operator: BinaryOperator::LessEqual,
             right: Box::new(Expr::Primary {
-                id: 7,
+                info: NodeInfo { id: 7 },
                 value: Primary::Literal(Literal::Number(10.0)),
             }),
         };
@@ -485,26 +514,26 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Call {
-            id: 6,
+            info: NodeInfo { id: 6 },
             callee: Box::new(Expr::Primary {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 value: Primary::Primitive(Primitive::Identifier {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     name: "func".to_string(),
                 }),
             }),
             arguments: vec![
                 Expr::Primary {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         name: "arg1".to_string(),
                     }),
                 },
                 Expr::Primary {
-                    id: 5,
+                    info: NodeInfo { id: 5 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 4,
+                        info: NodeInfo { id: 4 },
                         name: "arg2".to_string(),
                     }),
                 },
@@ -521,26 +550,26 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::MemberAccess {
-            id: 6,
+            info: NodeInfo { id: 6 },
             left: Box::new(Expr::Primary {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 value: Primary::Primitive(Primitive::Identifier {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     name: "obj".to_string(),
                 }),
             }),
             members: vec![
                 Expr::Primary {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         name: "prop1".to_string(),
                     }),
                 },
                 Expr::Primary {
-                    id: 5,
+                    info: NodeInfo { id: 5 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 4,
+                        info: NodeInfo { id: 4 },
                         name: "prop2".to_string(),
                     }),
                 },
@@ -557,13 +586,13 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Unary {
-            id: 2,
+            info: NodeInfo { id: 2 },
             operator: UnaryOperator::Negate,
             right: Box::new(Expr::Unary {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 operator: UnaryOperator::Not,
                 right: Box::new(Expr::Primary {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     value: Primary::Literal(Literal::Number(42.0)),
                 }),
             }),
@@ -579,22 +608,22 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            id: 4,
+            info: NodeInfo { id: 4 },
             left: Box::new(Expr::Binary {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 left: Box::new(Expr::Primary {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     value: Primary::Literal(Literal::Boolean(true)),
                 }),
                 operator: BinaryOperator::And,
                 right: Box::new(Expr::Primary {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     value: Primary::Literal(Literal::Boolean(false)),
                 }),
             }),
             operator: BinaryOperator::Or,
             right: Box::new(Expr::Primary {
-                id: 3,
+                info: NodeInfo { id: 3 },
                 value: Primary::Literal(Literal::Boolean(true)),
             }),
         };
@@ -609,23 +638,23 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Assignment {
-            id: 5,
+            info: NodeInfo { id: 5 },
             name: Box::new(Expr::Primary {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 value: Primary::Primitive(Primitive::Identifier {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     name: "x".to_string(),
                 }),
             }),
             value: Box::new(Expr::Binary {
-                id: 4,
+                info: NodeInfo { id: 4 },
                 left: Box::new(Expr::Primary {
-                    id: 2,
+                    info: NodeInfo { id: 2 },
                     value: Primary::Literal(Literal::Number(10.0)),
                 }),
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     value: Primary::Literal(Literal::Number(20.0)),
                 }),
             }),

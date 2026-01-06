@@ -2,7 +2,7 @@ use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::{expr::Expr, stmt::block::BlockStmt},
+    ast::{expr::Expr, stmt::block::BlockStmt, NodeInfo},
     Parsable, Parser,
 };
 
@@ -14,7 +14,7 @@ pub enum ElseClause {
 
 #[derive(Debug, PartialEq)]
 pub struct IfStmt {
-    pub id: usize,
+    pub info: NodeInfo,
     pub condition: Expr,
     pub then_branch: Box<BlockStmt>,
     pub else_branch: Option<ElseClause>,
@@ -41,7 +41,9 @@ impl Parsable for IfStmt {
         };
 
         Ok(IfStmt {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             condition,
             then_branch,
             else_branch,
@@ -60,6 +62,7 @@ mod if_stmt_tests {
                 block::BlockStmt,
                 r#if::{ElseClause, IfStmt},
             },
+            NodeInfo,
         },
         Parser,
     };
@@ -73,13 +76,13 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 condition: Expr::Primary {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     value: Primary::Literal(Literal::Boolean(true)),
                 },
                 then_branch: Box::new(BlockStmt {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     statements: vec![]
                 }),
                 else_branch: None,
@@ -96,17 +99,17 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                id: 3,
+                info: NodeInfo { id: 3 },
                 condition: Expr::Primary {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     value: Primary::Literal(Literal::Boolean(false)),
                 },
                 then_branch: Box::new(BlockStmt {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     statements: vec![]
                 }),
                 else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
-                    id: 2,
+                    info: NodeInfo { id: 2 },
                     statements: vec![]
                 }))),
             }

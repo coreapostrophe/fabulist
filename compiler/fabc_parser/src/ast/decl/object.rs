@@ -3,11 +3,14 @@ use std::collections::HashMap;
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::expr::Expr, expect_token, Parsable, Parser};
+use crate::{
+    ast::{expr::Expr, NodeInfo},
+    expect_token, Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct ObjectDecl {
-    pub id: usize,
+    pub info: NodeInfo,
     pub map: HashMap<String, Expr>,
 }
 
@@ -31,7 +34,9 @@ impl Parsable for ObjectDecl {
         }
 
         Ok(ObjectDecl {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             map,
         })
     }
@@ -47,6 +52,7 @@ mod object_decl_tests {
         ast::{
             decl::object::ObjectDecl,
             expr::{literal::Literal, Expr, Primary},
+            NodeInfo,
         },
         Parser,
     };
@@ -64,20 +70,20 @@ mod object_decl_tests {
             Parser::parse_ast::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 
         let expected = ObjectDecl {
-            id: 2,
+            info: NodeInfo { id: 2 },
             map: {
                 let mut map = HashMap::new();
                 map.insert(
                     "key1".to_string(),
                     Expr::Primary {
-                        id: 0,
+                        info: NodeInfo { id: 0 },
                         value: Primary::Literal(Literal::String("value1".to_string())),
                     },
                 );
                 map.insert(
                     "key2".to_string(),
                     Expr::Primary {
-                        id: 1,
+                        info: NodeInfo { id: 1 },
                         value: Primary::Literal(Literal::Number(42.0)),
                     },
                 );

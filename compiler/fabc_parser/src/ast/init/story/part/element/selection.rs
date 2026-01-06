@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, Parsable, Parser};
+use crate::{
+    ast::{decl::quote::QuoteDecl, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct SelectionElement {
-    pub id: usize,
+    pub info: NodeInfo,
     pub choices: Vec<QuoteDecl>,
 }
 
@@ -19,7 +22,9 @@ impl Parsable for SelectionElement {
         }
 
         Ok(SelectionElement {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             choices,
         })
     }
@@ -36,6 +41,7 @@ mod selection_tests {
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
             init::story::part::element::selection::SelectionElement,
+            NodeInfo,
         },
         Parser,
     };
@@ -51,26 +57,26 @@ mod selection_tests {
             Parser::parse_ast::<SelectionElement>(&tokens).expect("Failed to parse selection");
 
         let expected = SelectionElement {
-            id: 7,
+            info: NodeInfo { id: 7 },
             choices: vec![
                 QuoteDecl {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     text: "Go left.".to_string(),
                     properties: Some(ObjectDecl {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
                                 "score".to_string(),
                                 Expr::Primary {
-                                    id: 0,
+                                    info: NodeInfo { id: 0 },
                                     value: Primary::Literal(Literal::Number(10.0)),
                                 },
                             );
                             map.insert(
                                 "health".to_string(),
                                 Expr::Primary {
-                                    id: 1,
+                                    info: NodeInfo { id: 1 },
                                     value: Primary::Literal(Literal::Number(5.0)),
                                 },
                             );
@@ -79,16 +85,16 @@ mod selection_tests {
                     }),
                 },
                 QuoteDecl {
-                    id: 6,
+                    info: NodeInfo { id: 6 },
                     text: "Go right.".to_string(),
                     properties: Some(ObjectDecl {
-                        id: 5,
+                        info: NodeInfo { id: 5 },
                         map: {
                             let mut map = HashMap::new();
                             map.insert(
                                 "score".to_string(),
                                 Expr::Primary {
-                                    id: 4,
+                                    info: NodeInfo { id: 4 },
                                     value: Primary::Literal(Literal::Number(5.0)),
                                 },
                             );

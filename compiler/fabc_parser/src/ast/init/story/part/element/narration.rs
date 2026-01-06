@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::decl::quote::QuoteDecl, Parsable, Parser};
+use crate::{
+    ast::{decl::quote::QuoteDecl, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct NarrationElement {
-    pub id: usize,
+    pub info: NodeInfo,
     pub quote: QuoteDecl,
 }
 
@@ -16,7 +19,9 @@ impl Parsable for NarrationElement {
         let quote = QuoteDecl::parse(parser)?;
 
         Ok(NarrationElement {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             quote,
         })
     }
@@ -31,6 +36,7 @@ mod narration_tests {
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{primitive::Primitive, Expr, Primary},
             init::story::part::element::narration::NarrationElement,
+            NodeInfo,
         },
         Parser,
     };
@@ -43,9 +49,9 @@ mod narration_tests {
             Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
 
         let expected = NarrationElement {
-            id: 1,
+            info: NodeInfo { id: 1 },
             quote: QuoteDecl {
-                id: 0,
+                info: NodeInfo { id: 0 },
                 text: "This is a narration.".to_string(),
                 properties: None,
             },
@@ -62,20 +68,20 @@ mod narration_tests {
             Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
 
         let expected = NarrationElement {
-            id: 6,
+            info: NodeInfo { id: 6 },
             quote: QuoteDecl {
-                id: 5,
+                info: NodeInfo { id: 5 },
                 text: "This is a narration.".to_string(),
                 properties: Some(ObjectDecl {
-                    id: 4,
+                    info: NodeInfo { id: 4 },
                     map: {
                         let mut map = std::collections::HashMap::new();
                         map.insert(
                             "mood".to_string(),
                             Expr::Primary {
-                                id: 1,
+                                info: NodeInfo { id: 1 },
                                 value: Primary::Primitive(Primitive::Identifier {
-                                    id: 0,
+                                    info: NodeInfo { id: 0 },
                                     name: "happy".to_string(),
                                 }),
                             },
@@ -83,9 +89,9 @@ mod narration_tests {
                         map.insert(
                             "volume".to_string(),
                             Expr::Primary {
-                                id: 3,
+                                info: NodeInfo { id: 3 },
                                 value: Primary::Primitive(Primitive::Identifier {
-                                    id: 2,
+                                    info: NodeInfo { id: 2 },
                                     name: "loud".to_string(),
                                 }),
                             },

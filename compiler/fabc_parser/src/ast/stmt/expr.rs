@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::expr::Expr, Parsable, Parser};
+use crate::{
+    ast::{expr::Expr, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct ExprStmt {
-    pub id: usize,
+    pub info: NodeInfo,
     pub expr: Expr,
 }
 
@@ -14,7 +17,9 @@ impl Parsable for ExprStmt {
         let expr = Expr::parse(parser)?;
         parser.consume(TokenKind::Semicolon)?;
         Ok(ExprStmt {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             expr,
         })
     }
@@ -28,6 +33,7 @@ mod expr_stmt_tests {
         ast::{
             expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::expr::ExprStmt,
+            NodeInfo,
         },
         Parser,
     };
@@ -40,19 +46,19 @@ mod expr_stmt_tests {
             Parser::parse_ast::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
 
         let expected = ExprStmt {
-            id: 4,
+            info: NodeInfo { id: 4 },
             expr: Expr::Binary {
-                id: 3,
+                info: NodeInfo { id: 3 },
                 left: Box::new(Expr::Primary {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 0,
+                        info: NodeInfo { id: 0 },
                         name: "x".to_string(),
                     }),
                 }),
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
-                    id: 2,
+                    info: NodeInfo { id: 2 },
                     value: Primary::Literal(Literal::Number(1.0)),
                 }),
             },

@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{ast::expr::Expr, Parsable, Parser};
+use crate::{
+    ast::{expr::Expr, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct GotoStmt {
-    pub id: usize,
+    pub info: NodeInfo,
     pub target: Box<Expr>,
 }
 
@@ -17,7 +20,9 @@ impl Parsable for GotoStmt {
         parser.consume(TokenKind::Semicolon)?;
 
         Ok(GotoStmt {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             target: Box::new(target),
         })
     }
@@ -31,6 +36,7 @@ mod goto_stmt_tests {
         ast::{
             expr::{primitive::Primitive, Expr, Primary},
             stmt::goto::GotoStmt,
+            NodeInfo,
         },
         Parser,
     };
@@ -43,20 +49,20 @@ mod goto_stmt_tests {
             Parser::parse_ast::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
 
         let expected = GotoStmt {
-            id: 5,
+            info: NodeInfo { id: 5 },
             target: Box::new(Expr::MemberAccess {
-                id: 4,
+                info: NodeInfo { id: 4 },
                 left: Box::new(Expr::Primary {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 0,
+                        info: NodeInfo { id: 0 },
                         name: "module_ns".to_string(),
                     }),
                 }),
                 members: vec![Expr::Primary {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         name: "part_ident".to_string(),
                     }),
                 }],

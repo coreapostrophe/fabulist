@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::tokens::TokenKind;
 
-use crate::{ast::stmt::Stmt, Parsable, Parser};
+use crate::{
+    ast::{stmt::Stmt, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct BlockStmt {
-    pub id: usize,
+    pub info: NodeInfo,
     pub statements: Vec<Stmt>,
 }
 
@@ -19,7 +22,9 @@ impl Parsable for BlockStmt {
         parser.consume(TokenKind::RightBrace)?;
 
         Ok(BlockStmt {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             statements,
         })
     }
@@ -33,6 +38,7 @@ mod block_stmt_tests {
         ast::{
             expr::{literal::Literal, Expr, Primary},
             stmt::{block::BlockStmt, r#let::LetStmt, Stmt},
+            NodeInfo,
         },
         Parser,
     };
@@ -45,21 +51,21 @@ mod block_stmt_tests {
             Parser::parse_ast::<BlockStmt>(&tokens).expect("Failed to parse block statement");
 
         let expected = BlockStmt {
-            id: 4,
+            info: NodeInfo { id: 4 },
             statements: vec![
                 Stmt::Let(LetStmt {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     name: "a".to_string(),
                     initializer: Expr::Primary {
-                        id: 0,
+                        info: NodeInfo { id: 0 },
                         value: Primary::Literal(Literal::Number(1.0)),
                     },
                 }),
                 Stmt::Let(LetStmt {
-                    id: 3,
+                    info: NodeInfo { id: 3 },
                     name: "b".to_string(),
                     initializer: Expr::Primary {
-                        id: 2,
+                        info: NodeInfo { id: 2 },
                         value: Primary::Literal(Literal::Number(2.0)),
                     },
                 }),

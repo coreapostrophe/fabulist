@@ -2,31 +2,31 @@ use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::{decl::object::ObjectDecl, expr::Expr, stmt::block::BlockStmt},
+    ast::{decl::object::ObjectDecl, expr::Expr, stmt::block::BlockStmt, NodeInfo},
     expect_token, Parsable, Parser,
 };
 
 #[derive(Debug, PartialEq)]
 pub enum Primitive {
     Identifier {
-        id: usize,
+        info: NodeInfo,
         name: String,
     },
     Grouping {
-        id: usize,
+        info: NodeInfo,
         expr: Box<Expr>,
     },
     Object {
-        id: usize,
+        info: NodeInfo,
         value: ObjectDecl,
     },
     Closure {
-        id: usize,
+        info: NodeInfo,
         params: Vec<Primitive>,
         body: BlockStmt,
     },
     Context {
-        id: usize,
+        info: NodeInfo,
     },
 }
 
@@ -36,14 +36,18 @@ impl Parsable for Primitive {
             TokenKind::Identifier(_) => {
                 let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
                 Ok(Primitive::Identifier {
-                    id: parser.assign_id(),
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                    },
                     name,
                 })
             }
             TokenKind::Keyword(KeywordKind::Context) => {
                 parser.consume(TokenKind::Keyword(KeywordKind::Context))?;
                 Ok(Primitive::Context {
-                    id: parser.assign_id(),
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                    },
                 })
             }
             TokenKind::LeftParen => {
@@ -60,7 +64,9 @@ impl Parsable for Primitive {
                     let body = Box::new(BlockStmt::parse(parser)?);
 
                     Ok(Primitive::Closure {
-                        id: parser.assign_id(),
+                        info: NodeInfo {
+                            id: parser.assign_id(),
+                        },
                         params,
                         body: *body,
                     })
@@ -72,7 +78,9 @@ impl Parsable for Primitive {
                             Expr::parse(parser)
                         })?;
                     Ok(Primitive::Grouping {
-                        id: parser.assign_id(),
+                        info: NodeInfo {
+                            id: parser.assign_id(),
+                        },
                         expr: Box::new(expr),
                     })
                 }
@@ -80,7 +88,9 @@ impl Parsable for Primitive {
             TokenKind::LeftBrace => {
                 let object = ObjectDecl::parse(parser)?;
                 Ok(Primitive::Object {
-                    id: parser.assign_id(),
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                    },
                     value: object,
                 })
             }
@@ -105,6 +115,7 @@ mod primitive_tests {
             decl::object::ObjectDecl,
             expr::{literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary},
             stmt::{block::BlockStmt, expr::ExprStmt, Stmt},
+            NodeInfo,
         },
         Parser,
     };
@@ -117,7 +128,7 @@ mod primitive_tests {
         assert_eq!(
             primitive,
             Primitive::Identifier {
-                id: 0,
+                info: NodeInfo { id: 0 },
                 name: "foo".to_string(),
             }
         );
@@ -128,11 +139,11 @@ mod primitive_tests {
         assert_eq!(
             primitive,
             Primitive::Grouping {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 expr: Box::new(Expr::Primary {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     value: Primary::Primitive(Primitive::Identifier {
-                        id: 0,
+                        info: NodeInfo { id: 0 },
                         name: "x".to_string(),
                     }),
                 }),
@@ -142,7 +153,12 @@ mod primitive_tests {
         let source = "context";
         let tokens = Lexer::tokenize(source);
         let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
-        assert_eq!(primitive, Primitive::Context { id: 0 });
+        assert_eq!(
+            primitive,
+            Primitive::Context {
+                info: NodeInfo { id: 0 }
+            }
+        );
     }
 
     #[test]
@@ -152,22 +168,22 @@ mod primitive_tests {
         let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Object {
-            id: 3,
+            info: NodeInfo { id: 3 },
             value: ObjectDecl {
-                id: 2,
+                info: NodeInfo { id: 2 },
                 map: {
                     let mut map = HashMap::new();
                     map.insert(
                         "key1".to_string(),
                         Expr::Primary {
-                            id: 0,
+                            info: NodeInfo { id: 0 },
                             value: Primary::Literal(Literal::Number(42.0)),
                         },
                     );
                     map.insert(
                         "key2".to_string(),
                         Expr::Primary {
-                            id: 1,
+                            info: NodeInfo { id: 1 },
                             value: Primary::Literal(Literal::Boolean(true)),
                         },
                     );
@@ -185,35 +201,35 @@ mod primitive_tests {
         let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
 
         let expected = Primitive::Closure {
-            id: 9,
+            info: NodeInfo { id: 9 },
             params: vec![
                 Primitive::Identifier {
-                    id: 0,
+                    info: NodeInfo { id: 0 },
                     name: "x".to_string(),
                 },
                 Primitive::Identifier {
-                    id: 1,
+                    info: NodeInfo { id: 1 },
                     name: "y".to_string(),
                 },
             ],
             body: BlockStmt {
-                id: 8,
+                info: NodeInfo { id: 8 },
                 statements: vec![Stmt::Expr(ExprStmt {
-                    id: 7,
+                    info: NodeInfo { id: 7 },
                     expr: Expr::Binary {
-                        id: 6,
+                        info: NodeInfo { id: 6 },
                         left: Box::new(Expr::Primary {
-                            id: 3,
+                            info: NodeInfo { id: 3 },
                             value: Primary::Primitive(Primitive::Identifier {
-                                id: 2,
+                                info: NodeInfo { id: 2 },
                                 name: "x".to_string(),
                             }),
                         }),
                         operator: BinaryOperator::Add,
                         right: Box::new(Expr::Primary {
-                            id: 5,
+                            info: NodeInfo { id: 5 },
                             value: Primary::Primitive(Primitive::Identifier {
-                                id: 4,
+                                info: NodeInfo { id: 4 },
                                 name: "y".to_string(),
                             }),
                         }),

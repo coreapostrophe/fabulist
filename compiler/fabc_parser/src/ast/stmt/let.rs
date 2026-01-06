@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{ast::expr::Expr, expect_token, Parsable, Parser};
+use crate::{
+    ast::{expr::Expr, NodeInfo},
+    expect_token, Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct LetStmt {
-    pub id: usize,
+    pub info: NodeInfo,
     pub name: String,
     pub initializer: Expr,
 }
@@ -23,7 +26,9 @@ impl Parsable for LetStmt {
         parser.consume(TokenKind::Semicolon)?;
 
         Ok(LetStmt {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             name,
             initializer,
         })
@@ -38,6 +43,7 @@ mod let_stmt_tests {
         ast::{
             expr::{literal::Literal, Expr, Primary},
             stmt::r#let::LetStmt,
+            NodeInfo,
         },
         Parser,
     };
@@ -49,10 +55,10 @@ mod let_stmt_tests {
         let let_stmt = Parser::parse_ast::<LetStmt>(&tokens).expect("Failed to parse");
 
         let expected = LetStmt {
-            id: 1,
+            info: NodeInfo { id: 1 },
             name: "x".to_string(),
             initializer: Expr::Primary {
-                id: 0,
+                info: NodeInfo { id: 0 },
                 value: Primary::Literal(Literal::Number(42.0)),
             },
         };

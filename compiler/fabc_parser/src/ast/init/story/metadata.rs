@@ -1,11 +1,14 @@
 use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{ast::decl::object::ObjectDecl, Parsable, Parser};
+use crate::{
+    ast::{decl::object::ObjectDecl, NodeInfo},
+    Parsable, Parser,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Metadata {
-    pub id: usize,
+    pub info: NodeInfo,
     pub object: ObjectDecl,
 }
 
@@ -16,7 +19,9 @@ impl Parsable for Metadata {
         let object = ObjectDecl::parse(parser)?;
 
         Ok(Metadata {
-            id: parser.assign_id(),
+            info: NodeInfo {
+                id: parser.assign_id(),
+            },
             object,
         })
     }
@@ -33,6 +38,7 @@ mod metadata_tests {
             decl::object::ObjectDecl,
             expr::{literal::Literal, Expr, Primary},
             init::story::metadata::Metadata,
+            NodeInfo,
         },
         Parser,
     };
@@ -48,15 +54,15 @@ mod metadata_tests {
         let metadata = Parser::parse_ast::<Metadata>(&tokens).expect("Failed to parse metadata");
 
         let expected = Metadata {
-            id: 2,
+            info: NodeInfo { id: 2 },
             object: ObjectDecl {
-                id: 1,
+                info: NodeInfo { id: 1 },
                 map: {
                     let mut map = HashMap::new();
                     map.insert(
                         "title".to_string(),
                         Expr::Primary {
-                            id: 0,
+                            info: NodeInfo { id: 0 },
                             value: Primary::Literal(Literal::String("My Story".to_string())),
                         },
                     );

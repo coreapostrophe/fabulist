@@ -30,11 +30,11 @@ pub enum Stmt {
 impl Stmt {
     pub fn id(&self) -> usize {
         match self {
-            Stmt::Expr(stmt) => stmt.id,
-            Stmt::Block(stmt) => stmt.id,
-            Stmt::Let(stmt) => stmt.id,
-            Stmt::Goto(stmt) => stmt.id,
-            Stmt::If(stmt) => stmt.id,
+            Stmt::Expr(stmt) => stmt.info.id,
+            Stmt::Block(stmt) => stmt.info.id,
+            Stmt::Let(stmt) => stmt.info.id,
+            Stmt::Goto(stmt) => stmt.info.id,
+            Stmt::If(stmt) => stmt.info.id,
         }
     }
 }
