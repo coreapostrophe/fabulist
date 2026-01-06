@@ -1,24 +1,41 @@
 use std::collections::HashMap;
 
-#[derive(Clone)]
-pub enum SymbolType {
+pub enum DataType {
     Number,
     Boolean,
     String,
 }
 
-#[derive(Clone)]
+pub enum SymbolType {
+    Variable(DataType),
+    Function {
+        return_type: DataType,
+        parameters: Vec<DataType>,
+    },
+    Part,
+    Speaker,
+}
+
 pub struct Symbol {
     pub name: String,
     pub r#type: SymbolType,
     pub scope_level: usize,
 }
 
-#[derive(Default)]
 pub struct SymbolTable {
     entries: HashMap<String, Vec<Symbol>>,
     scope_display: Vec<Vec<String>>,
     current_level: usize,
+}
+
+impl Default for SymbolTable {
+    fn default() -> Self {
+        Self {
+            entries: HashMap::new(),
+            scope_display: vec![Vec::new()],
+            current_level: 0,
+        }
+    }
 }
 
 impl SymbolTable {

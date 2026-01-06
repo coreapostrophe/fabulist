@@ -1,6 +1,8 @@
 use fabc_error::Error;
 use fabc_parser::Parsable;
 
+use crate::symbol_table::SymbolTable;
+
 pub mod implementations;
 pub mod reachability;
 pub mod symbol_table;
@@ -10,6 +12,7 @@ pub trait Analyzable {
 }
 
 pub struct Analyzer {
+    symbol_table: SymbolTable,
     errors: Vec<Error>,
 }
 
@@ -18,9 +21,20 @@ impl Analyzer {
     where
         T: Parsable + Analyzable,
     {
-        let mut analyzer = Self { errors: Vec::new() };
+        let mut analyzer = Self {
+            symbol_table: SymbolTable::new(),
+            errors: Vec::new(),
+        };
+
         ast.analyze(&mut analyzer);
+
         Ok(analyzer)
+    }
+    pub fn symbol_table(&self) -> &SymbolTable {
+        &self.symbol_table
+    }
+    pub fn mut_symbol_table(&mut self) -> &mut SymbolTable {
+        &mut self.symbol_table
     }
     pub fn errors(&self) -> &[Error] {
         &self.errors

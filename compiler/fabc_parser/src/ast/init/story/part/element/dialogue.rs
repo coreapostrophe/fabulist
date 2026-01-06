@@ -4,13 +4,13 @@ use fabc_lexer::tokens::TokenKind;
 use crate::{ast::decl::quote::QuoteDecl, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
-pub struct Dialogue {
+pub struct DialogueElement {
     pub id: usize,
     pub speaker: String,
     pub quotes: Vec<QuoteDecl>,
 }
 
-impl Parsable for Dialogue {
+impl Parsable for DialogueElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let speaker =
             parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
@@ -23,7 +23,7 @@ impl Parsable for Dialogue {
             quotes.push(quote);
         }
 
-        Ok(Dialogue {
+        Ok(DialogueElement {
             id: parser.assign_id(),
             speaker,
             quotes,
@@ -41,7 +41,7 @@ mod dialogue_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
-            init::story::part::element::dialogue::Dialogue,
+            init::story::part::element::dialogue::DialogueElement,
         },
         Parser,
     };
@@ -54,9 +54,10 @@ mod dialogue_tests {
             > "How are you?" { emotion: "curious" }
         "#;
         let tokens = Lexer::tokenize(source);
-        let dialogue = Parser::parse_ast::<Dialogue>(&tokens).expect("Failed to parse dialogue");
+        let dialogue =
+            Parser::parse_ast::<DialogueElement>(&tokens).expect("Failed to parse dialogue");
 
-        let expected = Dialogue {
+        let expected = DialogueElement {
             id: 7,
             speaker: "narrator".to_string(),
             quotes: vec![

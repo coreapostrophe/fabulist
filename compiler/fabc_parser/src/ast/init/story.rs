@@ -57,7 +57,8 @@ mod story_tests {
                 metadata::Metadata,
                 part::{
                     element::{
-                        dialogue::Dialogue, narration::Narration, selection::Selection, Element,
+                        dialogue::DialogueElement, narration::NarrationElement,
+                        selection::SelectionElement, Element,
                     },
                     Part,
                 },
@@ -144,7 +145,7 @@ mod story_tests {
                 id: 15,
                 ident: "dialogue_1".to_string(),
                 elements: vec![
-                    Element::Narration(Narration {
+                    Element::Narration(NarrationElement {
                         id: 4,
                         quote: QuoteDecl {
                             id: 3,
@@ -152,7 +153,7 @@ mod story_tests {
                             properties: None,
                         },
                     }),
-                    Element::Dialogue(Dialogue {
+                    Element::Dialogue(DialogueElement {
                         id: 7,
                         speaker: "traveller".to_string(),
                         quotes: vec![
@@ -168,7 +169,7 @@ mod story_tests {
                             },
                         ],
                     }),
-                    Element::Selection(Selection {
+                    Element::Selection(SelectionElement {
                         id: 14,
                         choices: vec![
                             QuoteDecl {

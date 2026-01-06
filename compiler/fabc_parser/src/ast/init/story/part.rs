@@ -41,7 +41,7 @@ mod part_tests {
         ast::{
             decl::quote::QuoteDecl,
             init::story::part::{
-                element::{narration::Narration, Element},
+                element::{narration::NarrationElement, Element},
                 Part,
             },
         },
@@ -60,7 +60,7 @@ mod part_tests {
         let expected = Part {
             id: 2,
             ident: "intro".to_string(),
-            elements: vec![Element::Narration(Narration {
+            elements: vec![Element::Narration(NarrationElement {
                 id: 1,
                 quote: QuoteDecl {
                     id: 0,

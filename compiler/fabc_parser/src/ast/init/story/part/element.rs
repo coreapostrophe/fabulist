@@ -3,7 +3,7 @@ use fabc_lexer::tokens::TokenKind;
 
 use crate::{
     ast::init::story::part::element::{
-        dialogue::Dialogue, narration::Narration, selection::Selection,
+        dialogue::DialogueElement, narration::NarrationElement, selection::SelectionElement,
     },
     Parsable, Parser,
 };
@@ -14,9 +14,9 @@ pub mod selection;
 
 #[derive(Debug, PartialEq)]
 pub enum Element {
-    Narration(Narration),
-    Dialogue(Dialogue),
-    Selection(Selection),
+    Narration(NarrationElement),
+    Dialogue(DialogueElement),
+    Selection(SelectionElement),
 }
 
 impl Element {
@@ -30,9 +30,9 @@ impl Element {
 impl Parsable for Element {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {
-            TokenKind::Minus => Ok(Element::Selection(Selection::parse(parser)?)),
-            TokenKind::LeftBracket => Ok(Element::Dialogue(Dialogue::parse(parser)?)),
-            TokenKind::Asterisk => Ok(Element::Narration(Narration::parse(parser)?)),
+            TokenKind::Minus => Ok(Element::Selection(SelectionElement::parse(parser)?)),
+            TokenKind::LeftBracket => Ok(Element::Dialogue(DialogueElement::parse(parser)?)),
+            TokenKind::Asterisk => Ok(Element::Narration(NarrationElement::parse(parser)?)),
             _ => Err(Error::new(
                 ErrorKind::UnrecognizedElement {
                     element: parser.peek().to_string(),

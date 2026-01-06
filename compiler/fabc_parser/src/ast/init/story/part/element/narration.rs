@@ -4,18 +4,18 @@ use fabc_lexer::tokens::TokenKind;
 use crate::{ast::decl::quote::QuoteDecl, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
-pub struct Narration {
+pub struct NarrationElement {
     pub id: usize,
     pub quote: QuoteDecl,
 }
 
-impl Parsable for Narration {
+impl Parsable for NarrationElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         parser.consume(TokenKind::Asterisk)?;
 
         let quote = QuoteDecl::parse(parser)?;
 
-        Ok(Narration {
+        Ok(NarrationElement {
             id: parser.assign_id(),
             quote,
         })
@@ -30,7 +30,7 @@ mod narration_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{primitive::Primitive, Expr, Primary},
-            init::story::part::element::narration::Narration,
+            init::story::part::element::narration::NarrationElement,
         },
         Parser,
     };
@@ -39,9 +39,10 @@ mod narration_tests {
     fn parses_narration_without_properties() {
         let source = "* \"This is a narration.\"";
         let tokens = Lexer::tokenize(source);
-        let narration = Parser::parse_ast::<Narration>(&tokens).expect("Failed to parse narration");
+        let narration =
+            Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
 
-        let expected = Narration {
+        let expected = NarrationElement {
             id: 1,
             quote: QuoteDecl {
                 id: 0,
@@ -57,9 +58,10 @@ mod narration_tests {
     fn parses_narration_with_properties() {
         let source = "* \"This is a narration.\" { mood: happy, volume: loud }";
         let tokens = Lexer::tokenize(source);
-        let narration = Parser::parse_ast::<Narration>(&tokens).expect("Failed to parse narration");
+        let narration =
+            Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
 
-        let expected = Narration {
+        let expected = NarrationElement {
             id: 6,
             quote: QuoteDecl {
                 id: 5,

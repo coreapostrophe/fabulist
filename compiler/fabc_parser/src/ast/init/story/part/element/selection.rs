@@ -4,12 +4,12 @@ use fabc_lexer::tokens::TokenKind;
 use crate::{ast::decl::quote::QuoteDecl, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
-pub struct Selection {
+pub struct SelectionElement {
     pub id: usize,
     pub choices: Vec<QuoteDecl>,
 }
 
-impl Parsable for Selection {
+impl Parsable for SelectionElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let mut choices = Vec::new();
 
@@ -18,7 +18,7 @@ impl Parsable for Selection {
             choices.push(choice);
         }
 
-        Ok(Selection {
+        Ok(SelectionElement {
             id: parser.assign_id(),
             choices,
         })
@@ -35,7 +35,7 @@ mod selection_tests {
         ast::{
             decl::{object::ObjectDecl, quote::QuoteDecl},
             expr::{literal::Literal, Expr, Primary},
-            init::story::part::element::selection::Selection,
+            init::story::part::element::selection::SelectionElement,
         },
         Parser,
     };
@@ -47,9 +47,10 @@ mod selection_tests {
             - "Go right." { score: 5 }
         "#;
         let tokens = Lexer::tokenize(source);
-        let selection = Parser::parse_ast::<Selection>(&tokens).expect("Failed to parse selection");
+        let selection =
+            Parser::parse_ast::<SelectionElement>(&tokens).expect("Failed to parse selection");
 
-        let expected = Selection {
+        let expected = SelectionElement {
             id: 7,
             choices: vec![
                 QuoteDecl {
