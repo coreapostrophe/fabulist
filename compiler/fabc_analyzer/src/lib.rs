@@ -1,14 +1,20 @@
 use fabc_error::Error;
 use fabc_parser::Parsable;
 
-use crate::symbol_table::SymbolTable;
+use crate::{data_type::DataType, symbol_table::SymbolTable};
 
+pub mod data_type;
 pub mod implementations;
 pub mod reachability;
 pub mod symbol_table;
 
+#[derive(Default)]
+pub struct AnalysisResult {
+    pub data_type: Option<DataType>,
+}
+
 pub trait Analyzable {
-    fn analyze(&self, analyzer: &mut Analyzer);
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult;
 }
 
 pub struct Analyzer {

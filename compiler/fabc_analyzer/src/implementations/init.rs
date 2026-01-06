@@ -12,27 +12,31 @@ use fabc_parser::ast::init::story::{
     StoryInit,
 };
 
-use crate::{symbol_table::SymbolType, Analyzable};
+use crate::{symbol_table::SymbolType, AnalysisResult, Analyzable};
 
 impl Analyzable for StoryInit {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         if let Some(metadata) = &self.metadata {
             metadata.analyze(analyzer);
         }
         self.parts.iter().for_each(|part| {
             part.analyze(analyzer);
         });
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for Metadata {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         self.object.analyze(analyzer);
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for Part {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         analyzer
             .mut_symbol_table()
             .insert_symbol(&self.ident, SymbolType::Part);
@@ -40,11 +44,13 @@ impl Analyzable for Part {
         self.elements.iter().for_each(|element| {
             element.analyze(analyzer);
         });
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for Element {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         match self {
             Element::Dialogue(dialogue) => {
                 dialogue.analyze(analyzer);
@@ -56,11 +62,13 @@ impl Analyzable for Element {
                 narration.analyze(analyzer);
             }
         }
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for DialogueElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         analyzer
             .mut_symbol_table()
             .insert_symbol(&self.speaker, SymbolType::Speaker);
@@ -68,19 +76,25 @@ impl Analyzable for DialogueElement {
         self.quotes.iter().for_each(|quote| {
             quote.analyze(analyzer);
         });
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for SelectionElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         self.choices.iter().for_each(|choice| {
             choice.analyze(analyzer);
         });
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for NarrationElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         self.quote.analyze(analyzer);
+
+        AnalysisResult::default()
     }
 }

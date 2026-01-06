@@ -2,16 +2,20 @@
 
 use fabc_parser::ast::decl::{object::ObjectDecl, quote::QuoteDecl};
 
-use crate::Analyzable;
+use crate::{AnalysisResult, Analyzable};
 
 impl Analyzable for QuoteDecl {
-    fn analyze(&self, _analyzer: &mut crate::Analyzer) {
-        todo!()
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        if let Some(properties) = &self.properties {
+            properties.analyze(analyzer);
+        }
+
+        AnalysisResult::default()
     }
 }
 
 impl Analyzable for ObjectDecl {
-    fn analyze(&self, _analyzer: &mut crate::Analyzer) {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         todo!()
     }
 }

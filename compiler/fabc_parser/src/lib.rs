@@ -123,6 +123,10 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         &self.tokens[self.current].kind
     }
 
+    pub(crate) fn _get_token(&self, offset: usize) -> &Token<'src> {
+        &self.tokens[self.current + offset]
+    }
+
     pub(crate) fn current_token(&self) -> &Token<'src> {
         &self.tokens[self.current]
     }

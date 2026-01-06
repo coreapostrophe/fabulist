@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-pub enum DataType {
-    Number,
-    Boolean,
-    String,
-}
+use crate::data_type::DataType;
 
 pub enum SymbolType {
     Variable(DataType),
