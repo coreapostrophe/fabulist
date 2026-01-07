@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::ErrorKind, Error, LineCol, Span};
 use fabc_lexer::{
     keywords::KeywordKind,
     tokens::{Token, TokenKind},
@@ -148,13 +148,17 @@ pub enum Expr {
 
 impl Expr {
     pub fn assignment(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::logical(parser)?;
 
         if parser.r#match(&[TokenKind::Equal]) {
             let value = Self::assignment(parser)?;
+            let end_span = parser.end_span();
+
             expr = Expr::Assignment {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 name: Box::new(expr),
                 value: Box::new(value),
@@ -165,6 +169,7 @@ impl Expr {
     }
 
     fn logical(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::equality(parser)?;
 
         while parser.r#match(&[
@@ -173,9 +178,12 @@ impl Expr {
         ]) {
             let operator = LogicalOperator::try_from(parser.previous_token())?;
             let right = Self::equality(parser)?;
+            let end_span = parser.end_span();
+
             expr = Expr::Binary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 operator: match operator {
@@ -190,14 +198,18 @@ impl Expr {
     }
 
     fn equality(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::comparison(parser)?;
 
         while parser.r#match(&[TokenKind::BangEqual, TokenKind::EqualEqual]) {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::comparison(parser)?;
+            let end_span = parser.end_span();
+
             expr = Expr::Binary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 operator,
@@ -209,6 +221,7 @@ impl Expr {
     }
 
     fn comparison(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::term(parser)?;
 
         while parser.r#match(&[
@@ -219,9 +232,12 @@ impl Expr {
         ]) {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::term(parser)?;
+            let end_span = parser.end_span();
+
             expr = Expr::Binary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 operator,
@@ -233,14 +249,18 @@ impl Expr {
     }
 
     fn term(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::factor(parser)?;
 
         while parser.r#match(&[TokenKind::Minus, TokenKind::Plus]) {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::factor(parser)?;
+            let end_span = parser.end_span();
+
             expr = Expr::Binary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 operator,
@@ -252,14 +272,18 @@ impl Expr {
     }
 
     fn factor(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = LineCol::from_token(parser.current_token());
         let mut expr = Self::unary(parser)?;
 
         while parser.r#match(&[TokenKind::Slash, TokenKind::Asterisk]) {
             let operator = BinaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
+            let end_span = LineCol::from_token(parser.previous_token());
+
             expr = Expr::Binary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 operator,
@@ -272,11 +296,15 @@ impl Expr {
 
     fn unary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         if parser.r#match(&[TokenKind::Bang, TokenKind::Minus]) {
+            let start_span = LineCol::from_token(parser.current_token());
             let operator = UnaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
+            let end_span = LineCol::from_token(parser.previous_token());
+
             return Ok(Expr::Unary {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 operator,
                 right: Box::new(right),
@@ -287,11 +315,11 @@ impl Expr {
     }
 
     fn member_access(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::call(parser)?;
 
         if parser.r#match(&[TokenKind::Dot]) {
             let mut members = Vec::new();
-
             loop {
                 let member = Self::call(parser)?;
                 members.push(member);
@@ -300,9 +328,12 @@ impl Expr {
                     break;
                 }
             }
+            let end_span = parser.end_span();
+
             expr = Expr::MemberAccess {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 left: Box::new(expr),
                 members,
@@ -313,6 +344,7 @@ impl Expr {
     }
 
     fn call(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
+        let start_span = parser.start_span();
         let mut expr = Self::primary(parser)?;
 
         if parser.peek() == &TokenKind::LeftParen {
@@ -322,9 +354,12 @@ impl Expr {
                 TokenKind::Comma,
                 |parser| Expr::parse(parser),
             )?;
+            let end_span = parser.end_span();
+
             expr = Expr::Call {
                 info: NodeInfo {
                     id: parser.assign_id(),
+                    span: Span::from((start_span, end_span)),
                 },
                 callee: Box::new(expr),
                 arguments,
@@ -341,9 +376,11 @@ impl Expr {
             | TokenKind::Number(_)
             | TokenKind::Keyword(KeywordKind::True | KeywordKind::False | KeywordKind::None) => {
                 let literal = Literal::parse(parser)?;
+
                 Ok(Expr::Primary {
                     info: NodeInfo {
                         id: parser.assign_id(),
+                        span: Span::from(parser.previous_token()),
                     },
                     value: Primary::Literal(literal),
                 })
@@ -355,9 +392,11 @@ impl Expr {
             | TokenKind::Identifier(_)
             | TokenKind::Keyword(KeywordKind::Context) => {
                 let primitive = Primitive::parse(parser)?;
+
                 Ok(Expr::Primary {
                     info: NodeInfo {
                         id: parser.assign_id(),
+                        span: Span::from(parser.previous_token()),
                     },
                     value: Primary::Primitive(primitive),
                 })
@@ -380,6 +419,7 @@ impl Parsable for Expr {
 
 #[cfg(test)]
 mod expr_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -400,29 +440,50 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            info: NodeInfo { id: 6 },
+            info: NodeInfo {
+                id: 6,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13))),
+            },
             left: Box::new(Expr::Primary {
-                info: NodeInfo { id: 0 },
+                info: NodeInfo {
+                    id: 0,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                },
                 value: Primary::Literal(Literal::Number(1.0)),
             }),
             operator: BinaryOperator::Add,
             right: Box::new(Expr::Binary {
-                info: NodeInfo { id: 5 },
+                info: NodeInfo {
+                    id: 5,
+                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 13))),
+                },
                 left: Box::new(Expr::Binary {
-                    info: NodeInfo { id: 3 },
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
+                    },
                     left: Box::new(Expr::Primary {
-                        info: NodeInfo { id: 1 },
+                        info: NodeInfo {
+                            id: 1,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                        },
                         value: Primary::Literal(Literal::Number(2.0)),
                     }),
                     operator: BinaryOperator::Multiply,
                     right: Box::new(Expr::Primary {
-                        info: NodeInfo { id: 2 },
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
+                        },
                         value: Primary::Literal(Literal::Number(3.0)),
                     }),
                 }),
                 operator: BinaryOperator::Divide,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 4 },
+                    info: NodeInfo {
+                        id: 4,
+                        span: Span::from((LineCol::new(1, 13), LineCol::new(1, 13))),
+                    },
                     value: Primary::Literal(Literal::Number(4.0)),
                 }),
             }),
@@ -438,22 +499,37 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            info: NodeInfo { id: 4 },
+            info: NodeInfo {
+                id: 4,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
+            },
             left: Box::new(Expr::Binary {
-                info: NodeInfo { id: 2 },
+                info: NodeInfo {
+                    id: 2,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 8))),
+                },
                 left: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 2))),
+                    },
                     value: Primary::Literal(Literal::Number(10.0)),
                 }),
                 operator: BinaryOperator::EqualEqual,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 7), LineCol::new(1, 8))),
+                    },
                     value: Primary::Literal(Literal::Number(20.0)),
                 }),
             }),
             operator: BinaryOperator::NotEqual,
             right: Box::new(Expr::Primary {
-                info: NodeInfo { id: 3 },
+                info: NodeInfo {
+                    id: 3,
+                    span: Span::from((LineCol::new(1, 13), LineCol::new(1, 14))),
+                },
                 value: Primary::Literal(Literal::Number(30.0)),
             }),
         };
@@ -468,38 +544,65 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            info: NodeInfo { id: 8 },
+            info: NodeInfo {
+                id: 8,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 20))),
+            },
             left: Box::new(Expr::Binary {
-                info: NodeInfo { id: 6 },
+                info: NodeInfo {
+                    id: 6,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
+                },
                 left: Box::new(Expr::Binary {
-                    info: NodeInfo { id: 4 },
+                    info: NodeInfo {
+                        id: 4,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 9))),
+                    },
                     left: Box::new(Expr::Binary {
-                        info: NodeInfo { id: 2 },
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 5))),
+                        },
                         left: Box::new(Expr::Primary {
-                            info: NodeInfo { id: 0 },
+                            info: NodeInfo {
+                                id: 0,
+                                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                            },
                             value: Primary::Literal(Literal::Number(5.0)),
                         }),
                         operator: BinaryOperator::Greater,
                         right: Box::new(Expr::Primary {
-                            info: NodeInfo { id: 1 },
+                            info: NodeInfo {
+                                id: 1,
+                                span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                            },
                             value: Primary::Literal(Literal::Number(3.0)),
                         }),
                     }),
                     operator: BinaryOperator::Less,
                     right: Box::new(Expr::Primary {
-                        info: NodeInfo { id: 3 },
+                        info: NodeInfo {
+                            id: 3,
+                            span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
+                        },
                         value: Primary::Literal(Literal::Number(9.0)),
                     }),
                 }),
                 operator: BinaryOperator::GreaterEqual,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 5 },
+                    info: NodeInfo {
+                        id: 5,
+                        span: Span::from((LineCol::new(1, 14), LineCol::new(1, 14))),
+                    },
                     value: Primary::Literal(Literal::Number(2.0)),
                 }),
             }),
             operator: BinaryOperator::LessEqual,
             right: Box::new(Expr::Primary {
-                info: NodeInfo { id: 7 },
+                info: NodeInfo {
+                    id: 7,
+                    span: Span::from((LineCol::new(1, 19), LineCol::new(1, 20))),
+                },
                 value: Primary::Literal(Literal::Number(10.0)),
             }),
         };
@@ -514,26 +617,47 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Call {
-            info: NodeInfo { id: 6 },
+            info: NodeInfo {
+                id: 6,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 16))),
+            },
             callee: Box::new(Expr::Primary {
-                info: NodeInfo { id: 1 },
+                info: NodeInfo {
+                    id: 1,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
+                },
                 value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
+                    },
                     name: "func".to_string(),
                 }),
             }),
             arguments: vec![
                 Expr::Primary {
-                    info: NodeInfo { id: 3 },
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span::from((LineCol::new(1, 6), LineCol::new(1, 9))),
+                    },
                     value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo { id: 2 },
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 6), LineCol::new(1, 9))),
+                        },
                         name: "arg1".to_string(),
                     }),
                 },
                 Expr::Primary {
-                    info: NodeInfo { id: 5 },
+                    info: NodeInfo {
+                        id: 5,
+                        span: Span::from((LineCol::new(1, 12), LineCol::new(1, 15))),
+                    },
                     value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo { id: 4 },
+                        info: NodeInfo {
+                            id: 4,
+                            span: Span::from((LineCol::new(1, 12), LineCol::new(1, 15))),
+                        },
                         name: "arg2".to_string(),
                     }),
                 },
@@ -550,26 +674,47 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::MemberAccess {
-            info: NodeInfo { id: 6 },
+            info: NodeInfo {
+                id: 6,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 15))),
+            },
             left: Box::new(Expr::Primary {
-                info: NodeInfo { id: 1 },
+                info: NodeInfo {
+                    id: 1,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 3))),
+                },
                 value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 3))),
+                    },
                     name: "obj".to_string(),
                 }),
             }),
             members: vec![
                 Expr::Primary {
-                    info: NodeInfo { id: 3 },
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
+                    },
                     value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo { id: 2 },
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
+                        },
                         name: "prop1".to_string(),
                     }),
                 },
                 Expr::Primary {
-                    info: NodeInfo { id: 5 },
+                    info: NodeInfo {
+                        id: 5,
+                        span: Span::from((LineCol::new(1, 11), LineCol::new(1, 15))),
+                    },
                     value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo { id: 4 },
+                        info: NodeInfo {
+                            id: 4,
+                            span: Span::from((LineCol::new(1, 11), LineCol::new(1, 15))),
+                        },
                         name: "prop2".to_string(),
                     }),
                 },
@@ -586,13 +731,22 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Unary {
-            info: NodeInfo { id: 2 },
+            info: NodeInfo {
+                id: 2,
+                span: Span::from((LineCol::new(1, 2), LineCol::new(1, 3))),
+            },
             operator: UnaryOperator::Negate,
             right: Box::new(Expr::Unary {
-                info: NodeInfo { id: 1 },
+                info: NodeInfo {
+                    id: 1,
+                    span: Span::from((LineCol::new(1, 3), LineCol::new(1, 3))),
+                },
                 operator: UnaryOperator::Not,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 3), LineCol::new(1, 4))),
+                    },
                     value: Primary::Literal(Literal::Number(42.0)),
                 }),
             }),
@@ -608,22 +762,37 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Binary {
-            info: NodeInfo { id: 4 },
+            info: NodeInfo {
+                id: 4,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 22))),
+            },
             left: Box::new(Expr::Binary {
-                info: NodeInfo { id: 2 },
+                info: NodeInfo {
+                    id: 2,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
+                },
                 left: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
+                    },
                     value: Primary::Literal(Literal::Boolean(true)),
                 }),
                 operator: BinaryOperator::And,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 10), LineCol::new(1, 14))),
+                    },
                     value: Primary::Literal(Literal::Boolean(false)),
                 }),
             }),
             operator: BinaryOperator::Or,
             right: Box::new(Expr::Primary {
-                info: NodeInfo { id: 3 },
+                info: NodeInfo {
+                    id: 3,
+                    span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
+                },
                 value: Primary::Literal(Literal::Boolean(true)),
             }),
         };
@@ -638,23 +807,41 @@ mod expr_tests {
         let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
 
         let expected = Expr::Assignment {
-            info: NodeInfo { id: 5 },
+            info: NodeInfo {
+                id: 5,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
+            },
             name: Box::new(Expr::Primary {
-                info: NodeInfo { id: 1 },
+                info: NodeInfo {
+                    id: 1,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                },
                 value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                    },
                     name: "x".to_string(),
                 }),
             }),
             value: Box::new(Expr::Binary {
-                info: NodeInfo { id: 4 },
+                info: NodeInfo {
+                    id: 4,
+                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 11))),
+                },
                 left: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 2 },
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 6))),
+                    },
                     value: Primary::Literal(Literal::Number(10.0)),
                 }),
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 3 },
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span::from((LineCol::new(1, 10), LineCol::new(1, 11))),
+                    },
                     value: Primary::Literal(Literal::Number(20.0)),
                 }),
             }),

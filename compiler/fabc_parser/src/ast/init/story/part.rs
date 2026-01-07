@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
@@ -21,16 +21,19 @@ impl Part {
 
 impl Parsable for Part {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
         parser.consume(TokenKind::Pound)?;
 
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
         let elements =
             parser.invariant_parse(Element::SYNC_DELIMITERS, Part::SYNC_DELIMITERS, false);
+        let end_span = parser.end_span();
 
         Ok(Part {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             ident,
             elements,
@@ -40,6 +43,7 @@ impl Parsable for Part {
 
 #[cfg(test)]
 mod part_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -64,12 +68,21 @@ mod part_tests {
         let part = Parser::parse_ast::<Part>(&tokens).expect("Failed to parse part");
 
         let expected = Part {
-            info: NodeInfo { id: 2 },
+            info: NodeInfo {
+                id: 2,
+                span: Span::from((LineCol::new(2, 13), LineCol::new(3, 36))),
+            },
             ident: "intro".to_string(),
             elements: vec![Element::Narration(NarrationElement {
-                info: NodeInfo { id: 1 },
+                info: NodeInfo {
+                    id: 1,
+                    span: Span::from((LineCol::new(3, 13), LineCol::new(3, 36))),
+                },
                 quote: QuoteDecl {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(3, 15), LineCol::new(3, 36))),
+                    },
                     text: "This is a narration.".to_string(),
                     properties: None,
                 },

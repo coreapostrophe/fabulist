@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
@@ -16,6 +16,8 @@ pub struct ObjectDecl {
 
 impl Parsable for ObjectDecl {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
+
         let map_vec = parser.punctuated(
             TokenKind::LeftBrace,
             TokenKind::RightBrace,
@@ -33,9 +35,12 @@ impl Parsable for ObjectDecl {
             map.insert(key, value);
         }
 
+        let end_span = parser.end_span();
+
         Ok(ObjectDecl {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             map,
         })
@@ -46,6 +51,7 @@ impl Parsable for ObjectDecl {
 mod object_decl_tests {
     use std::collections::HashMap;
 
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -70,20 +76,29 @@ mod object_decl_tests {
             Parser::parse_ast::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
 
         let expected = ObjectDecl {
-            info: NodeInfo { id: 2 },
+            info: NodeInfo {
+                id: 2,
+                span: Span::from((LineCol::new(2, 13), LineCol::new(5, 13))),
+            },
             map: {
                 let mut map = HashMap::new();
                 map.insert(
                     "key1".to_string(),
                     Expr::Primary {
-                        info: NodeInfo { id: 0 },
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(3, 23), LineCol::new(3, 30))),
+                        },
                         value: Primary::Literal(Literal::String("value1".to_string())),
                     },
                 );
                 map.insert(
                     "key2".to_string(),
                     Expr::Primary {
-                        info: NodeInfo { id: 1 },
+                        info: NodeInfo {
+                            id: 1,
+                            span: Span::from((LineCol::new(4, 23), LineCol::new(4, 24))),
+                        },
                         value: Primary::Literal(Literal::Number(42.0)),
                     },
                 );

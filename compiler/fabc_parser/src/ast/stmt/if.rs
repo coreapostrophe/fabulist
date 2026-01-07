@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
@@ -22,6 +22,8 @@ pub struct IfStmt {
 
 impl Parsable for IfStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
+
         parser.consume(TokenKind::Keyword(KeywordKind::If))?;
 
         let condition = parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
@@ -40,9 +42,12 @@ impl Parsable for IfStmt {
             None
         };
 
+        let end_span = parser.end_span();
+
         Ok(IfStmt {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             condition,
             then_branch,
@@ -53,6 +58,7 @@ impl Parsable for IfStmt {
 
 #[cfg(test)]
 mod if_stmt_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -76,13 +82,22 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                info: NodeInfo { id: 2 },
+                info: NodeInfo {
+                    id: 2,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13)))
+                },
                 condition: Expr::Primary {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 8)))
+                    },
                     value: Primary::Literal(Literal::Boolean(true)),
                 },
                 then_branch: Box::new(BlockStmt {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 11), LineCol::new(1, 13)))
+                    },
                     statements: vec![]
                 }),
                 else_branch: None,
@@ -99,17 +114,29 @@ mod if_stmt_tests {
         assert_eq!(
             if_stmt,
             IfStmt {
-                info: NodeInfo { id: 3 },
+                info: NodeInfo {
+                    id: 3,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 23)))
+                },
                 condition: Expr::Primary {
-                    info: NodeInfo { id: 0 },
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9)))
+                    },
                     value: Primary::Literal(Literal::Boolean(false)),
                 },
                 then_branch: Box::new(BlockStmt {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 12), LineCol::new(1, 14)))
+                    },
                     statements: vec![]
                 }),
                 else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
-                    info: NodeInfo { id: 2 },
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span::from((LineCol::new(1, 21), LineCol::new(1, 23)))
+                    },
                     statements: vec![]
                 }))),
             }

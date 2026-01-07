@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
@@ -15,6 +15,8 @@ pub struct LetStmt {
 
 impl Parsable for LetStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
+
         parser.consume(TokenKind::Keyword(KeywordKind::Let))?;
 
         let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
@@ -25,9 +27,12 @@ impl Parsable for LetStmt {
 
         parser.consume(TokenKind::Semicolon)?;
 
+        let end_span = parser.end_span();
+
         Ok(LetStmt {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             name,
             initializer,
@@ -37,6 +42,7 @@ impl Parsable for LetStmt {
 
 #[cfg(test)]
 mod let_stmt_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -55,10 +61,16 @@ mod let_stmt_tests {
         let let_stmt = Parser::parse_ast::<LetStmt>(&tokens).expect("Failed to parse");
 
         let expected = LetStmt {
-            info: NodeInfo { id: 1 },
+            info: NodeInfo {
+                id: 1,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
+            },
             name: "x".to_string(),
             initializer: Expr::Primary {
-                info: NodeInfo { id: 0 },
+                info: NodeInfo {
+                    id: 0,
+                    span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
+                },
                 value: Primary::Literal(Literal::Number(42.0)),
             },
         };

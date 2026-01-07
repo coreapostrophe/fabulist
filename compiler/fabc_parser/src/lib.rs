@@ -1,6 +1,6 @@
 use std::slice;
 
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::ErrorKind, Error, LineCol};
 use fabc_lexer::{
     tokens::{Token, TokenKind},
     Lexer,
@@ -86,7 +86,15 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         T::parse(&mut parser)
     }
 
-    pub(crate) fn push_error(&mut self, error: fabc_error::Error) {
+    pub(crate) fn start_span(&self) -> LineCol {
+        LineCol::from_token(self.current_token())
+    }
+
+    pub(crate) fn end_span(&self) -> LineCol {
+        LineCol::from_token_end(self.previous_token())
+    }
+
+    pub(crate) fn push_error(&mut self, error: Error) {
         self.errors.push(error);
     }
 

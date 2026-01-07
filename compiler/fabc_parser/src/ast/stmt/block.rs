@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
@@ -14,6 +14,8 @@ pub struct BlockStmt {
 
 impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
+
         parser.consume(TokenKind::LeftBrace)?;
 
         let statements =
@@ -21,9 +23,12 @@ impl Parsable for BlockStmt {
 
         parser.consume(TokenKind::RightBrace)?;
 
+        let end_span = parser.end_span();
+
         Ok(BlockStmt {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             statements,
         })
@@ -32,6 +37,7 @@ impl Parsable for BlockStmt {
 
 #[cfg(test)]
 mod block_stmt_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -51,21 +57,36 @@ mod block_stmt_tests {
             Parser::parse_ast::<BlockStmt>(&tokens).expect("Failed to parse block statement");
 
         let expected = BlockStmt {
-            info: NodeInfo { id: 4 },
+            info: NodeInfo {
+                id: 4,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 25))),
+            },
             statements: vec![
                 Stmt::Let(LetStmt {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 3), LineCol::new(1, 12))),
+                    },
                     name: "a".to_string(),
                     initializer: Expr::Primary {
-                        info: NodeInfo { id: 0 },
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 11), LineCol::new(1, 11))),
+                        },
                         value: Primary::Literal(Literal::Number(1.0)),
                     },
                 }),
                 Stmt::Let(LetStmt {
-                    info: NodeInfo { id: 3 },
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span::from((LineCol::new(1, 14), LineCol::new(1, 23))),
+                    },
                     name: "b".to_string(),
                     initializer: Expr::Primary {
-                        info: NodeInfo { id: 2 },
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 22), LineCol::new(1, 22))),
+                        },
                         value: Primary::Literal(Literal::Number(2.0)),
                     },
                 }),

@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
@@ -14,11 +14,15 @@ pub struct ExprStmt {
 
 impl Parsable for ExprStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
         let expr = Expr::parse(parser)?;
         parser.consume(TokenKind::Semicolon)?;
+        let end_span = parser.end_span();
+
         Ok(ExprStmt {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             expr,
         })
@@ -27,6 +31,7 @@ impl Parsable for ExprStmt {
 
 #[cfg(test)]
 mod expr_stmt_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -46,19 +51,34 @@ mod expr_stmt_tests {
             Parser::parse_ast::<ExprStmt>(&tokens).expect("Failed to parse expr statement");
 
         let expected = ExprStmt {
-            info: NodeInfo { id: 4 },
+            info: NodeInfo {
+                id: 4,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 6))),
+            },
             expr: Expr::Binary {
-                info: NodeInfo { id: 3 },
+                info: NodeInfo {
+                    id: 3,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 5))),
+                },
                 left: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 1 },
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                    },
                     value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo { id: 0 },
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                        },
                         name: "x".to_string(),
                     }),
                 }),
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
-                    info: NodeInfo { id: 2 },
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                    },
                     value: Primary::Literal(Literal::Number(1.0)),
                 }),
             },

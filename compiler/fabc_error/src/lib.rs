@@ -6,7 +6,7 @@ use crate::kind::ErrorKind;
 
 pub mod kind;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct LineCol(usize, usize);
 
 impl LineCol {
@@ -23,11 +23,11 @@ impl LineCol {
         Self::new(token.line, token.column)
     }
     pub fn from_token_end(token: &Token<'_>) -> Self {
-        Self::new(token.line, token.column + token.length)
+        Self::new(token.line, token.column + token.length - 1)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Span {
     start: LineCol,
     end: LineCol,

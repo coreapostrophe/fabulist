@@ -1,4 +1,4 @@
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{ast::NodeInfo, expect_token, Parsable, Parser};
@@ -12,6 +12,7 @@ pub struct ModuleInit {
 
 impl Parsable for ModuleInit {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
+        let start_span = parser.start_span();
         parser.consume(TokenKind::Keyword(KeywordKind::Module))?;
 
         let path = expect_token!(parser, TokenKind::String, "module string path")?;
@@ -27,10 +28,12 @@ impl Parsable for ModuleInit {
         };
 
         parser.consume(TokenKind::Semicolon)?;
+        let end_span = parser.end_span();
 
         Ok(ModuleInit {
             info: NodeInfo {
                 id: parser.assign_id(),
+                span: Span::from((start_span, end_span)),
             },
             path,
             alias,
@@ -40,6 +43,7 @@ impl Parsable for ModuleInit {
 
 #[cfg(test)]
 mod module_stmt_tests {
+    use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
     use crate::{
@@ -54,7 +58,10 @@ mod module_stmt_tests {
         let module_init =
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
         let expected = ModuleInit {
-            info: NodeInfo { id: 0 },
+            info: NodeInfo {
+                id: 0,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 24))),
+            },
             path: "my/module/path".to_string(),
             alias: None,
         };
@@ -70,7 +77,10 @@ mod module_stmt_tests {
             Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
 
         let expected = ModuleInit {
-            info: NodeInfo { id: 0 },
+            info: NodeInfo {
+                id: 0,
+                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 36))),
+            },
             path: "my/module/path".to_string(),
             alias: Some("my_alias".to_string()),
         };
