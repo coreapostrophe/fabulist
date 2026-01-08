@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use crate::data_type::DataType;
 
+#[derive(Clone)]
 pub enum SymbolType {
-    Variable(DataType),
+    Data(DataType),
     Function {
         return_type: DataType,
         parameters: Vec<DataType>,
@@ -37,6 +38,9 @@ impl Default for SymbolTable {
 impl SymbolTable {
     pub fn new() -> Self {
         Self::default()
+    }
+    pub fn current_level(&self) -> usize {
+        self.current_level
     }
     pub fn enter_scope(&mut self) {
         self.current_level += 1;

@@ -16,18 +16,20 @@ pub struct BlockStmt {
 impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
-        let mut last_return = None;
+        let mut first_return = None;
         let statements =
             parser.enclosed(TokenKind::LeftBrace, TokenKind::RightBrace, |parser| {
                 let mut stmt_vec = Vec::new();
                 let mut idx_count = 0;
 
-                while parser.peek() != &TokenKind::RightBrace && parser.peek() != &TokenKind::EoF {
+                while parser.peek() != &TokenKind::RightBrace && !parser.is_terminated() {
                     let stmt = Stmt::parse(parser);
                     match stmt {
                         Ok(stmt) => {
                             if let Stmt::Return(_) = &stmt {
-                                last_return = Some(idx_count);
+                                if first_return.is_none() {
+                                    first_return = Some(idx_count);
+                                }
                             }
                             stmt_vec.push(stmt);
                         }
@@ -35,7 +37,6 @@ impl Parsable for BlockStmt {
                     }
                     idx_count += 1;
                 }
-
                 Ok(stmt_vec)
             })?;
         let end_span = parser.end_span();
@@ -45,7 +46,7 @@ impl Parsable for BlockStmt {
                 id: parser.assign_id(),
                 span: Span::from((start_span, end_span)),
             },
-            last_return,
+            last_return: first_return,
             statements,
         })
     }

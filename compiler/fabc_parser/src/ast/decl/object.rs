@@ -17,20 +17,22 @@ pub struct ObjectDecl {
 impl Parsable for ObjectDecl {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
-
-        let map_vec = parser.punctuated(
-            TokenKind::LeftBrace,
-            TokenKind::RightBrace,
-            TokenKind::Comma,
-            |parser| {
-                let key = expect_token!(parser, TokenKind::Identifier, "identifier")?;
-                parser.consume(TokenKind::Colon)?;
-                let value = Expr::parse(parser)?;
-                Ok((key, value))
-            },
-        )?;
-        let map = map_vec.into_iter().collect::<HashMap<String, Expr>>();
-
+        let map = {
+            let punctuated_vec = parser.punctuated(
+                TokenKind::LeftBrace,
+                TokenKind::RightBrace,
+                TokenKind::Comma,
+                |parser| {
+                    let key = expect_token!(parser, TokenKind::Identifier, "identifier")?;
+                    parser.consume(TokenKind::Colon)?;
+                    let value = Expr::parse(parser)?;
+                    Ok((key, value))
+                },
+            )?;
+            punctuated_vec
+                .into_iter()
+                .collect::<HashMap<String, Expr>>()
+        };
         let end_span = parser.end_span();
 
         Ok(ObjectDecl {

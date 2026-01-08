@@ -12,7 +12,9 @@ use fabc_parser::ast::init::story::{
     StoryInit,
 };
 
-use crate::{symbol_table::SymbolType, AnalysisResult, Analyzable};
+use crate::{
+    annotations::SymbolAnnotation, symbol_table::SymbolType, AnalysisResult, Analyzable, Annotation,
+};
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -37,12 +39,23 @@ impl Analyzable for Metadata {
 
 impl Analyzable for Part {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        let r#type = SymbolType::Part;
+        let scope_level = analyzer.symbol_table().current_level();
+
         analyzer
             .mut_symbol_table()
-            .insert_symbol(&self.ident, SymbolType::Part);
+            .insert_symbol(&self.ident, r#type.clone());
 
         self.elements.iter().for_each(|element| {
             element.analyze(analyzer);
+        });
+
+        analyzer.annotate(Annotation {
+            node_id: self.info.id,
+            symbol_annotation: Some(SymbolAnnotation {
+                r#type,
+                scope_level,
+            }),
         });
 
         AnalysisResult::default()
@@ -69,10 +82,6 @@ impl Analyzable for Element {
 
 impl Analyzable for DialogueElement {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        analyzer
-            .mut_symbol_table()
-            .insert_symbol(&self.speaker, SymbolType::Speaker);
-
         self.quotes.iter().for_each(|quote| {
             quote.analyze(analyzer);
         });

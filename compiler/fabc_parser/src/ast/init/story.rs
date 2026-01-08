@@ -32,12 +32,8 @@ impl Parsable for StoryInit {
             None
         };
 
-        let mut parts = parser.invariant_parse(Part::SYNC_DELIMITERS, Init::SYNC_DELIMITERS, false);
+        let parts = parser.invariant_parse(Part::SYNC_DELIMITERS, Init::SYNC_DELIMITERS, false);
 
-        while parser.peek() == &TokenKind::Pound {
-            let part = Part::parse(parser)?;
-            parts.push(part);
-        }
         let end_span = parser.end_span();
 
         Ok(StoryInit {

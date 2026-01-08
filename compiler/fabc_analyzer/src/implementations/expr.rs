@@ -1,6 +1,13 @@
-use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive};
+#![allow(unused)]
+use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr};
 
-use crate::{data_type::DataType, AnalysisResult, Analyzable};
+use crate::{data_type::DataType, symbol_table::SymbolType, AnalysisResult, Analyzable};
+
+impl Analyzable for Expr {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        todo!()
+    }
+}
 
 impl Analyzable for Literal {
     fn analyze(&self, _analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -12,13 +19,13 @@ impl Analyzable for Literal {
         };
 
         AnalysisResult {
-            data_type: Some(data_type),
+            symbol_type: Some(SymbolType::Data(data_type)),
         }
     }
 }
 
 impl Analyzable for Primitive {
-    fn analyze(&self, _analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         todo!()
     }
 }

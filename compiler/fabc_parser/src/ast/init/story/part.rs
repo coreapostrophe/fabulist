@@ -24,7 +24,6 @@ impl Parsable for Part {
         let start_span = parser.start_span();
         parser.consume(TokenKind::Pound)?;
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
-
         let elements =
             parser.invariant_parse(Element::SYNC_DELIMITERS, Part::SYNC_DELIMITERS, false);
         let end_span = parser.end_span();

@@ -86,7 +86,9 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         T::parse(&mut parser)
     }
 
-    pub fn errors(&self) -> &Vec<Error> {
+    #[cfg(test)]
+    #[allow(unused)]
+    pub(crate) fn errors(&self) -> &Vec<Error> {
         &self.errors
     }
 
