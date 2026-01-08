@@ -9,7 +9,7 @@ macro_rules! expect_token {
                     expected: $expected.to_string(),
                     found: $parser.previous().to_string(),
                 },
-                $parser.current_token(),
+                $parser.peek_token(),
             ))
         }
     }};

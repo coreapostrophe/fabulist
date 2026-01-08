@@ -37,7 +37,7 @@ impl Parsable for Element {
                 ErrorKind::UnrecognizedElement {
                     element: parser.peek().to_string(),
                 },
-                parser.current_token(),
+                parser.peek_token(),
             )),
         }
     }

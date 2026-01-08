@@ -35,6 +35,7 @@ impl Parsable for Primitive {
         match parser.peek() {
             TokenKind::Identifier(_) => {
                 let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
+
                 Ok(Primitive::Identifier {
                     info: NodeInfo {
                         id: parser.assign_id(),
@@ -45,6 +46,7 @@ impl Parsable for Primitive {
             }
             TokenKind::Keyword(KeywordKind::Context) => {
                 parser.consume(TokenKind::Keyword(KeywordKind::Context))?;
+
                 Ok(Primitive::Context {
                     info: NodeInfo {
                         id: parser.assign_id(),
@@ -55,18 +57,14 @@ impl Parsable for Primitive {
             TokenKind::LeftParen => {
                 if let Some(closure) = parser.rollbacking(|parser| {
                     let start_span = parser.start_span();
-
                     let params = parser.punctuated(
                         TokenKind::LeftParen,
                         TokenKind::RightParen,
                         TokenKind::Comma,
                         |parser| Primitive::parse(parser),
                     )?;
-
                     parser.consume(TokenKind::ArrowRight)?;
-
                     let body = Box::new(BlockStmt::parse(parser)?);
-
                     let end_span = parser.end_span();
 
                     Ok(Primitive::Closure {
@@ -113,7 +111,7 @@ impl Parsable for Primitive {
                 ErrorKind::UnrecognizedPrimitive {
                     primitive: parser.peek().to_string(),
                 },
-                parser.current_token(),
+                parser.peek_token(),
             )),
         }
     }
@@ -269,6 +267,7 @@ mod primitive_tests {
                     id: 8,
                     span: Span::from((LineCol::new(1, 11), LineCol::new(1, 20))),
                 },
+                last_return: None,
                 statements: vec![Stmt::Expr(ExprStmt {
                     info: NodeInfo {
                         id: 7,

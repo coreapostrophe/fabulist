@@ -16,7 +16,6 @@ pub struct DialogueElement {
 impl Parsable for DialogueElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
-
         let speaker =
             parser.enclosed(TokenKind::LeftBracket, TokenKind::RightBracket, |parser| {
                 expect_token!(parser, TokenKind::Identifier, "speaker identifier")
@@ -24,8 +23,12 @@ impl Parsable for DialogueElement {
 
         let mut quotes = Vec::new();
         while parser.peek() == &TokenKind::Greater {
-            let quote = parser.prefixed(TokenKind::Greater, |parser| QuoteDecl::parse(parser))?;
-            quotes.push(quote);
+            parser.consume(TokenKind::Greater)?;
+            let quote = QuoteDecl::parse(parser);
+            match quote {
+                Ok(quote) => quotes.push(quote),
+                Err(err) => parser.errors.push(err),
+            }
         }
 
         let end_span = parser.end_span();

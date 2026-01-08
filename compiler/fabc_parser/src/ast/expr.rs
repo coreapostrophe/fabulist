@@ -272,7 +272,7 @@ impl Expr {
     }
 
     fn factor(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
-        let start_span = LineCol::from_token(parser.current_token());
+        let start_span = LineCol::from_token(parser.peek_token());
         let mut expr = Self::unary(parser)?;
 
         while parser.r#match(&[TokenKind::Slash, TokenKind::Asterisk]) {
@@ -296,7 +296,7 @@ impl Expr {
 
     fn unary(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         if parser.r#match(&[TokenKind::Bang, TokenKind::Minus]) {
-            let start_span = LineCol::from_token(parser.current_token());
+            let start_span = LineCol::from_token(parser.peek_token());
             let operator = UnaryOperator::try_from(parser.previous_token())?;
             let right = Self::unary(parser)?;
             let end_span = LineCol::from_token(parser.previous_token());
@@ -405,7 +405,7 @@ impl Expr {
                 ErrorKind::UnrecognizedPrimary {
                     primary: parser.peek().to_string(),
                 },
-                parser.current_token(),
+                parser.peek_token(),
             )),
         }
     }

@@ -86,8 +86,12 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         T::parse(&mut parser)
     }
 
+    pub fn errors(&self) -> &Vec<Error> {
+        &self.errors
+    }
+
     pub(crate) fn start_span(&self) -> LineCol {
-        LineCol::from_token(self.current_token())
+        LineCol::from_token(self.peek_token())
     }
 
     pub(crate) fn end_span(&self) -> LineCol {
@@ -131,11 +135,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         &self.tokens[self.current].kind
     }
 
-    pub(crate) fn _get_token(&self, offset: usize) -> &Token<'src> {
-        &self.tokens[self.current + offset]
-    }
-
-    pub(crate) fn current_token(&self) -> &Token<'src> {
+    pub(crate) fn peek_token(&self) -> &Token<'src> {
         &self.tokens[self.current]
     }
 
@@ -146,26 +146,14 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         self.previous()
     }
 
-    pub(crate) fn prefixed<F, T>(
-        &mut self,
-        prefix: TokenKind<'src>,
-        parser_fn: F,
-    ) -> Result<T, Error>
-    where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
-    {
-        self.consume(prefix)?;
-        parser_fn(self)
-    }
-
     pub(crate) fn enclosed<F, T>(
         &mut self,
         start: TokenKind<'src>,
         end: TokenKind<'src>,
-        parser_fn: F,
+        mut parser_fn: F,
     ) -> Result<T, Error>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: FnMut(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         let delimiter_start_index = self.current;
         self.consume(start)?;
@@ -184,10 +172,10 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         start: TokenKind<'src>,
         end: TokenKind<'src>,
         delimiter: TokenKind<'src>,
-        parser_fn: F,
+        mut parser_fn: F,
     ) -> Result<Vec<T>, Error>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: FnMut(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         self.enclosed(start, end.clone(), |parser| {
             let mut items = Vec::new();
@@ -203,9 +191,9 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         })
     }
 
-    pub(crate) fn rollbacking<F, T>(&mut self, parser_fn: F) -> Option<T>
+    pub(crate) fn rollbacking<F, T>(&mut self, mut parser_fn: F) -> Option<T>
     where
-        F: Fn(&mut Parser<'src, 'tok>) -> Result<T, Error>,
+        F: FnMut(&mut Parser<'src, 'tok>) -> Result<T, Error>,
     {
         self.save = Some(Save {
             current: self.current,
@@ -234,7 +222,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
                     expected: expected.to_string(),
                     found: self.peek().to_string(),
                 },
-                self.current_token(),
+                self.peek_token(),
             ))
         }
     }
@@ -301,6 +289,8 @@ mod library_tests {
         let source = fabc_reg_test::COMPLEX_STORY;
         let tokens = Lexer::tokenize(source);
         let story = Parser::parse(&tokens);
+
+        println!("Errors: {:?}", story.errors);
 
         assert!(story.errors.is_empty());
     }

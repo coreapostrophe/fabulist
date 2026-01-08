@@ -2,7 +2,10 @@ use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::stmt::{block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt},
+    ast::stmt::{
+        block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt,
+        r#return::ReturnStmt,
+    },
     Parsable, Parser,
 };
 
@@ -11,6 +14,7 @@ pub mod expr;
 pub mod goto;
 pub mod r#if;
 pub mod r#let;
+pub mod r#return;
 
 #[derive(Debug, PartialEq)]
 pub enum ElseClause {
@@ -25,6 +29,7 @@ pub enum Stmt {
     Let(LetStmt),
     Goto(GotoStmt),
     If(IfStmt),
+    Return(ReturnStmt),
 }
 
 impl Stmt {
@@ -35,6 +40,7 @@ impl Stmt {
             Stmt::Let(stmt) => stmt.info.id,
             Stmt::Goto(stmt) => stmt.info.id,
             Stmt::If(stmt) => stmt.info.id,
+            Stmt::Return(stmt) => stmt.info.id,
         }
     }
 }
@@ -46,6 +52,7 @@ impl Parsable for Stmt {
             TokenKind::Keyword(KeywordKind::If) => Ok(Stmt::If(IfStmt::parse(parser)?)),
             TokenKind::LeftBrace => Ok(Stmt::Block(BlockStmt::parse(parser)?)),
             TokenKind::Keyword(KeywordKind::Let) => Ok(Stmt::Let(LetStmt::parse(parser)?)),
+            TokenKind::Keyword(KeywordKind::Return) => Ok(Stmt::Return(ReturnStmt::parse(parser)?)),
             _ => Ok(Stmt::Expr(ExprStmt::parse(parser)?)),
         }
     }

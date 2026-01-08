@@ -29,11 +29,7 @@ impl Parsable for ObjectDecl {
                 Ok((key, value))
             },
         )?;
-
-        let mut map = HashMap::new();
-        for (key, value) in map_vec {
-            map.insert(key, value);
-        }
+        let map = map_vec.into_iter().collect::<HashMap<String, Expr>>();
 
         let end_span = parser.end_span();
 

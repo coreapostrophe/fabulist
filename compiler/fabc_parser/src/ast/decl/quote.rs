@@ -18,7 +18,6 @@ impl Parsable for QuoteDecl {
         let start_span = parser.start_span();
 
         let text = expect_token!(parser, TokenKind::String, "quote text")?;
-
         let properties = if parser.peek() == &TokenKind::LeftBrace {
             Some(ObjectDecl::parse(parser)?)
         } else {

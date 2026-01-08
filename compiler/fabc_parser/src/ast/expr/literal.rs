@@ -23,7 +23,7 @@ impl Parsable for Literal {
                 ErrorKind::UnrecognizedLiteral {
                     literal: parser.previous().to_string(),
                 },
-                parser.current_token(),
+                parser.peek_token(),
             )),
         }
     }

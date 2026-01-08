@@ -9,20 +9,35 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub struct BlockStmt {
     pub info: NodeInfo,
+    pub last_return: Option<usize>,
     pub statements: Vec<Stmt>,
 }
 
 impl Parsable for BlockStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
-
-        parser.consume(TokenKind::LeftBrace)?;
-
+        let mut last_return = None;
         let statements =
-            parser.invariant_parse(&[TokenKind::Semicolon], &[TokenKind::RightBrace], true);
+            parser.enclosed(TokenKind::LeftBrace, TokenKind::RightBrace, |parser| {
+                let mut stmt_vec = Vec::new();
+                let mut idx_count = 0;
 
-        parser.consume(TokenKind::RightBrace)?;
+                while parser.peek() != &TokenKind::RightBrace && parser.peek() != &TokenKind::EoF {
+                    let stmt = Stmt::parse(parser);
+                    match stmt {
+                        Ok(stmt) => {
+                            if let Stmt::Return(_) = &stmt {
+                                last_return = Some(idx_count);
+                            }
+                            stmt_vec.push(stmt);
+                        }
+                        Err(err) => parser.push_error(err),
+                    }
+                    idx_count += 1;
+                }
 
+                Ok(stmt_vec)
+            })?;
         let end_span = parser.end_span();
 
         Ok(BlockStmt {
@@ -30,6 +45,7 @@ impl Parsable for BlockStmt {
                 id: parser.assign_id(),
                 span: Span::from((start_span, end_span)),
             },
+            last_return,
             statements,
         })
     }
@@ -61,6 +77,7 @@ mod block_stmt_tests {
                 id: 4,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 25))),
             },
+            last_return: None,
             statements: vec![
                 Stmt::Let(LetStmt {
                     info: NodeInfo {

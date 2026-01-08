@@ -7,5 +7,6 @@ pub enum DataType {
     Number,
     Boolean,
     String,
+    None,
     Record { fields: Vec<Field> },
 }

@@ -16,7 +16,6 @@ impl Parsable for NarrationElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
         parser.consume(TokenKind::Asterisk)?;
-
         let quote = QuoteDecl::parse(parser)?;
         let end_span = parser.end_span();
 

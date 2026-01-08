@@ -23,7 +23,6 @@ impl Parsable for Part {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
         parser.consume(TokenKind::Pound)?;
-
         let ident = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
         let elements =

@@ -16,9 +16,9 @@ impl Parsable for SelectionElement {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
         let mut choices = Vec::new();
-
         while parser.peek() == &TokenKind::Minus {
-            let choice = parser.prefixed(TokenKind::Minus, |parser| QuoteDecl::parse(parser))?;
+            parser.consume(TokenKind::Minus)?;
+            let choice = QuoteDecl::parse(parser)?;
             choices.push(choice);
         }
         let end_span = parser.end_span();

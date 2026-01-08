@@ -31,7 +31,7 @@ impl Parsable for Init {
                 ErrorKind::UnrecognizedInitiator {
                     initiator: parser.peek().to_string(),
                 },
-                parser.current_token(),
+                parser.peek_token(),
             )),
         }
     }

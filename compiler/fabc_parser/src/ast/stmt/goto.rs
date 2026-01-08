@@ -15,12 +15,9 @@ pub struct GotoStmt {
 impl Parsable for GotoStmt {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         let start_span = parser.start_span();
-
         parser.consume(TokenKind::Keyword(KeywordKind::Goto))?;
-
         let target = Expr::parse(parser)?;
         parser.consume(TokenKind::Semicolon)?;
-
         let end_span = parser.end_span();
 
         Ok(GotoStmt {
