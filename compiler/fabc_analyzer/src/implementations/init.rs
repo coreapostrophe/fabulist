@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use fabc_parser::ast::init::story::{
     metadata::Metadata,
     part::{
@@ -12,9 +10,7 @@ use fabc_parser::ast::init::story::{
     StoryInit,
 };
 
-use crate::{
-    annotations::SymbolAnnotation, symbol_table::SymbolType, AnalysisResult, Analyzable, Annotation,
-};
+use crate::{symbol_table::Symbol, types::StorySymbolType, AnalysisResult, Analyzable};
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -39,24 +35,26 @@ impl Analyzable for Metadata {
 
 impl Analyzable for Part {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        let r#type = SymbolType::Part;
-        let scope_level = analyzer.symbol_table().current_level();
+        let part_name = self.ident.clone();
+        let part_type = StorySymbolType::Part;
+        let part_sl = analyzer.story_sym_table().current_level();
 
         analyzer
-            .mut_symbol_table()
-            .insert_symbol(&self.ident, r#type.clone());
+            .mut_story_sym_table()
+            .insert_symbol(&self.ident, part_type.clone());
 
         self.elements.iter().for_each(|element| {
             element.analyze(analyzer);
         });
 
-        analyzer.annotate(Annotation {
-            node_id: self.info.id,
-            symbol_annotation: Some(SymbolAnnotation {
-                r#type,
-                scope_level,
-            }),
-        });
+        analyzer.annotate_story_symbol(
+            self.info.id,
+            Symbol {
+                name: part_name.clone(),
+                r#type: part_type.clone(),
+                scope_level: part_sl,
+            },
+        );
 
         AnalysisResult::default()
     }
@@ -82,9 +80,26 @@ impl Analyzable for Element {
 
 impl Analyzable for DialogueElement {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        let speaker_name = self.speaker.clone();
+        let speaker_type = StorySymbolType::Speaker;
+        let speaker_sl = analyzer.story_sym_table().current_level();
+
+        analyzer
+            .mut_story_sym_table()
+            .insert_symbol(&self.speaker, speaker_type.clone());
+
         self.quotes.iter().for_each(|quote| {
             quote.analyze(analyzer);
         });
+
+        analyzer.annotate_story_symbol(
+            self.info.id,
+            Symbol {
+                name: speaker_name,
+                r#type: speaker_type,
+                scope_level: speaker_sl,
+            },
+        );
 
         AnalysisResult::default()
     }

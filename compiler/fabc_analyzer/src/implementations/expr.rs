@@ -1,7 +1,10 @@
 #![allow(unused)]
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr};
 
-use crate::{data_type::DataType, symbol_table::SymbolType, AnalysisResult, Analyzable};
+use crate::{
+    types::{DataType, ModuleSymbolType},
+    AnalysisResult, Analyzable,
+};
 
 impl Analyzable for Expr {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -19,7 +22,7 @@ impl Analyzable for Literal {
         };
 
         AnalysisResult {
-            symbol_type: Some(SymbolType::Data(data_type)),
+            mod_sym_type: Some(ModuleSymbolType::Data(data_type)),
         }
     }
 }

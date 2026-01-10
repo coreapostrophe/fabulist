@@ -1,31 +1,18 @@
 use std::collections::HashMap;
 
-use crate::data_type::DataType;
-
-#[derive(Clone)]
-pub enum SymbolType {
-    Data(DataType),
-    Function {
-        return_type: DataType,
-        parameters: Vec<DataType>,
-    },
-    Part,
-    Speaker,
-}
-
-pub struct Symbol {
+pub struct Symbol<T> {
     pub name: String,
-    pub r#type: SymbolType,
+    pub r#type: T,
     pub scope_level: usize,
 }
 
-pub struct SymbolTable {
-    entries: HashMap<String, Vec<Symbol>>,
+pub struct SymbolTable<T> {
+    entries: HashMap<String, Vec<Symbol<T>>>,
     scope_display: Vec<Vec<String>>,
     current_level: usize,
 }
 
-impl Default for SymbolTable {
+impl<T> Default for SymbolTable<T> {
     fn default() -> Self {
         Self {
             entries: HashMap::new(),
@@ -35,7 +22,7 @@ impl Default for SymbolTable {
     }
 }
 
-impl SymbolTable {
+impl<T> SymbolTable<T> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -61,7 +48,7 @@ impl SymbolTable {
             self.current_level -= 1;
         }
     }
-    pub fn insert_symbol(&mut self, name: &str, r#type: SymbolType) {
+    pub fn insert_symbol(&mut self, name: &str, r#type: T) {
         let symbol = Symbol {
             name: name.to_string(),
             r#type,
@@ -77,7 +64,7 @@ impl SymbolTable {
             scope_symbols.push(name.to_string());
         }
     }
-    pub fn lookup_symbol(&self, name: &str) -> Option<&Symbol> {
+    pub fn lookup_symbol(&self, name: &str) -> Option<&Symbol<T>> {
         self.entries.get(name).and_then(|stack| stack.last())
     }
 }

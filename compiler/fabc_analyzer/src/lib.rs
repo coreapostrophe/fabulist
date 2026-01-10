@@ -1,22 +1,22 @@
+#![allow(unused)]
 use std::collections::HashMap;
 
 use fabc_error::Error;
 use fabc_parser::Parsable;
 
 use crate::{
-    annotations::SymbolAnnotation,
-    symbol_table::{SymbolTable, SymbolType},
+    symbol_table::{Symbol, SymbolTable},
+    types::{ModuleSymbolType, StorySymbolType},
 };
 
-pub mod annotations;
-pub mod data_type;
 pub mod implementations;
 pub mod reachability;
 pub mod symbol_table;
+pub mod types;
 
 #[derive(Default)]
 pub struct AnalysisResult {
-    pub symbol_type: Option<SymbolType>,
+    pub mod_sym_type: Option<ModuleSymbolType>,
 }
 
 pub trait Analyzable {
@@ -24,19 +24,17 @@ pub trait Analyzable {
 }
 
 pub struct AnalyzerResult {
-    pub symbol_annotations: HashMap<usize, SymbolAnnotation>,
+    pub story_sym_annotations: HashMap<usize, Symbol<StorySymbolType>>,
+    pub mod_sym_annotations: HashMap<usize, Symbol<ModuleSymbolType>>,
     pub errors: Vec<Error>,
-}
-
-pub struct Annotation {
-    pub node_id: usize,
-    pub symbol_annotation: Option<SymbolAnnotation>,
 }
 
 #[derive(Default)]
 pub struct Analyzer {
-    symbol_table: SymbolTable,
-    symbol_annotations: HashMap<usize, SymbolAnnotation>,
+    story_sym_table: SymbolTable<StorySymbolType>,
+    mod_sym_table: SymbolTable<ModuleSymbolType>,
+    story_sym_annotations: HashMap<usize, Symbol<StorySymbolType>>,
+    mod_sym_annotations: HashMap<usize, Symbol<ModuleSymbolType>>,
     errors: Vec<Error>,
 }
 
@@ -50,20 +48,32 @@ impl Analyzer {
         Ok(analyzer)
     }
 
-    pub(crate) fn symbol_table(&self) -> &SymbolTable {
-        &self.symbol_table
+    pub(crate) fn mod_sym_table(&self) -> &SymbolTable<ModuleSymbolType> {
+        &self.mod_sym_table
     }
 
-    pub(crate) fn mut_symbol_table(&mut self) -> &mut SymbolTable {
-        &mut self.symbol_table
+    pub(crate) fn mut_mod_sym_table(&mut self) -> &mut SymbolTable<ModuleSymbolType> {
+        &mut self.mod_sym_table
     }
 
-    #[allow(unused)]
-    pub(crate) fn annotate(&mut self, annotations: Annotation) {
-        if let Some(symbol_annotation) = annotations.symbol_annotation {
-            self.symbol_annotations
-                .insert(annotations.node_id, symbol_annotation);
-        }
+    pub(crate) fn story_sym_table(&self) -> &SymbolTable<StorySymbolType> {
+        &self.story_sym_table
+    }
+
+    pub(crate) fn mut_story_sym_table(&mut self) -> &mut SymbolTable<StorySymbolType> {
+        &mut self.story_sym_table
+    }
+
+    pub(crate) fn annotate_story_symbol(
+        &mut self,
+        node_id: usize,
+        symbol: Symbol<StorySymbolType>,
+    ) {
+        self.story_sym_annotations.insert(node_id, symbol);
+    }
+
+    pub(crate) fn annotate_mod_symbol(&mut self, node_id: usize, symbol: Symbol<ModuleSymbolType>) {
+        self.mod_sym_annotations.insert(node_id, symbol);
     }
 
     #[allow(unused)]
