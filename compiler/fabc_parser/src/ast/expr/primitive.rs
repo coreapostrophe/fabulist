@@ -267,7 +267,7 @@ mod primitive_tests {
                     id: 8,
                     span: Span::from((LineCol::new(1, 11), LineCol::new(1, 20))),
                 },
-                last_return: None,
+                first_return: None,
                 statements: vec![Stmt::Expr(ExprStmt {
                     info: NodeInfo {
                         id: 7,

@@ -98,7 +98,7 @@ mod if_stmt_tests {
                         id: 1,
                         span: Span::from((LineCol::new(1, 11), LineCol::new(1, 13)))
                     },
-                    last_return: None,
+                    first_return: None,
                     statements: vec![]
                 }),
                 else_branch: None,
@@ -131,7 +131,7 @@ mod if_stmt_tests {
                         id: 1,
                         span: Span::from((LineCol::new(1, 12), LineCol::new(1, 14)))
                     },
-                    last_return: None,
+                    first_return: None,
                     statements: vec![]
                 }),
                 else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
@@ -139,7 +139,7 @@ mod if_stmt_tests {
                         id: 2,
                         span: Span::from((LineCol::new(1, 21), LineCol::new(1, 23)))
                     },
-                    last_return: None,
+                    first_return: None,
                     statements: vec![]
                 }))),
             }

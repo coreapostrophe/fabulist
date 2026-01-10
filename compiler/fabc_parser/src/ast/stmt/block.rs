@@ -9,7 +9,7 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub struct BlockStmt {
     pub info: NodeInfo,
-    pub last_return: Option<usize>,
+    pub first_return: Option<usize>,
     pub statements: Vec<Stmt>,
 }
 
@@ -46,7 +46,7 @@ impl Parsable for BlockStmt {
                 id: parser.assign_id(),
                 span: Span::from((start_span, end_span)),
             },
-            last_return: first_return,
+            first_return,
             statements,
         })
     }
@@ -78,7 +78,7 @@ mod block_stmt_tests {
                 id: 4,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 25))),
             },
-            last_return: None,
+            first_return: None,
             statements: vec![
                 Stmt::Let(LetStmt {
                     info: NodeInfo {
