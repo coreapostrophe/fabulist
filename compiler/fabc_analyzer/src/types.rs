@@ -27,3 +27,9 @@ pub enum StorySymbolType {
     Part,
     Speaker,
 }
+
+#[derive(Clone)]
+pub struct Symbol<T> {
+    pub name: String,
+    pub r#type: T,
+}

@@ -1,12 +1,12 @@
 #![allow(unused)]
 use std::collections::HashMap;
 
-use fabc_error::Error;
+use fabc_error::{Error, Span};
 use fabc_parser::Parsable;
 
 use crate::{
-    symbol_table::{Symbol, SymbolTable},
-    types::{ModuleSymbolType, StorySymbolType},
+    symbol_table::SymbolTable,
+    types::{ModuleSymbolType, StorySymbolType, Symbol},
 };
 
 pub mod implementations;
@@ -48,20 +48,20 @@ impl Analyzer {
         Ok(analyzer)
     }
 
-    pub(crate) fn mod_sym_table(&self) -> &SymbolTable<ModuleSymbolType> {
-        &self.mod_sym_table
-    }
-
-    pub(crate) fn mut_mod_sym_table(&mut self) -> &mut SymbolTable<ModuleSymbolType> {
-        &mut self.mod_sym_table
-    }
-
-    pub(crate) fn story_sym_table(&self) -> &SymbolTable<StorySymbolType> {
-        &self.story_sym_table
+    pub(crate) fn story_sym_table(&mut self) -> &mut SymbolTable<StorySymbolType> {
+        &mut self.story_sym_table
     }
 
     pub(crate) fn mut_story_sym_table(&mut self) -> &mut SymbolTable<StorySymbolType> {
         &mut self.story_sym_table
+    }
+
+    pub(crate) fn mod_sym_table(&mut self) -> &mut SymbolTable<ModuleSymbolType> {
+        &mut self.mod_sym_table
+    }
+
+    pub(crate) fn mut_mod_sym_table(&mut self) -> &mut SymbolTable<ModuleSymbolType> {
+        &mut self.mod_sym_table
     }
 
     pub(crate) fn annotate_story_symbol(

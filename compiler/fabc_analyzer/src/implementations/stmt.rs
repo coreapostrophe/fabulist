@@ -1,4 +1,5 @@
 #![allow(unused)]
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::stmt::{
     block::BlockStmt,
     expr::ExprStmt,
@@ -10,19 +11,27 @@ use fabc_parser::ast::stmt::{
 };
 
 use crate::{
-    symbol_table::Symbol,
-    types::{DataType, ModuleSymbolType},
+    types::{DataType, ModuleSymbolType, Symbol},
     AnalysisResult, Analyzable, Analyzer,
 };
 
 impl Analyzable for Stmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
-        todo!()
+        match self {
+            Stmt::Block(block_stmt) => block_stmt.analyze(analyzer),
+            Stmt::Expr(expr_stmt) => expr_stmt.analyze(analyzer),
+            Stmt::Goto(goto_stmt) => goto_stmt.analyze(analyzer),
+            Stmt::If(if_stmt) => if_stmt.analyze(analyzer),
+            Stmt::Let(let_stmt) => let_stmt.analyze(analyzer),
+            Stmt::Return(return_stmt) => return_stmt.analyze(analyzer),
+        }
     }
 }
 
 impl Analyzable for BlockStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
+        analyzer.mut_mod_sym_table().enter_scope();
+
         let mut return_type: Option<ModuleSymbolType> = None;
 
         for statement in &self.statements {
@@ -38,6 +47,8 @@ impl Analyzable for BlockStmt {
                 }
             }
         }
+
+        analyzer.mut_mod_sym_table().exit_scope();
 
         AnalysisResult {
             mod_sym_type: return_type,
@@ -83,26 +94,26 @@ impl Analyzable for IfStmt {
 
 impl Analyzable for LetStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
-        let var_name = self.name.clone();
-        let var_type = self
-            .initializer
-            .analyze(analyzer)
-            .mod_sym_type
-            .unwrap_or(ModuleSymbolType::Data(DataType::None));
-        let var_sl = analyzer.mod_sym_table().current_level();
+        let Some(var_type) = self.initializer.analyze(analyzer).mod_sym_type else {
+            analyzer.push_error(Error::new(ErrorKind::TypeInference, self.info.span.clone()));
+            return AnalysisResult::default();
+        };
 
-        analyzer
-            .mut_mod_sym_table()
-            .insert_symbol(&self.name, var_type.clone());
+        let var_symbol = {
+            let Some(symbol) = analyzer
+                .mut_mod_sym_table()
+                .assign_symbol(&self.name, var_type.clone())
+            else {
+                analyzer.push_error(Error::new(
+                    ErrorKind::InternalAssignment,
+                    self.info.span.clone(),
+                ));
+                return AnalysisResult::default();
+            };
+            symbol.clone()
+        };
 
-        analyzer.annotate_mod_symbol(
-            self.info.id,
-            Symbol {
-                name: var_name,
-                r#type: var_type,
-                scope_level: var_sl,
-            },
-        );
+        analyzer.annotate_mod_symbol(self.info.id, var_symbol.clone());
 
         AnalysisResult::default()
     }

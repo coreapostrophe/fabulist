@@ -7,6 +7,8 @@ pub enum ErrorKind {
     UnrecognizedPrimary { primary: String },
     UnrecognizedInitiator { initiator: String },
     InvalidOperator { operator: String },
+    TypeInference,
+    InternalAssignment,
     UnclosedDelimiter,
 }
 
@@ -20,11 +22,17 @@ impl ErrorKind {
             ErrorKind::UnrecognizedPrimary { .. } => "Unrecognized primary",
             ErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
+            ErrorKind::TypeInference => "Type Inference",
+            ErrorKind::InternalAssignment => "Internal assignment error",
             ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
         }
     }
     pub fn message(&self) -> String {
         match self {
+            ErrorKind::InternalAssignment => {
+                "An internal error occurred during assignment".to_string()
+            }
+            ErrorKind::TypeInference => "Unable to infer type".to_string(),
             ErrorKind::ExpectedSymbol { expected, found } => {
                 format!("Expected '{}', found '{}'", expected, found)
             }

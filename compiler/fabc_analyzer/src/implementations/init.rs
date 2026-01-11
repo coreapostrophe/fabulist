@@ -1,3 +1,4 @@
+use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::init::story::{
     metadata::Metadata,
     part::{
@@ -10,7 +11,10 @@ use fabc_parser::ast::init::story::{
     StoryInit,
 };
 
-use crate::{symbol_table::Symbol, types::StorySymbolType, AnalysisResult, Analyzable};
+use crate::{
+    types::{StorySymbolType, Symbol},
+    AnalysisResult, Analyzable,
+};
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -35,26 +39,25 @@ impl Analyzable for Metadata {
 
 impl Analyzable for Part {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        let part_name = self.ident.clone();
-        let part_type = StorySymbolType::Part;
-        let part_sl = analyzer.story_sym_table().current_level();
-
-        analyzer
-            .mut_story_sym_table()
-            .insert_symbol(&self.ident, part_type.clone());
+        let part_symbol = {
+            let Some(symbol) = analyzer
+                .mut_story_sym_table()
+                .assign_symbol(&self.ident, StorySymbolType::Part)
+            else {
+                analyzer.push_error(Error::new(
+                    ErrorKind::InternalAssignment,
+                    self.info.span.clone(),
+                ));
+                return AnalysisResult::default();
+            };
+            symbol.clone()
+        };
 
         self.elements.iter().for_each(|element| {
             element.analyze(analyzer);
         });
 
-        analyzer.annotate_story_symbol(
-            self.info.id,
-            Symbol {
-                name: part_name.clone(),
-                r#type: part_type.clone(),
-                scope_level: part_sl,
-            },
-        );
+        analyzer.annotate_story_symbol(self.info.id, part_symbol);
 
         AnalysisResult::default()
     }
@@ -80,26 +83,25 @@ impl Analyzable for Element {
 
 impl Analyzable for DialogueElement {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        let speaker_name = self.speaker.clone();
-        let speaker_type = StorySymbolType::Speaker;
-        let speaker_sl = analyzer.story_sym_table().current_level();
-
-        analyzer
-            .mut_story_sym_table()
-            .insert_symbol(&self.speaker, speaker_type.clone());
+        let speaker_symbol = {
+            let Some(symbol) = analyzer
+                .mut_story_sym_table()
+                .assign_symbol(&self.speaker, StorySymbolType::Speaker)
+            else {
+                analyzer.push_error(Error::new(
+                    ErrorKind::InternalAssignment,
+                    self.info.span.clone(),
+                ));
+                return AnalysisResult::default();
+            };
+            symbol.clone()
+        };
 
         self.quotes.iter().for_each(|quote| {
             quote.analyze(analyzer);
         });
 
-        analyzer.annotate_story_symbol(
-            self.info.id,
-            Symbol {
-                name: speaker_name,
-                r#type: speaker_type,
-                scope_level: speaker_sl,
-            },
-        );
+        analyzer.annotate_story_symbol(self.info.id, speaker_symbol);
 
         AnalysisResult::default()
     }
