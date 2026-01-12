@@ -2,9 +2,12 @@ use fabc_error::Error;
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
-    ast::stmt::{
-        block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt,
-        r#return::ReturnStmt,
+    ast::{
+        stmt::{
+            block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::IfStmt, r#let::LetStmt,
+            r#return::ReturnStmt,
+        },
+        NodeInfo,
     },
     Parsable, Parser,
 };
@@ -33,14 +36,14 @@ pub enum Stmt {
 }
 
 impl Stmt {
-    pub fn id(&self) -> usize {
+    pub fn info(&self) -> &NodeInfo {
         match self {
-            Stmt::Expr(stmt) => stmt.info.id,
-            Stmt::Block(stmt) => stmt.info.id,
-            Stmt::Let(stmt) => stmt.info.id,
-            Stmt::Goto(stmt) => stmt.info.id,
-            Stmt::If(stmt) => stmt.info.id,
-            Stmt::Return(stmt) => stmt.info.id,
+            Stmt::Expr(stmt) => &stmt.info,
+            Stmt::Block(stmt) => &stmt.info,
+            Stmt::Let(stmt) => &stmt.info,
+            Stmt::Goto(stmt) => &stmt.info,
+            Stmt::If(stmt) => &stmt.info,
+            Stmt::Return(stmt) => &stmt.info,
         }
     }
 }

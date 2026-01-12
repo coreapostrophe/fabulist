@@ -1,20 +1,65 @@
 use fabc_error::{kind::ErrorKind, Error};
-use fabc_parser::ast::init::story::{
-    metadata::Metadata,
-    part::{
-        element::{
-            dialogue::DialogueElement, narration::NarrationElement, selection::SelectionElement,
-            Element,
+use fabc_parser::ast::init::{
+    module::ModuleInit,
+    story::{
+        metadata::Metadata,
+        part::{
+            element::{
+                dialogue::DialogueElement, narration::NarrationElement,
+                selection::SelectionElement, Element,
+            },
+            Part,
         },
-        Part,
+        StoryInit,
     },
-    StoryInit,
+    Init,
 };
 
 use crate::{
-    types::{StorySymbolType, Symbol},
+    types::{ModuleSymbolType, StorySymbolType, Symbol},
     AnalysisResult, Analyzable,
 };
+
+impl Analyzable for Init {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        match self {
+            Init::Story(story_init) => story_init.analyze(analyzer),
+            Init::Module(module_init) => module_init.analyze(analyzer),
+        }
+    }
+}
+
+impl Analyzable for ModuleInit {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        if let Some(module_alias) = self.alias.as_ref() {
+            let sym_type = ModuleSymbolType::Module {
+                name: module_alias.clone(),
+            };
+
+            let alias_symbol = {
+                let Some(symbol) = analyzer
+                    .mut_mod_sym_table()
+                    .assign_symbol(module_alias, sym_type.clone())
+                else {
+                    analyzer.push_error(Error::new(
+                        ErrorKind::InternalAssignment,
+                        self.info.span.clone(),
+                    ));
+                    return AnalysisResult::default();
+                };
+                symbol.clone()
+            };
+
+            analyzer.annotate_mod_symbol(self.info.id, alias_symbol);
+
+            return AnalysisResult {
+                mod_sym_type: Some(sym_type),
+            };
+        }
+
+        AnalysisResult::default()
+    }
+}
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {

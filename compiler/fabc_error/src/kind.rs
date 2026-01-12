@@ -7,14 +7,19 @@ pub enum ErrorKind {
     UnrecognizedPrimary { primary: String },
     UnrecognizedInitiator { initiator: String },
     InvalidOperator { operator: String },
+    ExpectedType { expected: String, found: String },
+    ArityMismatch { expected: usize, found: usize },
     TypeInference,
     InternalAssignment,
     UnclosedDelimiter,
+    UninitializedVariable,
+    NotCallable,
 }
 
 impl ErrorKind {
     pub fn name(&self) -> &'static str {
         match self {
+            ErrorKind::ExpectedType { .. } => "Unexpected type",
             ErrorKind::ExpectedSymbol { .. } => "Unexpected symbol",
             ErrorKind::UnrecognizedLiteral { .. } => "Unrecognized literal",
             ErrorKind::UnrecognizedPrimitive { .. } => "Unrecognized primitive",
@@ -22,13 +27,24 @@ impl ErrorKind {
             ErrorKind::UnrecognizedPrimary { .. } => "Unrecognized primary",
             ErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
+            ErrorKind::ArityMismatch { .. } => "Arity mismatch",
             ErrorKind::TypeInference => "Type Inference",
             ErrorKind::InternalAssignment => "Internal assignment error",
             ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
+            ErrorKind::UninitializedVariable => "Uninitialized variable",
+            ErrorKind::NotCallable => "Not callable",
         }
     }
     pub fn message(&self) -> String {
         match self {
+            ErrorKind::ArityMismatch { expected, found } => {
+                format!("Expected {} arguments, found {}", expected, found)
+            }
+            ErrorKind::NotCallable => "Attempted to call a non-callable entity".to_string(),
+            ErrorKind::ExpectedType { expected, found } => {
+                format!("Expected type '{}', found '{}'", expected, found)
+            }
+            ErrorKind::UninitializedVariable => "Variable used before initialization".to_string(),
             ErrorKind::InternalAssignment => {
                 "An internal error occurred during assignment".to_string()
             }

@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use fabc_error::{Error, Span};
-use fabc_parser::Parsable;
+use fabc_parser::{ast::init::Init, Parsable};
 
 use crate::{
     symbol_table::SymbolTable,
@@ -39,6 +39,21 @@ pub struct Analyzer {
 }
 
 impl Analyzer {
+    pub fn analyze(inits: Vec<Init>) -> AnalyzerResult {
+        let mut analyzer = Self::default();
+
+        for init in &inits {
+            init.analyze(&mut analyzer);
+        }
+
+        AnalyzerResult {
+            story_sym_annotations: analyzer.story_sym_annotations,
+            mod_sym_annotations: analyzer.mod_sym_annotations,
+            errors: analyzer.errors,
+        }
+    }
+
+    #[cfg(test)]
     pub fn analyze_ast<T>(ast: &T) -> Result<Self, Error>
     where
         T: Parsable + Analyzable,

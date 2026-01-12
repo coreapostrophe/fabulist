@@ -147,6 +147,20 @@ pub enum Expr {
 }
 
 impl Expr {
+    pub fn info(&self) -> &NodeInfo {
+        match self {
+            Expr::Binary { info, .. } => info,
+            Expr::Unary { info, .. } => info,
+            Expr::Assignment { info, .. } => info,
+            Expr::MemberAccess { info, .. } => info,
+            Expr::Call { info, .. } => info,
+            Expr::Primary { info, .. } => info,
+            Expr::Grouping { info, .. } => info,
+        }
+    }
+}
+
+impl Expr {
     pub fn assignment(parser: &mut Parser<'_, '_>) -> Result<Expr, Error> {
         let start_span = parser.start_span();
         let mut expr = Self::logical(parser)?;
