@@ -4,7 +4,7 @@ use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::decl::{object::ObjectDecl, quote::QuoteDecl};
 
 use crate::{
-    types::{DataType, Field, ModuleSymbolType},
+    types::{DataType, Field, ModuleSymbolType, SymbolAnnotation},
     AnalysisResult, Analyzable,
 };
 
@@ -38,8 +38,18 @@ impl Analyzable for ObjectDecl {
             });
         }
 
+        let object_sym_type = ModuleSymbolType::Data(DataType::Record { fields });
+
+        analyzer.annotate_mod_symbol(
+            self.info.id,
+            SymbolAnnotation {
+                name: None,
+                r#type: object_sym_type.clone(),
+            },
+        );
+
         AnalysisResult {
-            mod_sym_type: Some(ModuleSymbolType::Data(DataType::Record { fields })),
+            mod_sym_type: Some(object_sym_type),
         }
     }
 }

@@ -72,3 +72,17 @@ pub struct Symbol<T> {
     pub name: String,
     pub r#type: T,
 }
+
+pub struct SymbolAnnotation<T> {
+    pub name: Option<String>,
+    pub r#type: T,
+}
+
+impl<T> From<Symbol<T>> for SymbolAnnotation<T> {
+    fn from(symbol: Symbol<T>) -> Self {
+        SymbolAnnotation {
+            name: Some(symbol.name),
+            r#type: symbol.r#type,
+        }
+    }
+}

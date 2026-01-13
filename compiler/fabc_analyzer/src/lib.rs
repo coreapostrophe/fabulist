@@ -6,7 +6,7 @@ use fabc_parser::{ast::init::Init, Parsable};
 
 use crate::{
     symbol_table::SymbolTable,
-    types::{ModuleSymbolType, StorySymbolType, Symbol},
+    types::{ModuleSymbolType, StorySymbolType, Symbol, SymbolAnnotation},
 };
 
 pub mod implementations;
@@ -24,8 +24,8 @@ pub trait Analyzable {
 }
 
 pub struct AnalyzerResult {
-    pub story_sym_annotations: HashMap<usize, Symbol<StorySymbolType>>,
-    pub mod_sym_annotations: HashMap<usize, Symbol<ModuleSymbolType>>,
+    pub story_sym_annotations: HashMap<usize, SymbolAnnotation<StorySymbolType>>,
+    pub mod_sym_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
     pub errors: Vec<Error>,
 }
 
@@ -33,8 +33,8 @@ pub struct AnalyzerResult {
 pub struct Analyzer {
     story_sym_table: SymbolTable<StorySymbolType>,
     mod_sym_table: SymbolTable<ModuleSymbolType>,
-    story_sym_annotations: HashMap<usize, Symbol<StorySymbolType>>,
-    mod_sym_annotations: HashMap<usize, Symbol<ModuleSymbolType>>,
+    story_sym_annotations: HashMap<usize, SymbolAnnotation<StorySymbolType>>,
+    mod_sym_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
     errors: Vec<Error>,
 }
 
@@ -82,12 +82,16 @@ impl Analyzer {
     pub(crate) fn annotate_story_symbol(
         &mut self,
         node_id: usize,
-        symbol: Symbol<StorySymbolType>,
+        symbol: SymbolAnnotation<StorySymbolType>,
     ) {
         self.story_sym_annotations.insert(node_id, symbol);
     }
 
-    pub(crate) fn annotate_mod_symbol(&mut self, node_id: usize, symbol: Symbol<ModuleSymbolType>) {
+    pub(crate) fn annotate_mod_symbol(
+        &mut self,
+        node_id: usize,
+        symbol: SymbolAnnotation<ModuleSymbolType>,
+    ) {
         self.mod_sym_annotations.insert(node_id, symbol);
     }
 

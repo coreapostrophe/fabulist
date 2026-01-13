@@ -50,7 +50,7 @@ impl Analyzable for ModuleInit {
                 symbol.clone()
             };
 
-            analyzer.annotate_mod_symbol(self.info.id, alias_symbol);
+            analyzer.annotate_mod_symbol(self.info.id, alias_symbol.into());
 
             return AnalysisResult {
                 mod_sym_type: Some(sym_type),
@@ -102,7 +102,7 @@ impl Analyzable for Part {
             element.analyze(analyzer);
         });
 
-        analyzer.annotate_story_symbol(self.info.id, part_symbol);
+        analyzer.annotate_story_symbol(self.info.id, part_symbol.into());
 
         AnalysisResult::default()
     }
@@ -146,7 +146,7 @@ impl Analyzable for DialogueElement {
             quote.analyze(analyzer);
         });
 
-        analyzer.annotate_story_symbol(self.info.id, speaker_symbol);
+        analyzer.annotate_story_symbol(self.info.id, speaker_symbol.into());
 
         AnalysisResult::default()
     }

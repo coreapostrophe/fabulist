@@ -113,7 +113,7 @@ impl Analyzable for LetStmt {
             symbol.clone()
         };
 
-        analyzer.annotate_mod_symbol(self.info.id, var_symbol.clone());
+        analyzer.annotate_mod_symbol(self.info.id, var_symbol.clone().into());
 
         AnalysisResult::default()
     }
