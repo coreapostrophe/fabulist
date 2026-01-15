@@ -30,6 +30,18 @@ pub enum Primitive {
     },
 }
 
+impl Primitive {
+    pub fn info(&self) -> &NodeInfo {
+        match self {
+            Primitive::Identifier { info, .. } => info,
+            Primitive::Grouping { info, .. } => info,
+            Primitive::Object { info, .. } => info,
+            Primitive::Closure { info, .. } => info,
+            Primitive::Context { info } => info,
+        }
+    }
+}
+
 impl Parsable for Primitive {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {

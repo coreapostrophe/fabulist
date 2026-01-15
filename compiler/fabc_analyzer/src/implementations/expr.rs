@@ -3,14 +3,28 @@ use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
 
 use crate::{
-    types::{DataType, ModuleSymbolType},
+    types::{DataType, ModuleSymbolType, SymbolAnnotation},
     AnalysisResult, Analyzable,
 };
 
 impl Analyzable for Expr {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         match self {
-            Expr::Primary { value, .. } => value.analyze(analyzer),
+            Expr::Primary { value, .. } => {
+                let result = value.analyze(analyzer);
+
+                if let Some(sym_type) = &result.mod_sym_type {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: None,
+                            r#type: sym_type.clone(),
+                        },
+                    );
+                }
+
+                result
+            }
             Expr::Binary {
                 info,
                 left,
@@ -46,6 +60,14 @@ impl Analyzable for Expr {
                     return AnalysisResult::default();
                 }
 
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: left_sym_type.clone(),
+                    },
+                );
+
                 AnalysisResult {
                     mod_sym_type: Some(left_sym_type),
                 }
@@ -79,6 +101,14 @@ impl Analyzable for Expr {
                     ));
                     return AnalysisResult::default();
                 }
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: value_sym_type.clone(),
+                    },
+                );
 
                 AnalysisResult {
                     mod_sym_type: Some(value_sym_type),
@@ -139,6 +169,14 @@ impl Analyzable for Expr {
                             }
                         }
 
+                        analyzer.annotate_mod_symbol(
+                            self.info().id,
+                            SymbolAnnotation {
+                                name: None,
+                                r#type: (*return_type).clone(),
+                            },
+                        );
+
                         AnalysisResult {
                             mod_sym_type: Some(*return_type),
                         }
@@ -149,12 +187,40 @@ impl Analyzable for Expr {
                     }
                 }
             }
-            Expr::Grouping { info, expression } => expression.analyze(analyzer),
+            Expr::Grouping { info, expression } => {
+                let result = expression.analyze(analyzer);
+
+                if let Some(sym_type) = &result.mod_sym_type {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: None,
+                            r#type: sym_type.clone(),
+                        },
+                    );
+                };
+
+                result
+            }
             Expr::Unary {
                 info,
                 operator,
                 right,
-            } => right.analyze(analyzer),
+            } => {
+                let result = right.analyze(analyzer);
+
+                if let Some(sym_type) = &result.mod_sym_type {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: None,
+                            r#type: sym_type.clone(),
+                        },
+                    );
+                };
+
+                result
+            }
             Expr::MemberAccess {
                 info,
                 left,
@@ -221,6 +287,16 @@ impl Analyzable for Expr {
                     };
                 }
 
+                if let Some(resolved_type) = &resolved_type {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: None,
+                            r#type: resolved_type.clone(),
+                        },
+                    );
+                }
+
                 AnalysisResult {
                     mod_sym_type: resolved_type,
                 }
@@ -230,7 +306,7 @@ impl Analyzable for Expr {
 }
 
 impl Analyzable for Literal {
-    fn analyze(&self, _analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         let data_type = match self {
             Literal::Number(_) => DataType::Number,
             Literal::String(_) => DataType::String,
@@ -252,16 +328,37 @@ impl Analyzable for Primitive {
                     analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                     return AnalysisResult::default();
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: lit_sym_type.clone(),
+                    },
+                );
+
                 lit_sym_type.clone()
             }
             Primitive::Identifier { info, name } => {
-                let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
-                    analyzer.push_error(Error::new(
-                        ErrorKind::UninitializedVariable,
-                        info.span.clone(),
-                    ));
-                    return AnalysisResult::default();
+                let ident_sym = {
+                    let Some(sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
+                        analyzer.push_error(Error::new(
+                            ErrorKind::UninitializedVariable,
+                            info.span.clone(),
+                        ));
+                        return AnalysisResult::default();
+                    };
+                    sym.clone()
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: Some(name.clone()),
+                        r#type: ident_sym.r#type.clone(),
+                    },
+                );
+
                 ident_sym.r#type.clone()
             }
             Primitive::Grouping { info, expr } => {
@@ -269,9 +366,30 @@ impl Analyzable for Primitive {
                     analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                     return AnalysisResult::default();
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: group_sym_type.clone(),
+                    },
+                );
+
                 group_sym_type.clone()
             }
-            Primitive::Context { info } => ModuleSymbolType::Data(DataType::Context),
+            Primitive::Context { info } => {
+                let context_type = ModuleSymbolType::Data(DataType::Context);
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: context_type.clone(),
+                    },
+                );
+
+                context_type
+            }
             Primitive::Closure { info, params, body } => {
                 let mut param_types = Vec::new();
 
@@ -292,6 +410,18 @@ impl Analyzable for Primitive {
                     };
                     sym_type.clone()
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: ModuleSymbolType::Function {
+                            return_type: Box::new(body_sym_type.clone()),
+                            parameters: param_types.clone(),
+                            arity: params.len(),
+                        },
+                    },
+                );
 
                 ModuleSymbolType::Function {
                     return_type: Box::new(body_sym_type),
