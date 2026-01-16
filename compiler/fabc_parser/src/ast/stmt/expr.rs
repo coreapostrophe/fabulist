@@ -52,12 +52,12 @@ mod expr_stmt_tests {
 
         let expected = ExprStmt {
             info: NodeInfo {
-                id: 4,
+                id: 5,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 6))),
             },
             expr: Expr::Binary {
                 info: NodeInfo {
-                    id: 3,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 5))),
                 },
                 left: Box::new(Expr::Primary {
@@ -76,10 +76,16 @@ mod expr_stmt_tests {
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 2,
+                        id: 3,
                         span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
                     },
-                    value: Primary::Literal(Literal::Number(1.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                        },
+                        value: 1.0,
+                    }),
                 }),
             },
         };

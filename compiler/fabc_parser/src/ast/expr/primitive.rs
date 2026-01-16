@@ -210,12 +210,12 @@ mod primitive_tests {
 
         let expected = Primitive::Object {
             info: NodeInfo {
-                id: 3,
+                id: 5,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 24))),
             },
             value: ObjectDecl {
                 info: NodeInfo {
-                    id: 2,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 24))),
                 },
                 map: {
@@ -224,20 +224,32 @@ mod primitive_tests {
                         "key1".to_string(),
                         Expr::Primary {
                             info: NodeInfo {
-                                id: 0,
+                                id: 1,
                                 span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
                             },
-                            value: Primary::Literal(Literal::Number(42.0)),
+                            value: Primary::Literal(Literal::Number {
+                                info: NodeInfo {
+                                    id: 0,
+                                    span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
+                                },
+                                value: 42.0,
+                            }),
                         },
                     );
                     map.insert(
                         "key2".to_string(),
                         Expr::Primary {
                             info: NodeInfo {
-                                id: 1,
+                                id: 3,
                                 span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
                             },
-                            value: Primary::Literal(Literal::Boolean(true)),
+                            value: Primary::Literal(Literal::Boolean {
+                                info: NodeInfo {
+                                    id: 2,
+                                    span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
+                                },
+                                value: true,
+                            }),
                         },
                     );
                     map

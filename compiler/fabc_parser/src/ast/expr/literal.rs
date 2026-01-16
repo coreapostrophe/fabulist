@@ -1,24 +1,66 @@
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{Parsable, Parser};
+use crate::{ast::NodeInfo, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
-    Boolean(bool),
-    String(String),
-    Number(f64),
-    None,
+    Boolean { info: NodeInfo, value: bool },
+    String { info: NodeInfo, value: String },
+    Number { info: NodeInfo, value: f64 },
+    None { info: NodeInfo },
+}
+
+impl Literal {
+    pub fn info(&self) -> &NodeInfo {
+        match self {
+            Literal::Boolean { info, .. }
+            | Literal::String { info, .. }
+            | Literal::Number { info, .. }
+            | Literal::None { info } => info,
+        }
+    }
 }
 
 impl Parsable for Literal {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
-        match parser.advance() {
-            TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean(true)),
-            TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean(false)),
-            TokenKind::String(value) => Ok(Literal::String(value.to_string())),
-            TokenKind::Number(value) => Ok(Literal::Number(*value)),
-            TokenKind::Keyword(KeywordKind::None) => Ok(Literal::None),
+        let kind = parser.advance();
+
+        match kind.clone() {
+            TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean {
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                    span: parser.previous_token().into(),
+                },
+                value: true,
+            }),
+            TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean {
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                    span: parser.previous_token().into(),
+                },
+                value: false,
+            }),
+            TokenKind::String(value) => Ok(Literal::String {
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                    span: parser.previous_token().into(),
+                },
+                value: value.to_string(),
+            }),
+            TokenKind::Number(value) => Ok(Literal::Number {
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                    span: parser.previous_token().into(),
+                },
+                value,
+            }),
+            TokenKind::Keyword(KeywordKind::None) => Ok(Literal::None {
+                info: NodeInfo {
+                    id: parser.assign_id(),
+                    span: parser.previous_token().into(),
+                },
+            }),
             _ => Err(Error::new(
                 ErrorKind::UnrecognizedLiteral {
                     literal: parser.previous().to_string(),
@@ -40,26 +82,41 @@ mod literal_tests {
         let source = "42";
         let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        assert_eq!(literal, Literal::Number(42.0));
+        match literal {
+            Literal::Number { value, .. } => assert_eq!(value, 42.0),
+            _ => panic!("Expected Number literal"),
+        }
 
         let source = "\"hello\"";
         let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        assert_eq!(literal, Literal::String("hello".to_string()));
+        match literal {
+            Literal::String { value, .. } => assert_eq!(value, "hello".to_string()),
+            _ => panic!("Expected String literal"),
+        }
 
         let source = "true";
         let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        assert_eq!(literal, Literal::Boolean(true));
+        match literal {
+            Literal::Boolean { value, .. } => assert!(value),
+            _ => panic!("Expected Boolean literal"),
+        }
 
         let source = "false";
         let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        assert_eq!(literal, Literal::Boolean(false));
+        match literal {
+            Literal::Boolean { value, .. } => assert!(!value),
+            _ => panic!("Expected Boolean literal"),
+        }
 
         let source = "none";
         let tokens = Lexer::tokenize(source);
         let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        assert_eq!(literal, Literal::None);
+        match literal {
+            Literal::None { .. } => {}
+            _ => panic!("Expected None literal"),
+        }
     }
 }

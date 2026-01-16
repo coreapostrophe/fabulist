@@ -75,7 +75,7 @@ mod object_decl_tests {
 
         let expected = ObjectDecl {
             info: NodeInfo {
-                id: 2,
+                id: 4,
                 span: Span::from((LineCol::new(2, 13), LineCol::new(5, 13))),
             },
             map: {
@@ -84,20 +84,32 @@ mod object_decl_tests {
                     "key1".to_string(),
                     Expr::Primary {
                         info: NodeInfo {
-                            id: 0,
+                            id: 1,
                             span: Span::from((LineCol::new(3, 23), LineCol::new(3, 30))),
                         },
-                        value: Primary::Literal(Literal::String("value1".to_string())),
+                        value: Primary::Literal(Literal::String {
+                            info: NodeInfo {
+                                id: 0,
+                                span: Span::from((LineCol::new(3, 23), LineCol::new(3, 30))),
+                            },
+                            value: "value1".to_string(),
+                        }),
                     },
                 );
                 map.insert(
                     "key2".to_string(),
                     Expr::Primary {
                         info: NodeInfo {
-                            id: 1,
+                            id: 3,
                             span: Span::from((LineCol::new(4, 23), LineCol::new(4, 24))),
                         },
-                        value: Primary::Literal(Literal::Number(42.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 2,
+                                span: Span::from((LineCol::new(4, 23), LineCol::new(4, 24))),
+                            },
+                            value: 42.0,
+                        }),
                     },
                 );
                 map

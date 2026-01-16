@@ -79,13 +79,13 @@ mod quote_decl_tests {
 
         let expected = QuoteDecl {
             info: NodeInfo {
-                id: 3,
+                id: 5,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 66))),
             },
             text: "This is a quote with properties.".to_string(),
             properties: Some(ObjectDecl {
                 info: NodeInfo {
-                    id: 2,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 36), LineCol::new(1, 66))),
                 },
                 map: {
@@ -94,20 +94,32 @@ mod quote_decl_tests {
                         "author".to_string(),
                         Expr::Primary {
                             info: NodeInfo {
-                                id: 0,
+                                id: 1,
                                 span: Span::from((LineCol::new(1, 46), LineCol::new(1, 52))),
                             },
-                            value: Primary::Literal(Literal::String("Alice".to_string())),
+                            value: Primary::Literal(Literal::String {
+                                info: NodeInfo {
+                                    id: 0,
+                                    span: Span::from((LineCol::new(1, 46), LineCol::new(1, 52))),
+                                },
+                                value: "Alice".to_string(),
+                            }),
                         },
                     );
                     map.insert(
                         "length".to_string(),
                         Expr::Primary {
                             info: NodeInfo {
-                                id: 1,
+                                id: 3,
                                 span: Span::from((LineCol::new(1, 63), LineCol::new(1, 64))),
                             },
-                            value: Primary::Literal(Literal::Number(30.0)),
+                            value: Primary::Literal(Literal::Number {
+                                info: NodeInfo {
+                                    id: 2,
+                                    span: Span::from((LineCol::new(1, 63), LineCol::new(1, 64))),
+                                },
+                                value: 30.0,
+                            }),
                         },
                     );
                     map

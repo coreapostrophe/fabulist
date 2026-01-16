@@ -57,15 +57,21 @@ mod return_stmt_tests {
             return_stmt,
             ReturnStmt {
                 info: NodeInfo {
-                    id: 1,
+                    id: 2,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 10))),
                 },
                 value: Some(Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 8), LineCol::new(1, 9))),
                     },
-                    value: Primary::Literal(Literal::Number(42.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 8), LineCol::new(1, 9))),
+                        },
+                        value: 42.0
+                    }),
                 }),
             }
         );

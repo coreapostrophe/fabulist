@@ -75,37 +75,49 @@ mod block_stmt_tests {
 
         let expected = BlockStmt {
             info: NodeInfo {
-                id: 4,
+                id: 6,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 25))),
             },
             first_return: None,
             statements: vec![
                 Stmt::Let(LetStmt {
                     info: NodeInfo {
-                        id: 1,
+                        id: 2,
                         span: Span::from((LineCol::new(1, 3), LineCol::new(1, 12))),
                     },
                     name: "a".to_string(),
                     initializer: Expr::Primary {
                         info: NodeInfo {
-                            id: 0,
+                            id: 1,
                             span: Span::from((LineCol::new(1, 11), LineCol::new(1, 11))),
                         },
-                        value: Primary::Literal(Literal::Number(1.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 0,
+                                span: Span::from((LineCol::new(1, 11), LineCol::new(1, 11))),
+                            },
+                            value: 1.0,
+                        }),
                     },
                 }),
                 Stmt::Let(LetStmt {
                     info: NodeInfo {
-                        id: 3,
+                        id: 5,
                         span: Span::from((LineCol::new(1, 14), LineCol::new(1, 23))),
                     },
                     name: "b".to_string(),
                     initializer: Expr::Primary {
                         info: NodeInfo {
-                            id: 2,
+                            id: 4,
                             span: Span::from((LineCol::new(1, 22), LineCol::new(1, 22))),
                         },
-                        value: Primary::Literal(Literal::Number(2.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 3,
+                                span: Span::from((LineCol::new(1, 22), LineCol::new(1, 22))),
+                            },
+                            value: 2.0,
+                        }),
                     },
                 }),
             ],

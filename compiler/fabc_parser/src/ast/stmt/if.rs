@@ -83,19 +83,25 @@ mod if_stmt_tests {
             if_stmt,
             IfStmt {
                 info: NodeInfo {
-                    id: 2,
+                    id: 3,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13)))
                 },
                 condition: Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 5), LineCol::new(1, 8)))
                     },
-                    value: Primary::Literal(Literal::Boolean(true)),
+                    value: Primary::Literal(Literal::Boolean {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 8))),
+                        },
+                        value: true
+                    }),
                 },
                 then_branch: Box::new(BlockStmt {
                     info: NodeInfo {
-                        id: 1,
+                        id: 2,
                         span: Span::from((LineCol::new(1, 11), LineCol::new(1, 13)))
                     },
                     first_return: None,
@@ -116,19 +122,25 @@ mod if_stmt_tests {
             if_stmt,
             IfStmt {
                 info: NodeInfo {
-                    id: 3,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 23)))
                 },
                 condition: Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9)))
                     },
-                    value: Primary::Literal(Literal::Boolean(false)),
+                    value: Primary::Literal(Literal::Boolean {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
+                        },
+                        value: false
+                    }),
                 },
                 then_branch: Box::new(BlockStmt {
                     info: NodeInfo {
-                        id: 1,
+                        id: 2,
                         span: Span::from((LineCol::new(1, 12), LineCol::new(1, 14)))
                     },
                     first_return: None,
@@ -136,7 +148,7 @@ mod if_stmt_tests {
                 }),
                 else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
                     info: NodeInfo {
-                        id: 2,
+                        id: 3,
                         span: Span::from((LineCol::new(1, 21), LineCol::new(1, 23)))
                     },
                     first_return: None,

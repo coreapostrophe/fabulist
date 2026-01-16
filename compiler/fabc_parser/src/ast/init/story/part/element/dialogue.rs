@@ -73,20 +73,20 @@ mod dialogue_tests {
 
         let expected = DialogueElement {
             info: NodeInfo {
-                id: 7,
+                id: 10,
                 span: Span::from((LineCol::new(2, 13), LineCol::new(4, 51))),
             },
             speaker: "narrator".to_string(),
             quotes: vec![
                 QuoteDecl {
                     info: NodeInfo {
-                        id: 3,
+                        id: 5,
                         span: Span::from((LineCol::new(3, 15), LineCol::new(3, 60))),
                     },
                     text: "Hello there!".to_string(),
                     properties: Some(ObjectDecl {
                         info: NodeInfo {
-                            id: 2,
+                            id: 4,
                             span: Span::from((LineCol::new(3, 30), LineCol::new(3, 60))),
                         },
                         map: {
@@ -95,26 +95,44 @@ mod dialogue_tests {
                                 "emotion".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 0,
+                                        id: 1,
                                         span: Span::from((
                                             LineCol::new(3, 41),
                                             LineCol::new(3, 47),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::String("happy".to_string())),
+                                    value: Primary::Literal(Literal::String {
+                                        info: NodeInfo {
+                                            id: 0,
+                                            span: Span::from((
+                                                LineCol::new(3, 41),
+                                                LineCol::new(3, 47),
+                                            )),
+                                        },
+                                        value: "happy".to_string(),
+                                    }),
                                 },
                             );
                             map.insert(
                                 "volume".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 1,
+                                        id: 3,
                                         span: Span::from((
                                             LineCol::new(3, 58),
                                             LineCol::new(3, 58),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::Number(5.0)),
+                                    value: Primary::Literal(Literal::Number {
+                                        info: NodeInfo {
+                                            id: 2,
+                                            span: Span::from((
+                                                LineCol::new(3, 58),
+                                                LineCol::new(3, 58),
+                                            )),
+                                        },
+                                        value: 5.0,
+                                    }),
                                 },
                             );
                             map
@@ -123,13 +141,13 @@ mod dialogue_tests {
                 },
                 QuoteDecl {
                     info: NodeInfo {
-                        id: 6,
+                        id: 9,
                         span: Span::from((LineCol::new(4, 15), LineCol::new(4, 51))),
                     },
                     text: "How are you?".to_string(),
                     properties: Some(ObjectDecl {
                         info: NodeInfo {
-                            id: 5,
+                            id: 8,
                             span: Span::from((LineCol::new(4, 30), LineCol::new(4, 51))),
                         },
                         map: {
@@ -138,13 +156,22 @@ mod dialogue_tests {
                                 "emotion".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 4,
+                                        id: 7,
                                         span: Span::from((
                                             LineCol::new(4, 41),
                                             LineCol::new(4, 49),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::String("curious".to_string())),
+                                    value: Primary::Literal(Literal::String {
+                                        info: NodeInfo {
+                                            id: 6,
+                                            span: Span::from((
+                                                LineCol::new(4, 41),
+                                                LineCol::new(4, 49),
+                                            )),
+                                        },
+                                        value: "curious".to_string(),
+                                    }),
                                 },
                             );
                             map

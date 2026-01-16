@@ -308,10 +308,10 @@ impl Analyzable for Expr {
 impl Analyzable for Literal {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         let data_type = match self {
-            Literal::Number(_) => DataType::Number,
-            Literal::String(_) => DataType::String,
-            Literal::Boolean(_) => DataType::Boolean,
-            Literal::None => DataType::None,
+            Literal::Number { .. } => DataType::Number,
+            Literal::String { .. } => DataType::String,
+            Literal::Boolean { .. } => DataType::Boolean,
+            Literal::None { .. } => DataType::None,
         };
 
         AnalysisResult {

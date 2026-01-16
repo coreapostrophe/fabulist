@@ -61,19 +61,19 @@ mod selection_tests {
 
         let expected = SelectionElement {
             info: NodeInfo {
-                id: 7,
+                id: 10,
                 span: Span::from((LineCol::new(2, 13), LineCol::new(3, 38))),
             },
             choices: vec![
                 QuoteDecl {
                     info: NodeInfo {
-                        id: 3,
+                        id: 5,
                         span: Span::from((LineCol::new(2, 15), LineCol::new(2, 49))),
                     },
                     text: "Go left.".to_string(),
                     properties: Some(ObjectDecl {
                         info: NodeInfo {
-                            id: 2,
+                            id: 4,
                             span: Span::from((LineCol::new(2, 26), LineCol::new(2, 49))),
                         },
                         map: {
@@ -82,26 +82,44 @@ mod selection_tests {
                                 "score".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 0,
+                                        id: 1,
                                         span: Span::from((
                                             LineCol::new(2, 35),
                                             LineCol::new(2, 36),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::Number(10.0)),
+                                    value: Primary::Literal(Literal::Number {
+                                        info: NodeInfo {
+                                            id: 0,
+                                            span: Span::from((
+                                                LineCol::new(2, 35),
+                                                LineCol::new(2, 36),
+                                            )),
+                                        },
+                                        value: 10.0,
+                                    }),
                                 },
                             );
                             map.insert(
                                 "health".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 1,
+                                        id: 3,
                                         span: Span::from((
                                             LineCol::new(2, 47),
                                             LineCol::new(2, 47),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::Number(5.0)),
+                                    value: Primary::Literal(Literal::Number {
+                                        info: NodeInfo {
+                                            id: 2,
+                                            span: Span::from((
+                                                LineCol::new(2, 47),
+                                                LineCol::new(2, 47),
+                                            )),
+                                        },
+                                        value: 5.0,
+                                    }),
                                 },
                             );
                             map
@@ -110,13 +128,13 @@ mod selection_tests {
                 },
                 QuoteDecl {
                     info: NodeInfo {
-                        id: 6,
+                        id: 9,
                         span: Span::from((LineCol::new(3, 15), LineCol::new(3, 38))),
                     },
                     text: "Go right.".to_string(),
                     properties: Some(ObjectDecl {
                         info: NodeInfo {
-                            id: 5,
+                            id: 8,
                             span: Span::from((LineCol::new(3, 27), LineCol::new(3, 38))),
                         },
                         map: {
@@ -125,13 +143,22 @@ mod selection_tests {
                                 "score".to_string(),
                                 Expr::Primary {
                                     info: NodeInfo {
-                                        id: 4,
+                                        id: 7,
                                         span: Span::from((
                                             LineCol::new(3, 36),
                                             LineCol::new(3, 36),
                                         )),
                                     },
-                                    value: Primary::Literal(Literal::Number(5.0)),
+                                    value: Primary::Literal(Literal::Number {
+                                        info: NodeInfo {
+                                            id: 6,
+                                            span: Span::from((
+                                                LineCol::new(3, 36),
+                                                LineCol::new(3, 36),
+                                            )),
+                                        },
+                                        value: 5.0,
+                                    }),
                                 },
                             );
                             map

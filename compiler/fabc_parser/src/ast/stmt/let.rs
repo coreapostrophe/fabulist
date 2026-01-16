@@ -62,16 +62,22 @@ mod let_stmt_tests {
 
         let expected = LetStmt {
             info: NodeInfo {
-                id: 1,
+                id: 2,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
             },
             name: "x".to_string(),
             initializer: Expr::Primary {
                 info: NodeInfo {
-                    id: 0,
+                    id: 1,
                     span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
                 },
-                value: Primary::Literal(Literal::Number(42.0)),
+                value: Primary::Literal(Literal::Number {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
+                    },
+                    value: 42.0,
+                }),
             },
         };
 

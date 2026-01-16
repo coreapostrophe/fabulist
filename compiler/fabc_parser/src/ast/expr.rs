@@ -455,50 +455,74 @@ mod expr_tests {
 
         let expected = Expr::Binary {
             info: NodeInfo {
-                id: 6,
+                id: 10,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13))),
             },
             left: Box::new(Expr::Primary {
                 info: NodeInfo {
-                    id: 0,
+                    id: 1,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
                 },
-                value: Primary::Literal(Literal::Number(1.0)),
+                value: Primary::Literal(Literal::Number {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                    },
+                    value: 1.0,
+                }),
             }),
             operator: BinaryOperator::Add,
             right: Box::new(Expr::Binary {
                 info: NodeInfo {
-                    id: 5,
+                    id: 9,
                     span: Span::from((LineCol::new(1, 5), LineCol::new(1, 13))),
                 },
                 left: Box::new(Expr::Binary {
                     info: NodeInfo {
-                        id: 3,
+                        id: 6,
                         span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
                     },
                     left: Box::new(Expr::Primary {
                         info: NodeInfo {
-                            id: 1,
+                            id: 3,
                             span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
                         },
-                        value: Primary::Literal(Literal::Number(2.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 2,
+                                span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                            },
+                            value: 2.0,
+                        }),
                     }),
                     operator: BinaryOperator::Multiply,
                     right: Box::new(Expr::Primary {
                         info: NodeInfo {
-                            id: 2,
+                            id: 5,
                             span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
                         },
-                        value: Primary::Literal(Literal::Number(3.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 4,
+                                span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
+                            },
+                            value: 3.0,
+                        }),
                     }),
                 }),
                 operator: BinaryOperator::Divide,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 4,
+                        id: 8,
                         span: Span::from((LineCol::new(1, 13), LineCol::new(1, 13))),
                     },
-                    value: Primary::Literal(Literal::Number(4.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 7,
+                            span: Span::from((LineCol::new(1, 13), LineCol::new(1, 13))),
+                        },
+                        value: 4.0,
+                    }),
                 }),
             }),
         };
@@ -514,37 +538,55 @@ mod expr_tests {
 
         let expected = Expr::Binary {
             info: NodeInfo {
-                id: 4,
+                id: 7,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
             },
             left: Box::new(Expr::Binary {
                 info: NodeInfo {
-                    id: 2,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 8))),
                 },
                 left: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 1), LineCol::new(1, 2))),
                     },
-                    value: Primary::Literal(Literal::Number(10.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 2))),
+                        },
+                        value: 10.0,
+                    }),
                 }),
                 operator: BinaryOperator::EqualEqual,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 1,
+                        id: 3,
                         span: Span::from((LineCol::new(1, 7), LineCol::new(1, 8))),
                     },
-                    value: Primary::Literal(Literal::Number(20.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 7), LineCol::new(1, 8))),
+                        },
+                        value: 20.0,
+                    }),
                 }),
             }),
             operator: BinaryOperator::NotEqual,
             right: Box::new(Expr::Primary {
                 info: NodeInfo {
-                    id: 3,
+                    id: 6,
                     span: Span::from((LineCol::new(1, 13), LineCol::new(1, 14))),
                 },
-                value: Primary::Literal(Literal::Number(30.0)),
+                value: Primary::Literal(Literal::Number {
+                    info: NodeInfo {
+                        id: 5,
+                        span: Span::from((LineCol::new(1, 13), LineCol::new(1, 14))),
+                    },
+                    value: 30.0,
+                }),
             }),
         };
 
@@ -559,65 +601,95 @@ mod expr_tests {
 
         let expected = Expr::Binary {
             info: NodeInfo {
-                id: 8,
+                id: 13,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 20))),
             },
             left: Box::new(Expr::Binary {
                 info: NodeInfo {
-                    id: 6,
+                    id: 10,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
                 },
                 left: Box::new(Expr::Binary {
                     info: NodeInfo {
-                        id: 4,
+                        id: 7,
                         span: Span::from((LineCol::new(1, 1), LineCol::new(1, 9))),
                     },
                     left: Box::new(Expr::Binary {
                         info: NodeInfo {
-                            id: 2,
+                            id: 4,
                             span: Span::from((LineCol::new(1, 1), LineCol::new(1, 5))),
                         },
                         left: Box::new(Expr::Primary {
                             info: NodeInfo {
-                                id: 0,
+                                id: 1,
                                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
                             },
-                            value: Primary::Literal(Literal::Number(5.0)),
+                            value: Primary::Literal(Literal::Number {
+                                info: NodeInfo {
+                                    id: 0,
+                                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
+                                },
+                                value: 5.0,
+                            }),
                         }),
                         operator: BinaryOperator::Greater,
                         right: Box::new(Expr::Primary {
                             info: NodeInfo {
-                                id: 1,
+                                id: 3,
                                 span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
                             },
-                            value: Primary::Literal(Literal::Number(3.0)),
+                            value: Primary::Literal(Literal::Number {
+                                info: NodeInfo {
+                                    id: 2,
+                                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
+                                },
+                                value: 3.0,
+                            }),
                         }),
                     }),
                     operator: BinaryOperator::Less,
                     right: Box::new(Expr::Primary {
                         info: NodeInfo {
-                            id: 3,
+                            id: 6,
                             span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
                         },
-                        value: Primary::Literal(Literal::Number(9.0)),
+                        value: Primary::Literal(Literal::Number {
+                            info: NodeInfo {
+                                id: 5,
+                                span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
+                            },
+                            value: 9.0,
+                        }),
                     }),
                 }),
                 operator: BinaryOperator::GreaterEqual,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 5,
+                        id: 9,
                         span: Span::from((LineCol::new(1, 14), LineCol::new(1, 14))),
                     },
-                    value: Primary::Literal(Literal::Number(2.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 8,
+                            span: Span::from((LineCol::new(1, 14), LineCol::new(1, 14))),
+                        },
+                        value: 2.0,
+                    }),
                 }),
             }),
             operator: BinaryOperator::LessEqual,
             right: Box::new(Expr::Primary {
                 info: NodeInfo {
-                    id: 7,
+                    id: 12,
                     span: Span::from((LineCol::new(1, 19), LineCol::new(1, 20))),
                 },
-                value: Primary::Literal(Literal::Number(10.0)),
+                value: Primary::Literal(Literal::Number {
+                    info: NodeInfo {
+                        id: 11,
+                        span: Span::from((LineCol::new(1, 19), LineCol::new(1, 20))),
+                    },
+                    value: 10.0,
+                }),
             }),
         };
 
@@ -746,22 +818,28 @@ mod expr_tests {
 
         let expected = Expr::Unary {
             info: NodeInfo {
-                id: 2,
+                id: 3,
                 span: Span::from((LineCol::new(1, 2), LineCol::new(1, 3))),
             },
             operator: UnaryOperator::Negate,
             right: Box::new(Expr::Unary {
                 info: NodeInfo {
-                    id: 1,
+                    id: 2,
                     span: Span::from((LineCol::new(1, 3), LineCol::new(1, 3))),
                 },
                 operator: UnaryOperator::Not,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 3), LineCol::new(1, 4))),
                     },
-                    value: Primary::Literal(Literal::Number(42.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 3), LineCol::new(1, 4))),
+                        },
+                        value: 42.0,
+                    }),
                 }),
             }),
         };
@@ -777,37 +855,55 @@ mod expr_tests {
 
         let expected = Expr::Binary {
             info: NodeInfo {
-                id: 4,
+                id: 7,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 22))),
             },
             left: Box::new(Expr::Binary {
                 info: NodeInfo {
-                    id: 2,
+                    id: 4,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
                 },
                 left: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 0,
+                        id: 1,
                         span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
                     },
-                    value: Primary::Literal(Literal::Boolean(true)),
+                    value: Primary::Literal(Literal::Boolean {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
+                        },
+                        value: true,
+                    }),
                 }),
                 operator: BinaryOperator::And,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 1,
+                        id: 3,
                         span: Span::from((LineCol::new(1, 10), LineCol::new(1, 14))),
                     },
-                    value: Primary::Literal(Literal::Boolean(false)),
+                    value: Primary::Literal(Literal::Boolean {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 10), LineCol::new(1, 14))),
+                        },
+                        value: false,
+                    }),
                 }),
             }),
             operator: BinaryOperator::Or,
             right: Box::new(Expr::Primary {
                 info: NodeInfo {
-                    id: 3,
+                    id: 6,
                     span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
                 },
-                value: Primary::Literal(Literal::Boolean(true)),
+                value: Primary::Literal(Literal::Boolean {
+                    info: NodeInfo {
+                        id: 5,
+                        span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
+                    },
+                    value: true,
+                }),
             }),
         };
 
@@ -822,7 +918,7 @@ mod expr_tests {
 
         let expected = Expr::Assignment {
             info: NodeInfo {
-                id: 5,
+                id: 7,
                 span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
             },
             name: Box::new(Expr::Primary {
@@ -840,23 +936,35 @@ mod expr_tests {
             }),
             value: Box::new(Expr::Binary {
                 info: NodeInfo {
-                    id: 4,
+                    id: 6,
                     span: Span::from((LineCol::new(1, 5), LineCol::new(1, 11))),
                 },
                 left: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 2,
+                        id: 3,
                         span: Span::from((LineCol::new(1, 5), LineCol::new(1, 6))),
                     },
-                    value: Primary::Literal(Literal::Number(10.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 6))),
+                        },
+                        value: 10.0,
+                    }),
                 }),
                 operator: BinaryOperator::Add,
                 right: Box::new(Expr::Primary {
                     info: NodeInfo {
-                        id: 3,
+                        id: 5,
                         span: Span::from((LineCol::new(1, 10), LineCol::new(1, 11))),
                     },
-                    value: Primary::Literal(Literal::Number(20.0)),
+                    value: Primary::Literal(Literal::Number {
+                        info: NodeInfo {
+                            id: 4,
+                            span: Span::from((LineCol::new(1, 10), LineCol::new(1, 11))),
+                        },
+                        value: 20.0,
+                    }),
                 }),
             }),
         };
