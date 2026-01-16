@@ -13,15 +13,24 @@ impl Analyzable for Expr {
             Expr::Primary { value, .. } => {
                 let result = value.analyze(analyzer);
 
-                if let Some(sym_type) = &result.mod_sym_type {
-                    analyzer.annotate_mod_symbol(
-                        self.info().id,
-                        SymbolAnnotation {
-                            name: None,
-                            r#type: sym_type.clone(),
-                        },
-                    );
-                }
+                let primary_type = {
+                    let Some(sym_type) = result.mod_sym_type.clone() else {
+                        analyzer.push_error(Error::new(
+                            ErrorKind::TypeInference,
+                            self.info().span.clone(),
+                        ));
+                        return AnalysisResult::default();
+                    };
+                    sym_type
+                };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: primary_type.clone(),
+                    },
+                );
 
                 result
             }
@@ -190,15 +199,22 @@ impl Analyzable for Expr {
             Expr::Grouping { info, expression } => {
                 let result = expression.analyze(analyzer);
 
-                if let Some(sym_type) = &result.mod_sym_type {
-                    analyzer.annotate_mod_symbol(
-                        self.info().id,
-                        SymbolAnnotation {
-                            name: None,
-                            r#type: sym_type.clone(),
-                        },
-                    );
+                let group_sym_type = {
+                    let Some(sym_type) = result.mod_sym_type.clone() else {
+                        analyzer
+                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        return AnalysisResult::default();
+                    };
+                    sym_type
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: group_sym_type.clone(),
+                    },
+                );
 
                 result
             }
@@ -209,15 +225,22 @@ impl Analyzable for Expr {
             } => {
                 let result = right.analyze(analyzer);
 
-                if let Some(sym_type) = &result.mod_sym_type {
-                    analyzer.annotate_mod_symbol(
-                        self.info().id,
-                        SymbolAnnotation {
-                            name: None,
-                            r#type: sym_type.clone(),
-                        },
-                    );
+                let unary_sym_type = {
+                    let Some(sym_type) = result.mod_sym_type.clone() else {
+                        analyzer
+                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        return AnalysisResult::default();
+                    };
+                    sym_type
                 };
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: unary_sym_type.clone(),
+                    },
+                );
 
                 result
             }
@@ -226,22 +249,20 @@ impl Analyzable for Expr {
                 left,
                 members,
             } => {
-                let left_sym_type = {
-                    let Some(ModuleSymbolType::Data(record_type)) =
-                        left.analyze(analyzer).mod_sym_type
-                    else {
+                let left_type = {
+                    let Some(left_type) = left.analyze(analyzer).mod_sym_type else {
                         analyzer
                             .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                         return AnalysisResult::default();
                     };
 
-                    if let DataType::Record { fields } = record_type {
-                        ModuleSymbolType::Data(DataType::Record { fields })
+                    if let ModuleSymbolType::Data(DataType::Record { .. }) = left_type {
+                        left_type
                     } else {
                         analyzer.push_error(Error::new(
                             ErrorKind::ExpectedType {
                                 expected: "Record".to_string(),
-                                found: format!("{record_type}"),
+                                found: format!("{left_type}"),
                             },
                             info.span.clone(),
                         ));
@@ -254,40 +275,38 @@ impl Analyzable for Expr {
                     let is_last = idx == members.len() - 1;
 
                     if !is_last {
-                        let Some(ModuleSymbolType::Data(record_type)) =
-                            member.analyze(analyzer).mod_sym_type
-                        else {
+                        let Some(member_type) = member.analyze(analyzer).mod_sym_type else {
                             analyzer.push_error(Error::new(
                                 ErrorKind::TypeInference,
                                 info.span.clone(),
                             ));
-                            continue;
+                            break;
                         };
 
-                        if let DataType::Record { fields } = record_type {
-                            continue;
+                        if let ModuleSymbolType::Data(DataType::Record { .. }) = member_type {
+                            resolved_type = Some(member_type);
                         } else {
                             analyzer.push_error(Error::new(
                                 ErrorKind::ExpectedType {
                                     expected: "Record".to_string(),
-                                    found: format!("{record_type}"),
+                                    found: format!("{member_type}"),
                                 },
                                 info.span.clone(),
                             ));
                         }
                     } else {
-                        let Some(sym_type) = member.analyze(analyzer).mod_sym_type else {
+                        let Some(member_type) = member.analyze(analyzer).mod_sym_type else {
                             analyzer.push_error(Error::new(
                                 ErrorKind::TypeInference,
                                 info.span.clone(),
                             ));
-                            continue;
+                            break;
                         };
-                        resolved_type = Some(sym_type);
+                        resolved_type = Some(member_type);
                     };
                 }
 
-                if let Some(resolved_type) = &resolved_type {
+                if let Some(resolved_type) = resolved_type {
                     analyzer.annotate_mod_symbol(
                         self.info().id,
                         SymbolAnnotation {
@@ -295,10 +314,12 @@ impl Analyzable for Expr {
                             r#type: resolved_type.clone(),
                         },
                     );
-                }
 
-                AnalysisResult {
-                    mod_sym_type: resolved_type,
+                    AnalysisResult {
+                        mod_sym_type: Some(resolved_type),
+                    }
+                } else {
+                    AnalysisResult::default()
                 }
             }
         }
@@ -314,6 +335,14 @@ impl Analyzable for Literal {
             Literal::None { .. } => DataType::None,
         };
 
+        analyzer.annotate_mod_symbol(
+            self.info().id,
+            SymbolAnnotation {
+                name: None,
+                r#type: ModuleSymbolType::Data(data_type.clone()),
+            },
+        );
+
         AnalysisResult {
             mod_sym_type: Some(ModuleSymbolType::Data(data_type)),
         }
@@ -324,7 +353,7 @@ impl Analyzable for Primitive {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
         let data_type = match self {
             Primitive::Object { info, value } => {
-                let Some(lit_sym_type) = value.analyze(analyzer).mod_sym_type else {
+                let Some(obj_type) = value.analyze(analyzer).mod_sym_type else {
                     analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                     return AnalysisResult::default();
                 };
@@ -333,22 +362,22 @@ impl Analyzable for Primitive {
                     self.info().id,
                     SymbolAnnotation {
                         name: None,
-                        r#type: lit_sym_type.clone(),
+                        r#type: obj_type.clone(),
                     },
                 );
 
-                lit_sym_type.clone()
+                obj_type
             }
             Primitive::Identifier { info, name } => {
                 let ident_sym = {
-                    let Some(sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
+                    let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             ErrorKind::UninitializedVariable,
                             info.span.clone(),
                         ));
                         return AnalysisResult::default();
                     };
-                    sym.clone()
+                    ident_sym.clone()
                 };
 
                 analyzer.annotate_mod_symbol(
@@ -359,10 +388,10 @@ impl Analyzable for Primitive {
                     },
                 );
 
-                ident_sym.r#type.clone()
+                ident_sym.r#type
             }
             Primitive::Grouping { info, expr } => {
-                let Some(group_sym_type) = expr.analyze(analyzer).mod_sym_type else {
+                let Some(group_type) = expr.analyze(analyzer).mod_sym_type else {
                     analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                     return AnalysisResult::default();
                 };
@@ -371,11 +400,11 @@ impl Analyzable for Primitive {
                     self.info().id,
                     SymbolAnnotation {
                         name: None,
-                        r#type: group_sym_type.clone(),
+                        r#type: group_type.clone(),
                     },
                 );
 
-                group_sym_type.clone()
+                group_type
             }
             Primitive::Context { info } => {
                 let context_type = ModuleSymbolType::Data(DataType::Context);
@@ -392,7 +421,6 @@ impl Analyzable for Primitive {
             }
             Primitive::Closure { info, params, body } => {
                 let mut param_types = Vec::new();
-
                 for param in params {
                     let Some(param_sym_type) = param.analyze(analyzer).mod_sym_type else {
                         analyzer
