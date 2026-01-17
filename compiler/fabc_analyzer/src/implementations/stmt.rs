@@ -1,4 +1,3 @@
-#![allow(unused)]
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::stmt::{
     block::BlockStmt,
@@ -11,7 +10,7 @@ use fabc_parser::ast::stmt::{
 };
 
 use crate::{
-    types::{DataType, ModuleSymbolType, Symbol},
+    types::{DataType, ModuleSymbolType},
     AnalysisResult, Analyzable, Analyzer,
 };
 
@@ -66,9 +65,17 @@ impl Analyzable for ExprStmt {
 
 impl Analyzable for GotoStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
-        self.target.analyze(analyzer);
+        let _target_type = {
+            let Some(symbol) = self.target.analyze(analyzer).mod_sym_type else {
+                analyzer.push_error(Error::new(ErrorKind::TypeInference, self.info.span.clone()));
+                return AnalysisResult::default();
+            };
+            symbol.clone()
+        };
 
-        AnalysisResult::default()
+        todo!("Find a way to resolve story part targets at analysis time");
+
+        // AnalysisResult::default()
     }
 }
 
@@ -124,7 +131,9 @@ impl Analyzable for ReturnStmt {
         if let Some(return_expr) = &self.value {
             return_expr.analyze(analyzer)
         } else {
-            AnalysisResult::default()
+            AnalysisResult {
+                mod_sym_type: Some(ModuleSymbolType::Data(DataType::None)),
+            }
         }
     }
 }

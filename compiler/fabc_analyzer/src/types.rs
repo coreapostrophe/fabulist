@@ -25,7 +25,11 @@ impl Display for DataType {
             DataType::None => write!(f, "None"),
             DataType::Context => write!(f, "Context"),
             DataType::Record { fields } => {
-                todo!()
+                let field_strs: Vec<String> = fields
+                    .iter()
+                    .map(|field| format!("{}: {}", field.name, field.r#type))
+                    .collect();
+                write!(f, "Record {{ {} }}", field_strs.join(", "))
             }
         }
     }

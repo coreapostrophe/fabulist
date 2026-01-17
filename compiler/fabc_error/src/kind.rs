@@ -9,6 +9,7 @@ pub enum ErrorKind {
     InvalidOperator { operator: String },
     ExpectedType { expected: String, found: String },
     ArityMismatch { expected: usize, found: usize },
+    InvalidMemberAccess { member: String },
     TypeInference,
     InternalAssignment,
     UnclosedDelimiter,
@@ -28,6 +29,7 @@ impl ErrorKind {
             ErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
             ErrorKind::ArityMismatch { .. } => "Arity mismatch",
+            ErrorKind::InvalidMemberAccess { .. } => "Invalid member access",
             ErrorKind::TypeInference => "Type Inference",
             ErrorKind::InternalAssignment => "Internal assignment error",
             ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
@@ -37,6 +39,9 @@ impl ErrorKind {
     }
     pub fn message(&self) -> String {
         match self {
+            ErrorKind::InvalidMemberAccess { member } => {
+                format!("Invalid member access '{}'", member)
+            }
             ErrorKind::ArityMismatch { expected, found } => {
                 format!("Expected {} arguments, found {}", expected, found)
             }

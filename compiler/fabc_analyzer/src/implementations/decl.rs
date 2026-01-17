@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::decl::{object::ObjectDecl, quote::QuoteDecl};
 

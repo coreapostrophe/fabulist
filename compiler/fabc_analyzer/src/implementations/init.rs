@@ -16,7 +16,7 @@ use fabc_parser::ast::init::{
 };
 
 use crate::{
-    types::{ModuleSymbolType, StorySymbolType, Symbol},
+    types::{ModuleSymbolType, StorySymbolType},
     AnalysisResult, Analyzable,
 };
 

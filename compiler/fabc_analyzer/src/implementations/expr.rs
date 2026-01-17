@@ -1,4 +1,3 @@
-#![allow(unused)]
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
 
@@ -35,10 +34,7 @@ impl Analyzable for Expr {
                 result
             }
             Expr::Binary {
-                info,
-                left,
-                operator,
-                right,
+                info, left, right, ..
             } => {
                 let left_sym_type = {
                     let Some(sym_type) = left.analyze(analyzer).mod_sym_type else {
@@ -83,7 +79,7 @@ impl Analyzable for Expr {
             }
             Expr::Assignment { info, name, value } => {
                 let name_sym_type = {
-                    let Some(sym_type) = value.analyze(analyzer).mod_sym_type else {
+                    let Some(sym_type) = name.analyze(analyzer).mod_sym_type else {
                         analyzer
                             .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
                         return AnalysisResult::default();
@@ -218,11 +214,7 @@ impl Analyzable for Expr {
 
                 result
             }
-            Expr::Unary {
-                info,
-                operator,
-                right,
-            } => {
+            Expr::Unary { info, right, .. } => {
                 let result = right.analyze(analyzer);
 
                 let unary_sym_type = {
@@ -249,7 +241,7 @@ impl Analyzable for Expr {
                 left,
                 members,
             } => {
-                let left_type = {
+                let mut current_type = {
                     let Some(left_type) = left.analyze(analyzer).mod_sym_type else {
                         analyzer
                             .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
@@ -270,56 +262,50 @@ impl Analyzable for Expr {
                     }
                 };
 
-                let mut resolved_type = None;
-                for (idx, member) in members.iter().enumerate() {
-                    let is_last = idx == members.len() - 1;
+                for member in members.iter() {
+                    let Some(member_name_type) = member.analyze(analyzer).mod_sym_type else {
+                        analyzer
+                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        return AnalysisResult::default();
+                    };
 
-                    if !is_last {
-                        let Some(member_type) = member.analyze(analyzer).mod_sym_type else {
-                            analyzer.push_error(Error::new(
-                                ErrorKind::TypeInference,
-                                info.span.clone(),
-                            ));
-                            break;
-                        };
-
-                        if let ModuleSymbolType::Data(DataType::Record { .. }) = member_type {
-                            resolved_type = Some(member_type);
+                    if let ModuleSymbolType::Data(DataType::Record { fields }) = &current_type {
+                        if let Some(field) = fields
+                            .iter()
+                            .find(|f| f.name == member_name_type.to_string())
+                        {
+                            current_type = (*field.r#type).clone();
                         } else {
                             analyzer.push_error(Error::new(
-                                ErrorKind::ExpectedType {
-                                    expected: "Record".to_string(),
-                                    found: format!("{member_type}"),
+                                ErrorKind::InvalidMemberAccess {
+                                    member: member_name_type.to_string(),
                                 },
                                 info.span.clone(),
                             ));
+                            return AnalysisResult::default();
                         }
                     } else {
-                        let Some(member_type) = member.analyze(analyzer).mod_sym_type else {
-                            analyzer.push_error(Error::new(
-                                ErrorKind::TypeInference,
-                                info.span.clone(),
-                            ));
-                            break;
-                        };
-                        resolved_type = Some(member_type);
-                    };
+                        analyzer.push_error(Error::new(
+                            ErrorKind::ExpectedType {
+                                expected: "Record".to_string(),
+                                found: format!("{current_type}"),
+                            },
+                            info.span.clone(),
+                        ));
+                        return AnalysisResult::default();
+                    }
                 }
 
-                if let Some(resolved_type) = resolved_type {
-                    analyzer.annotate_mod_symbol(
-                        self.info().id,
-                        SymbolAnnotation {
-                            name: None,
-                            r#type: resolved_type.clone(),
-                        },
-                    );
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: None,
+                        r#type: current_type.clone(),
+                    },
+                );
 
-                    AnalysisResult {
-                        mod_sym_type: Some(resolved_type),
-                    }
-                } else {
-                    AnalysisResult::default()
+                AnalysisResult {
+                    mod_sym_type: Some(current_type),
                 }
             }
         }
@@ -406,7 +392,7 @@ impl Analyzable for Primitive {
 
                 group_type
             }
-            Primitive::Context { info } => {
+            Primitive::Context { .. } => {
                 let context_type = ModuleSymbolType::Data(DataType::Context);
 
                 analyzer.annotate_mod_symbol(
@@ -420,24 +406,45 @@ impl Analyzable for Primitive {
                 context_type
             }
             Primitive::Closure { info, params, body } => {
+                analyzer.mut_mod_sym_table().enter_scope();
+
                 let mut param_types = Vec::new();
                 for param in params {
                     let Some(param_sym_type) = param.analyze(analyzer).mod_sym_type else {
                         analyzer
                             .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.mut_mod_sym_table().exit_scope();
                         return AnalysisResult::default();
                     };
                     param_types.push(param_sym_type.clone());
+
+                    if let Primitive::Identifier { name, .. } = param {
+                        if analyzer
+                            .mut_mod_sym_table()
+                            .assign_symbol(name, param_sym_type)
+                            .is_none()
+                        {
+                            analyzer.push_error(Error::new(
+                                ErrorKind::InternalAssignment,
+                                info.span.clone(),
+                            ));
+                            analyzer.mut_mod_sym_table().exit_scope();
+                            return AnalysisResult::default();
+                        }
+                    }
                 }
 
                 let body_sym_type = {
                     let Some(sym_type) = body.analyze(analyzer).mod_sym_type else {
                         analyzer
                             .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.mut_mod_sym_table().exit_scope();
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
                 };
+
+                analyzer.mut_mod_sym_table().exit_scope();
 
                 analyzer.annotate_mod_symbol(
                     self.info().id,

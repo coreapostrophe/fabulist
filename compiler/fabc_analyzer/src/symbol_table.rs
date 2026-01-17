@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{types::Symbol, Analyzer};
+use crate::types::Symbol;
 
 pub struct SymbolTable<T> {
     entries: HashMap<String, Vec<Symbol<T>>>,
