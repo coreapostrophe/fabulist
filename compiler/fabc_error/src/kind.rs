@@ -10,6 +10,7 @@ pub enum ErrorKind {
     ExpectedType { expected: String, found: String },
     ArityMismatch { expected: usize, found: usize },
     InvalidMemberAccess { member: String },
+    InvalidGotoTarget,
     TypeInference,
     InternalAssignment,
     UnclosedDelimiter,
@@ -30,6 +31,7 @@ impl ErrorKind {
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
             ErrorKind::ArityMismatch { .. } => "Arity mismatch",
             ErrorKind::InvalidMemberAccess { .. } => "Invalid member access",
+            ErrorKind::InvalidGotoTarget => "Invalid goto target",
             ErrorKind::TypeInference => "Type Inference",
             ErrorKind::InternalAssignment => "Internal assignment error",
             ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
@@ -39,6 +41,9 @@ impl ErrorKind {
     }
     pub fn message(&self) -> String {
         match self {
+            ErrorKind::InvalidGotoTarget => {
+                "The target of a goto statement must be a valid part identifier.".to_string()
+            }
             ErrorKind::InvalidMemberAccess { member } => {
                 format!("Invalid member access '{}'", member)
             }

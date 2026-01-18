@@ -362,9 +362,9 @@ impl Analyzable for Primitive {
                     ..Default::default()
                 }
             }
-            Primitive::Identifier { info, name } => {
-                let ident_mod_sym = {
-                    let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
+            Primitive::StoryIdentifier { info, name } => {
+                let ident_sym = {
+                    let Some(ident_sym) = analyzer.mut_story_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             ErrorKind::UninitializedVariable,
                             info.span.clone(),
@@ -374,8 +374,22 @@ impl Analyzable for Primitive {
                     ident_sym.clone()
                 };
 
-                let ident_story_sym = {
-                    let Some(ident_sym) = analyzer.mut_story_sym_table().lookup_symbol(name) else {
+                analyzer.annotate_story_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: Some(name.clone()),
+                        r#type: ident_sym.r#type.clone(),
+                    },
+                );
+
+                AnalysisResult {
+                    story_sym_type: Some(ident_sym.r#type),
+                    ..Default::default()
+                }
+            }
+            Primitive::Identifier { info, name } => {
+                let ident_sym = {
+                    let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             ErrorKind::UninitializedVariable,
                             info.span.clone(),
@@ -389,13 +403,13 @@ impl Analyzable for Primitive {
                     self.info().id,
                     SymbolAnnotation {
                         name: Some(name.clone()),
-                        r#type: ident_mod_sym.r#type.clone(),
+                        r#type: ident_sym.r#type.clone(),
                     },
                 );
 
                 AnalysisResult {
-                    mod_sym_type: Some(ident_mod_sym.r#type),
-                    story_sym_type: Some(ident_story_sym.r#type),
+                    mod_sym_type: Some(ident_sym.r#type),
+                    ..Default::default()
                 }
             }
             Primitive::Grouping { info, expr } => {

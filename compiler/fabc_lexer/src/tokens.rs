@@ -27,6 +27,7 @@ pub enum TokenKind<'src> {
     Colon,
     Semicolon,
     Pound,
+    Commat,
 
     // One or two character tokens
     Bang,
@@ -52,6 +53,7 @@ pub enum TokenKind<'src> {
 impl<'src> Display for TokenKind<'src> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            TokenKind::Commat => write!(f, "@"),
             TokenKind::LeftParen => write!(f, "("),
             TokenKind::RightParen => write!(f, ")"),
             TokenKind::LeftBrace => write!(f, "{{"),

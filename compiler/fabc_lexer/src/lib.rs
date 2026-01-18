@@ -79,6 +79,7 @@ impl<'src> Lexer<'src> {
             ':' => self.push_token(TokenKind::Colon),
             ';' => self.push_token(TokenKind::Semicolon),
             '#' => self.push_token(TokenKind::Pound),
+            '@' => self.push_token(TokenKind::Commat),
 
             // Double-character tokens.
             '!' => {
@@ -248,7 +249,7 @@ mod lexer_tests {
 
     #[test]
     fn test_simple_tokens() {
-        let source = "( ) { } [ ] , . - + * : ; ! != = == < <= > >= / =>";
+        let source = "( ) { } [ ] , . - + * : ; ! != = == < <= > >= / => @";
         let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {
@@ -390,9 +391,15 @@ mod lexer_tests {
                 length: 2,
             },
             Token {
+                kind: TokenKind::Commat,
+                line: 1,
+                column: 52,
+                length: 1,
+            },
+            Token {
                 kind: TokenKind::EoF,
                 line: 1,
-                column: 50,
+                column: 52,
                 length: 0,
             },
         ];
@@ -539,7 +546,7 @@ mod lexer_tests {
 
     #[test]
     fn test_error_token() {
-        let source = "@ \"fasfa";
+        let source = "$ \"fasfa";
         let tokens = Lexer::tokenize(source);
         let expected_tokens = vec![
             Token {

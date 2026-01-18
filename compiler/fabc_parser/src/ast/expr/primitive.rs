@@ -25,6 +25,10 @@ pub enum Primitive {
         params: Vec<Primitive>,
         body: BlockStmt,
     },
+    StoryIdentifier {
+        info: NodeInfo,
+        name: String,
+    },
     Context {
         info: NodeInfo,
     },
@@ -37,6 +41,7 @@ impl Primitive {
             Primitive::Grouping { info, .. } => info,
             Primitive::Object { info, .. } => info,
             Primitive::Closure { info, .. } => info,
+            Primitive::StoryIdentifier { info, .. } => info,
             Primitive::Context { info } => info,
         }
     }
@@ -45,6 +50,20 @@ impl Primitive {
 impl Parsable for Primitive {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
         match parser.peek() {
+            TokenKind::Commat => {
+                let start_span = parser.start_span();
+                parser.consume(TokenKind::Commat)?;
+                let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
+                let end_span = parser.end_span();
+
+                Ok(Primitive::StoryIdentifier {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: Span::from((start_span, end_span)),
+                    },
+                    name,
+                })
+            }
             TokenKind::Identifier(_) => {
                 let name = expect_token!(parser, TokenKind::Identifier, "identifier")?;
 
@@ -157,6 +176,20 @@ mod primitive_tests {
                 info: NodeInfo {
                     id: 0,
                     span: Span::from((LineCol::new(1, 1), LineCol::new(1, 3)))
+                },
+                name: "foo".to_string(),
+            }
+        );
+
+        let source = "@foo";
+        let tokens = Lexer::tokenize(source);
+        let primitive = Parser::parse_ast::<Primitive>(&tokens).expect("Failed to parse primitive");
+        assert_eq!(
+            primitive,
+            Primitive::StoryIdentifier {
+                info: NodeInfo {
+                    id: 0,
+                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4)))
                 },
                 name: "foo".to_string(),
             }
