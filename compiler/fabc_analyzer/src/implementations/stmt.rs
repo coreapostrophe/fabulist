@@ -10,7 +10,7 @@ use fabc_parser::ast::stmt::{
 };
 
 use crate::{
-    types::{DataType, ModuleSymbolType},
+    types::{DataType, ModuleSymbolType, StorySymbolType},
     AnalysisResult, Analyzable, Analyzer,
 };
 
@@ -51,6 +51,7 @@ impl Analyzable for BlockStmt {
 
         AnalysisResult {
             mod_sym_type: return_type,
+            ..Default::default()
         }
     }
 }
@@ -65,17 +66,25 @@ impl Analyzable for ExprStmt {
 
 impl Analyzable for GotoStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
-        let _target_type = {
-            let Some(symbol) = self.target.analyze(analyzer).mod_sym_type else {
+        let target_type = {
+            let Some(symbol) = self.target.analyze(analyzer).story_sym_type else {
                 analyzer.push_error(Error::new(ErrorKind::TypeInference, self.info.span.clone()));
                 return AnalysisResult::default();
             };
             symbol.clone()
         };
 
-        todo!("Find a way to resolve story part targets at analysis time");
+        if !matches!(target_type, StorySymbolType::Part) {
+            analyzer.push_error(Error::new(
+                ErrorKind::ExpectedType {
+                    expected: "part".to_string(),
+                    found: format!("{}", target_type),
+                },
+                self.info.span.clone(),
+            ));
+        }
 
-        // AnalysisResult::default()
+        AnalysisResult::default()
     }
 }
 
@@ -133,6 +142,7 @@ impl Analyzable for ReturnStmt {
         } else {
             AnalysisResult {
                 mod_sym_type: Some(ModuleSymbolType::Data(DataType::None)),
+                ..Default::default()
             }
         }
     }

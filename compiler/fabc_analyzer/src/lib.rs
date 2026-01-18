@@ -18,6 +18,7 @@ pub mod types;
 #[derive(Default)]
 pub struct AnalysisResult {
     pub mod_sym_type: Option<ModuleSymbolType>,
+    pub story_sym_type: Option<StorySymbolType>,
 }
 
 pub trait Analyzable {

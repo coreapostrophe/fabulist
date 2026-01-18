@@ -54,6 +54,7 @@ impl Analyzable for ModuleInit {
 
             return AnalysisResult {
                 mod_sym_type: Some(sym_type),
+                ..Default::default()
             };
         }
 

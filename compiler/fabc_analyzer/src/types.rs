@@ -71,6 +71,15 @@ pub enum StorySymbolType {
     Speaker,
 }
 
+impl Display for StorySymbolType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StorySymbolType::Part => write!(f, "part"),
+            StorySymbolType::Speaker => write!(f, "speaker"),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Symbol<T> {
     pub name: String,

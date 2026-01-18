@@ -48,6 +48,7 @@ impl Analyzable for ObjectDecl {
 
         AnalysisResult {
             mod_sym_type: Some(object_sym_type),
+            ..Default::default()
         }
     }
 }

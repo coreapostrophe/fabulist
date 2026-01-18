@@ -75,6 +75,7 @@ impl Analyzable for Expr {
 
                 AnalysisResult {
                     mod_sym_type: Some(left_sym_type),
+                    ..Default::default()
                 }
             }
             Expr::Assignment { info, name, value } => {
@@ -117,6 +118,7 @@ impl Analyzable for Expr {
 
                 AnalysisResult {
                     mod_sym_type: Some(value_sym_type),
+                    ..Default::default()
                 }
             }
             Expr::Call {
@@ -184,6 +186,7 @@ impl Analyzable for Expr {
 
                         AnalysisResult {
                             mod_sym_type: Some(*return_type),
+                            ..Default::default()
                         }
                     }
                     _ => {
@@ -306,6 +309,7 @@ impl Analyzable for Expr {
 
                 AnalysisResult {
                     mod_sym_type: Some(current_type),
+                    ..Default::default()
                 }
             }
         }
@@ -331,13 +335,14 @@ impl Analyzable for Literal {
 
         AnalysisResult {
             mod_sym_type: Some(ModuleSymbolType::Data(data_type)),
+            ..Default::default()
         }
     }
 }
 
 impl Analyzable for Primitive {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        let data_type = match self {
+        match self {
             Primitive::Object { info, value } => {
                 let Some(obj_type) = value.analyze(analyzer).mod_sym_type else {
                     analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
@@ -352,11 +357,25 @@ impl Analyzable for Primitive {
                     },
                 );
 
-                obj_type
+                AnalysisResult {
+                    mod_sym_type: Some(obj_type),
+                    ..Default::default()
+                }
             }
             Primitive::Identifier { info, name } => {
-                let ident_sym = {
+                let ident_mod_sym = {
                     let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
+                        analyzer.push_error(Error::new(
+                            ErrorKind::UninitializedVariable,
+                            info.span.clone(),
+                        ));
+                        return AnalysisResult::default();
+                    };
+                    ident_sym.clone()
+                };
+
+                let ident_story_sym = {
+                    let Some(ident_sym) = analyzer.mut_story_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             ErrorKind::UninitializedVariable,
                             info.span.clone(),
@@ -370,11 +389,14 @@ impl Analyzable for Primitive {
                     self.info().id,
                     SymbolAnnotation {
                         name: Some(name.clone()),
-                        r#type: ident_sym.r#type.clone(),
+                        r#type: ident_mod_sym.r#type.clone(),
                     },
                 );
 
-                ident_sym.r#type
+                AnalysisResult {
+                    mod_sym_type: Some(ident_mod_sym.r#type),
+                    story_sym_type: Some(ident_story_sym.r#type),
+                }
             }
             Primitive::Grouping { info, expr } => {
                 let Some(group_type) = expr.analyze(analyzer).mod_sym_type else {
@@ -390,7 +412,10 @@ impl Analyzable for Primitive {
                     },
                 );
 
-                group_type
+                AnalysisResult {
+                    mod_sym_type: Some(group_type),
+                    ..Default::default()
+                }
             }
             Primitive::Context { .. } => {
                 let context_type = ModuleSymbolType::Data(DataType::Context);
@@ -403,7 +428,10 @@ impl Analyzable for Primitive {
                     },
                 );
 
-                context_type
+                AnalysisResult {
+                    mod_sym_type: Some(context_type),
+                    ..Default::default()
+                }
             }
             Primitive::Closure { info, params, body } => {
                 analyzer.mut_mod_sym_table().enter_scope();
@@ -458,16 +486,15 @@ impl Analyzable for Primitive {
                     },
                 );
 
-                ModuleSymbolType::Function {
-                    return_type: Box::new(body_sym_type),
-                    parameters: param_types,
-                    arity: params.len(),
+                AnalysisResult {
+                    mod_sym_type: Some(ModuleSymbolType::Function {
+                        return_type: Box::new(body_sym_type),
+                        parameters: param_types,
+                        arity: params.len(),
+                    }),
+                    ..Default::default()
                 }
             }
-        };
-
-        AnalysisResult {
-            mod_sym_type: Some(data_type),
         }
     }
 }
