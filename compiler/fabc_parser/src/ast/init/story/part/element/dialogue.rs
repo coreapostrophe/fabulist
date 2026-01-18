@@ -23,11 +23,8 @@ impl Parsable for DialogueElement {
 
         let mut quotes = Vec::new();
         while parser.r#match(&[TokenKind::Greater]) {
-            let quote = QuoteDecl::parse(parser);
-            match quote {
-                Ok(quote) => quotes.push(quote),
-                Err(err) => parser.errors.push(err),
-            }
+            let quote = QuoteDecl::parse(parser)?;
+            quotes.push(quote);
         }
 
         let end_span = parser.end_span();

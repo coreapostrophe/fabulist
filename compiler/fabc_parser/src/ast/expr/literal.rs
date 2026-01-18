@@ -1,7 +1,7 @@
 use fabc_error::{kind::ErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
-use crate::{ast::NodeInfo, Parsable, Parser};
+use crate::{ast::NodeInfo, expect_token, Parsable, Parser};
 
 #[derive(Debug, PartialEq)]
 pub enum Literal {
@@ -24,43 +24,61 @@ impl Literal {
 
 impl Parsable for Literal {
     fn parse(parser: &mut Parser<'_, '_>) -> Result<Self, Error> {
-        let kind = parser.advance();
+        match parser.peek() {
+            TokenKind::Keyword(KeywordKind::True) => {
+                parser.advance();
 
-        match kind.clone() {
-            TokenKind::Keyword(KeywordKind::True) => Ok(Literal::Boolean {
-                info: NodeInfo {
-                    id: parser.assign_id(),
-                    span: parser.previous_token().into(),
-                },
-                value: true,
-            }),
-            TokenKind::Keyword(KeywordKind::False) => Ok(Literal::Boolean {
-                info: NodeInfo {
-                    id: parser.assign_id(),
-                    span: parser.previous_token().into(),
-                },
-                value: false,
-            }),
-            TokenKind::String(value) => Ok(Literal::String {
-                info: NodeInfo {
-                    id: parser.assign_id(),
-                    span: parser.previous_token().into(),
-                },
-                value: value.to_string(),
-            }),
-            TokenKind::Number(value) => Ok(Literal::Number {
-                info: NodeInfo {
-                    id: parser.assign_id(),
-                    span: parser.previous_token().into(),
-                },
-                value,
-            }),
-            TokenKind::Keyword(KeywordKind::None) => Ok(Literal::None {
-                info: NodeInfo {
-                    id: parser.assign_id(),
-                    span: parser.previous_token().into(),
-                },
-            }),
+                Ok(Literal::Boolean {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: parser.previous_token().into(),
+                    },
+                    value: true,
+                })
+            }
+            TokenKind::Keyword(KeywordKind::False) => {
+                parser.advance();
+
+                Ok(Literal::Boolean {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: parser.previous_token().into(),
+                    },
+                    value: false,
+                })
+            }
+            TokenKind::String(_) => {
+                let value = expect_token!(parser, TokenKind::String, "string literal")?;
+
+                Ok(Literal::String {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: parser.previous_token().into(),
+                    },
+                    value,
+                })
+            }
+            TokenKind::Number(_) => {
+                let value = expect_token!(parser, TokenKind::Number, "number literal")?;
+
+                Ok(Literal::Number {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: parser.previous_token().into(),
+                    },
+                    value,
+                })
+            }
+            TokenKind::Keyword(KeywordKind::None) => {
+                parser.advance();
+
+                Ok(Literal::None {
+                    info: NodeInfo {
+                        id: parser.assign_id(),
+                        span: parser.previous_token().into(),
+                    },
+                })
+            }
             _ => Err(Error::new(
                 ErrorKind::UnrecognizedLiteral {
                     literal: parser.previous().to_string(),

@@ -92,10 +92,10 @@ impl Parsable for Primitive {
                         TokenKind::LeftParen,
                         TokenKind::RightParen,
                         TokenKind::Comma,
-                        |parser| Primitive::parse(parser),
+                        Primitive::parse,
                     )?;
                     parser.consume(TokenKind::ArrowRight)?;
-                    let body = Box::new(BlockStmt::parse(parser)?);
+                    let body = BlockStmt::parse(parser)?;
                     let end_span = parser.end_span();
 
                     Ok(Primitive::Closure {
@@ -104,16 +104,17 @@ impl Parsable for Primitive {
                             span: Span::from((start_span, end_span)),
                         },
                         params,
-                        body: *body,
+                        body,
                     })
                 }) {
                     Ok(closure)
                 } else {
                     let start_span = parser.start_span();
-                    let expr =
-                        parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, |parser| {
-                            Expr::parse(parser)
-                        })?;
+                    let expr = parser.enclosed(
+                        TokenKind::LeftParen,
+                        TokenKind::RightParen,
+                        Expr::parse,
+                    )?;
                     let end_span = parser.end_span();
 
                     Ok(Primitive::Grouping {
