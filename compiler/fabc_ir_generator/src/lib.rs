@@ -1,15 +1,12 @@
 #![allow(unused)]
-use std::collections::HashMap;
-
-use fabc_error::Error;
 use fabc_parser::Parsable;
 
-use crate::{instructions::Instruction, procedures::Procedure};
-
 pub mod implementations;
-pub mod instructions;
-pub mod procedures;
-pub mod tac;
+pub mod ssa;
+
+pub use ssa::cfg::Procedure;
+pub use ssa::instr::{Instruction, Terminator};
+pub use ssa::{BlockId, BlockParam, Literal, Operand, PhiNode, ValueId};
 
 pub trait GenerateIR {
     fn generate_ir(&self, generator: &mut IRGenerator);
@@ -18,14 +15,15 @@ pub trait GenerateIR {
 #[derive(Default)]
 pub struct IRGenerator {
     procedures: Vec<Procedure>,
-    labels: HashMap<String, usize>,
-    instructions: Vec<Instruction>,
+    next_value: usize,
+    next_block: usize,
 }
 
 impl IRGenerator {
     pub fn new() -> Self {
         IRGenerator::default()
     }
+
     pub fn generate<T>(ast: T) -> Self
     where
         T: Parsable + GenerateIR,
@@ -34,20 +32,37 @@ impl IRGenerator {
         ast.generate_ir(&mut generator);
         generator
     }
+
+    pub fn procedures(&self) -> &[Procedure] {
+        &self.procedures
+    }
+
+    pub fn into_procedures(self) -> Vec<Procedure> {
+        self.procedures
+    }
+
+    pub(crate) fn fresh_value(&mut self) -> ValueId {
+        let id = ValueId(self.next_value);
+        self.next_value += 1;
+        id
+    }
+
+    pub(crate) fn fresh_block(&mut self) -> BlockId {
+        let id = BlockId(self.next_block);
+        self.next_block += 1;
+        id
+    }
+
+    pub(crate) fn make_param(&mut self, hint: Option<String>) -> BlockParam {
+        let id = self.fresh_value();
+        match hint {
+            Some(name) => BlockParam::with_hint(id, name),
+            None => BlockParam::new(id),
+        }
+    }
+
     pub(crate) fn add_procedure(&mut self, procedure: Procedure) -> &mut Self {
         self.procedures.push(procedure);
-        self
-    }
-    pub(crate) fn add_label(&mut self, name: String, index: usize) -> &mut Self {
-        self.labels.insert(name, index);
-        self
-    }
-    pub(crate) fn add_instruction(&mut self, instruction: Instruction) -> &mut Self {
-        self.instructions.push(instruction);
-        self
-    }
-    pub(crate) fn add_instructions(&mut self, instructions: Vec<Instruction>) -> &mut Self {
-        self.instructions.extend(instructions);
         self
     }
 }
