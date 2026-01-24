@@ -15,7 +15,7 @@ use crate::{
 pub mod literal;
 pub mod primitive;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BinaryOperator {
     EqualEqual,
     NotEqual,
@@ -56,7 +56,7 @@ impl TryFrom<&Token<'_>> for BinaryOperator {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum UnaryOperator {
     Not,
     Negate,
@@ -79,7 +79,7 @@ impl TryFrom<&Token<'_>> for UnaryOperator {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LogicalOperator {
     And,
     Or,

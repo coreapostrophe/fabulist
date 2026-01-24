@@ -2,11 +2,11 @@
 use fabc_parser::Parsable;
 
 pub mod implementations;
-pub mod ssa;
+pub mod quadruple;
 
-pub use ssa::cfg::Procedure;
-pub use ssa::instr::{Instruction, Terminator};
-pub use ssa::{BlockId, BlockParam, Literal, Operand, PhiNode, ValueId};
+pub use quadruple::{
+    Block, LabelId, Literal, Operand, Param, Procedure, Quadruple, TempId, Terminator,
+};
 
 pub trait GenerateIR {
     fn generate_ir(&self, generator: &mut IRGenerator);
@@ -15,8 +15,8 @@ pub trait GenerateIR {
 #[derive(Default)]
 pub struct IRGenerator {
     procedures: Vec<Procedure>,
-    next_value: usize,
-    next_block: usize,
+    next_temp: usize,
+    next_label: usize,
 }
 
 impl IRGenerator {
@@ -41,23 +41,23 @@ impl IRGenerator {
         self.procedures
     }
 
-    pub(crate) fn fresh_value(&mut self) -> ValueId {
-        let id = ValueId(self.next_value);
-        self.next_value += 1;
+    pub(crate) fn fresh_temp(&mut self) -> TempId {
+        let id = TempId(self.next_temp);
+        self.next_temp += 1;
         id
     }
 
-    pub(crate) fn fresh_block(&mut self) -> BlockId {
-        let id = BlockId(self.next_block);
-        self.next_block += 1;
+    pub(crate) fn fresh_label(&mut self) -> LabelId {
+        let id = LabelId(self.next_label);
+        self.next_label += 1;
         id
     }
 
-    pub(crate) fn make_param(&mut self, hint: Option<String>) -> BlockParam {
-        let id = self.fresh_value();
+    pub(crate) fn make_param(&mut self, hint: Option<String>) -> Param {
+        let id = self.fresh_temp();
         match hint {
-            Some(name) => BlockParam::with_hint(id, name),
-            None => BlockParam::new(id),
+            Some(name) => Param::with_hint(id, name),
+            None => Param::new(id),
         }
     }
 
