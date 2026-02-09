@@ -1,4 +1,7 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{
+    kind::{CompileErrorKind, InternalErrorKind},
+    Error,
+};
 use fabc_parser::ast::stmt::{
     block::BlockStmt,
     expr::ExprStmt,
@@ -68,7 +71,10 @@ impl Analyzable for GotoStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let target_type = {
             let Some(symbol) = self.target.analyze(analyzer).story_sym_type else {
-                analyzer.push_error(Error::new(ErrorKind::TypeInference, self.info.span.clone()));
+                analyzer.push_error(Error::new(
+                    CompileErrorKind::TypeInference,
+                    self.info.span.clone(),
+                ));
                 return AnalysisResult::default();
             };
             symbol.clone()
@@ -76,7 +82,7 @@ impl Analyzable for GotoStmt {
 
         if !matches!(target_type, StorySymbolType::Part) {
             analyzer.push_error(Error::new(
-                ErrorKind::ExpectedType {
+                CompileErrorKind::ExpectedType {
                     expected: "part".to_string(),
                     found: format!("{}", target_type),
                 },
@@ -111,7 +117,10 @@ impl Analyzable for IfStmt {
 impl Analyzable for LetStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let Some(var_type) = self.initializer.analyze(analyzer).mod_sym_type else {
-            analyzer.push_error(Error::new(ErrorKind::TypeInference, self.info.span.clone()));
+            analyzer.push_error(Error::new(
+                CompileErrorKind::TypeInference,
+                self.info.span.clone(),
+            ));
             return AnalysisResult::default();
         };
 
@@ -121,7 +130,7 @@ impl Analyzable for LetStmt {
                 .assign_symbol(&self.name, var_type.clone())
             else {
                 analyzer.push_error(Error::new(
-                    ErrorKind::InternalAssignment,
+                    InternalErrorKind::InvalidAssignment,
                     self.info.span.clone(),
                 ));
                 return AnalysisResult::default();

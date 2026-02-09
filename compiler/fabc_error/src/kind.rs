@@ -1,5 +1,5 @@
-#[derive(Debug, Clone)]
-pub enum ErrorKind {
+#[derive(Debug, Clone, PartialEq)]
+pub enum CompileErrorKind {
     ExpectedSymbol { expected: String, found: String },
     UnrecognizedLiteral { literal: String },
     UnrecognizedPrimitive { primitive: String },
@@ -10,94 +10,170 @@ pub enum ErrorKind {
     ExpectedType { expected: String, found: String },
     ArityMismatch { expected: usize, found: usize },
     InvalidMemberAccess { member: String },
-    IrMissingOperand,
-    IrMissingCallee,
-    IrMissingArgument,
-    IrMissingMemberBase,
-    IrInvalidAssignmentTarget,
     InvalidGotoTarget,
     TypeInference,
-    InternalAssignment,
     UnclosedDelimiter,
     UninitializedVariable,
     NotCallable,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum InternalErrorKind {
+    MissingOperand,
+    MissingCallee,
+    MissingArgument,
+    MissingMemberBase,
+    InvalidAssignmentTarget,
+    InvalidAssignment,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RuntimeErrorKind {}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ErrorKind {
+    Compile(CompileErrorKind),
+    Internal(InternalErrorKind),
+    Runtime(RuntimeErrorKind),
+}
+
+impl From<CompileErrorKind> for ErrorKind {
+    fn from(value: CompileErrorKind) -> Self {
+        ErrorKind::Compile(value)
+    }
+}
+
+impl From<InternalErrorKind> for ErrorKind {
+    fn from(value: InternalErrorKind) -> Self {
+        ErrorKind::Internal(value)
+    }
+}
+
+impl From<RuntimeErrorKind> for ErrorKind {
+    fn from(value: RuntimeErrorKind) -> Self {
+        ErrorKind::Runtime(value)
+    }
+}
+
 impl ErrorKind {
     pub fn name(&self) -> &'static str {
         match self {
-            ErrorKind::ExpectedType { .. } => "Unexpected type",
-            ErrorKind::ExpectedSymbol { .. } => "Unexpected symbol",
-            ErrorKind::UnrecognizedLiteral { .. } => "Unrecognized literal",
-            ErrorKind::UnrecognizedPrimitive { .. } => "Unrecognized primitive",
-            ErrorKind::UnrecognizedElement { .. } => "Unrecognized element",
-            ErrorKind::UnrecognizedPrimary { .. } => "Unrecognized primary",
-            ErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
-            ErrorKind::InvalidOperator { .. } => "Invalid operator",
-            ErrorKind::ArityMismatch { .. } => "Arity mismatch",
-            ErrorKind::InvalidMemberAccess { .. } => "Invalid member access",
-            ErrorKind::IrMissingOperand => "IR missing operand",
-            ErrorKind::IrMissingCallee => "IR missing callee operand",
-            ErrorKind::IrMissingArgument => "IR missing argument operand",
-            ErrorKind::IrMissingMemberBase => "IR missing member base",
-            ErrorKind::IrInvalidAssignmentTarget => "IR invalid assignment target",
-            ErrorKind::InvalidGotoTarget => "Invalid goto target",
-            ErrorKind::TypeInference => "Type Inference",
-            ErrorKind::InternalAssignment => "Internal assignment error",
-            ErrorKind::UnclosedDelimiter => "Unclosed delimiter",
-            ErrorKind::UninitializedVariable => "Uninitialized variable",
-            ErrorKind::NotCallable => "Not callable",
+            ErrorKind::Compile(kind) => kind.name(),
+            ErrorKind::Internal(kind) => kind.name(),
+            ErrorKind::Runtime(kind) => kind.name(),
         }
     }
+
     pub fn message(&self) -> String {
         match self {
-            ErrorKind::InvalidGotoTarget => {
+            ErrorKind::Compile(kind) => kind.message(),
+            ErrorKind::Internal(kind) => kind.message(),
+            ErrorKind::Runtime(kind) => kind.message(),
+        }
+    }
+}
+
+impl CompileErrorKind {
+    pub fn name(&self) -> &'static str {
+        match self {
+            CompileErrorKind::ExpectedType { .. } => "Unexpected type",
+            CompileErrorKind::ExpectedSymbol { .. } => "Unexpected symbol",
+            CompileErrorKind::UnrecognizedLiteral { .. } => "Unrecognized literal",
+            CompileErrorKind::UnrecognizedPrimitive { .. } => "Unrecognized primitive",
+            CompileErrorKind::UnrecognizedElement { .. } => "Unrecognized element",
+            CompileErrorKind::UnrecognizedPrimary { .. } => "Unrecognized primary",
+            CompileErrorKind::UnrecognizedInitiator { .. } => "Unrecognized initiator",
+            CompileErrorKind::InvalidOperator { .. } => "Invalid operator",
+            CompileErrorKind::ArityMismatch { .. } => "Arity mismatch",
+            CompileErrorKind::InvalidMemberAccess { .. } => "Invalid member access",
+            CompileErrorKind::InvalidGotoTarget => "Invalid goto target",
+            CompileErrorKind::TypeInference => "Type Inference",
+            CompileErrorKind::UnclosedDelimiter => "Unclosed delimiter",
+            CompileErrorKind::UninitializedVariable => "Uninitialized variable",
+            CompileErrorKind::NotCallable => "Not callable",
+        }
+    }
+
+    pub fn message(&self) -> String {
+        match self {
+            CompileErrorKind::InvalidGotoTarget => {
                 "The target of a goto statement must be a valid part identifier.".to_string()
             }
-            ErrorKind::InvalidMemberAccess { member } => {
+            CompileErrorKind::InvalidMemberAccess { member } => {
                 format!("Invalid member access '{}'", member)
             }
-            ErrorKind::IrMissingOperand => "IR generation produced no operand".to_string(),
-            ErrorKind::IrMissingCallee => "Callee produced no operand".to_string(),
-            ErrorKind::IrMissingArgument => "Argument produced no operand".to_string(),
-            ErrorKind::IrMissingMemberBase => "Member access base produced no operand".to_string(),
-            ErrorKind::IrInvalidAssignmentTarget => {
-                "Assignment target is not addressable".to_string()
-            }
-            ErrorKind::ArityMismatch { expected, found } => {
+            CompileErrorKind::ArityMismatch { expected, found } => {
                 format!("Expected {} arguments, found {}", expected, found)
             }
-            ErrorKind::NotCallable => "Attempted to call a non-callable entity".to_string(),
-            ErrorKind::ExpectedType { expected, found } => {
+            CompileErrorKind::NotCallable => "Attempted to call a non-callable entity".to_string(),
+            CompileErrorKind::ExpectedType { expected, found } => {
                 format!("Expected type '{}', found '{}'", expected, found)
             }
-            ErrorKind::UninitializedVariable => "Variable used before initialization".to_string(),
-            ErrorKind::InternalAssignment => {
-                "An internal error occurred during assignment".to_string()
+            CompileErrorKind::UninitializedVariable => {
+                "Variable used before initialization".to_string()
             }
-            ErrorKind::TypeInference => "Unable to infer type".to_string(),
-            ErrorKind::ExpectedSymbol { expected, found } => {
+            CompileErrorKind::TypeInference => "Unable to infer type".to_string(),
+            CompileErrorKind::ExpectedSymbol { expected, found } => {
                 format!("Expected '{}', found '{}'", expected, found)
             }
-            ErrorKind::UnrecognizedLiteral { literal } => {
+            CompileErrorKind::UnrecognizedLiteral { literal } => {
                 format!("Unrecognized literal '{}'", literal)
             }
-            ErrorKind::UnrecognizedPrimitive { primitive } => {
+            CompileErrorKind::UnrecognizedPrimitive { primitive } => {
                 format!("Unrecognized primitive '{}'", primitive)
             }
-            ErrorKind::UnrecognizedElement { element } => {
+            CompileErrorKind::UnrecognizedElement { element } => {
                 format!("Unrecognized element '{}'", element)
             }
-            ErrorKind::UnrecognizedPrimary { primary } => {
+            CompileErrorKind::UnrecognizedPrimary { primary } => {
                 format!("Unrecognized primary '{}'", primary)
             }
-            ErrorKind::UnrecognizedInitiator { initiator } => {
+            CompileErrorKind::UnrecognizedInitiator { initiator } => {
                 format!("Unrecognized initiator '{}'", initiator)
             }
-            ErrorKind::InvalidOperator { operator } => {
+            CompileErrorKind::InvalidOperator { operator } => {
                 format!("Invalid operator '{}'", operator)
             }
-            ErrorKind::UnclosedDelimiter => "Unclosed delimiter found".to_string(),
+            CompileErrorKind::UnclosedDelimiter => "Unclosed delimiter found".to_string(),
         }
+    }
+}
+
+impl InternalErrorKind {
+    pub fn name(&self) -> &'static str {
+        match self {
+            InternalErrorKind::MissingOperand => "IR missing operand",
+            InternalErrorKind::MissingCallee => "IR missing callee operand",
+            InternalErrorKind::MissingArgument => "IR missing argument operand",
+            InternalErrorKind::MissingMemberBase => "IR missing member base",
+            InternalErrorKind::InvalidAssignmentTarget => "IR invalid assignment target",
+            InternalErrorKind::InvalidAssignment => "Internal assignment error",
+        }
+    }
+
+    pub fn message(&self) -> String {
+        match self {
+            InternalErrorKind::MissingOperand => "IR generation produced no operand".to_string(),
+            InternalErrorKind::MissingCallee => "Callee produced no operand".to_string(),
+            InternalErrorKind::MissingArgument => "Argument produced no operand".to_string(),
+            InternalErrorKind::MissingMemberBase => {
+                "Member access base produced no operand".to_string()
+            }
+            InternalErrorKind::InvalidAssignmentTarget => {
+                "Assignment target is not addressable".to_string()
+            }
+            InternalErrorKind::InvalidAssignment => {
+                "An internal error occurred during assignment".to_string()
+            }
+        }
+    }
+}
+
+impl RuntimeErrorKind {
+    pub fn name(&self) -> &'static str {
+        match *self {}
+    }
+    pub fn message(&self) -> String {
+        match *self {}
     }
 }

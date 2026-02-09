@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error, Span};
+use fabc_error::{kind::InternalErrorKind, Error, Span};
 use fabc_parser::ast::expr::{literal::Literal as AstLiteral, primitive::Primitive, Expr, Primary};
 
 use crate::{
@@ -21,7 +21,7 @@ impl GenerateIR for Expr {
                     right_ir.operand.clone(),
                     generator,
                     &info.span,
-                    ErrorKind::IrMissingOperand,
+                    InternalErrorKind::MissingOperand,
                 ) else {
                     return IRResult {
                         operand: None,
@@ -56,7 +56,7 @@ impl GenerateIR for Expr {
                     left_ir.operand.clone(),
                     generator,
                     &info.span,
-                    ErrorKind::IrMissingOperand,
+                    InternalErrorKind::MissingOperand,
                 ) else {
                     left_ir.quadruples.append(&mut right_ir.quadruples);
                     return IRResult {
@@ -69,7 +69,7 @@ impl GenerateIR for Expr {
                     right_ir.operand.clone(),
                     generator,
                     &info.span,
-                    ErrorKind::IrMissingOperand,
+                    InternalErrorKind::MissingOperand,
                 ) else {
                     left_ir.quadruples.append(&mut right_ir.quadruples);
                     return IRResult {
@@ -127,7 +127,7 @@ impl GenerateIR for Expr {
                     callee_ir.operand.clone(),
                     generator,
                     &info.span,
-                    ErrorKind::IrMissingCallee,
+                    InternalErrorKind::MissingCallee,
                 ) else {
                     return IRResult {
                         operand: None,
@@ -143,7 +143,7 @@ impl GenerateIR for Expr {
                         arg_ir.operand,
                         generator,
                         &arg.info().span,
-                        ErrorKind::IrMissingArgument,
+                        InternalErrorKind::MissingArgument,
                     ) else {
                         return IRResult {
                             operand: None,
@@ -176,7 +176,7 @@ impl GenerateIR for Expr {
                     left_ir.operand,
                     generator,
                     &info.span,
-                    ErrorKind::IrMissingMemberBase,
+                    InternalErrorKind::MissingMemberBase,
                 ) else {
                     return IRResult {
                         operand: None,
@@ -298,7 +298,7 @@ fn extract_temp(result: &mut IRResult, generator: &mut IRGenerator, span: &Span)
         Some(Operand::Temp(id)) => id,
         Some(Operand::Literal(_)) | Some(Operand::Context) | None => {
             generator.push_error(Error::new(
-                ErrorKind::IrInvalidAssignmentTarget,
+                InternalErrorKind::InvalidAssignmentTarget,
                 span.clone(),
             ));
             generator.fresh_temp()
@@ -310,7 +310,7 @@ fn expect_operand(
     operand: Option<Operand>,
     generator: &mut IRGenerator,
     span: &Span,
-    err_kind: ErrorKind,
+    err_kind: InternalErrorKind,
 ) -> Option<Operand> {
     if let Some(op) = operand {
         Some(op)

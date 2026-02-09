@@ -5,7 +5,7 @@ macro_rules! expect_token {
             Ok(*value)
         } else {
             Err(fabc_error::Error::new(
-                fabc_error::kind::ErrorKind::ExpectedSymbol {
+                fabc_error::kind::CompileErrorKind::ExpectedSymbol {
                     expected: $expected.to_string(),
                     found: $parser.previous().to_string(),
                 },
@@ -18,7 +18,7 @@ macro_rules! expect_token {
             Ok(value.to_string())
         } else {
             Err(fabc_error::Error::new(
-                fabc_error::kind::ErrorKind::ExpectedSymbol {
+                fabc_error::kind::CompileErrorKind::ExpectedSymbol {
                     expected: $expected.to_string(),
                     found: $parser.previous().to_string(),
                 },

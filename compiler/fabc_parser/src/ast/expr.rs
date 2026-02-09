@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error, LineCol, Span};
+use fabc_error::{kind::CompileErrorKind, Error, LineCol, Span};
 use fabc_lexer::{
     keywords::KeywordKind,
     tokens::{Token, TokenKind},
@@ -47,7 +47,7 @@ impl TryFrom<&Token<'_>> for BinaryOperator {
             TokenKind::Asterisk => Ok(BinaryOperator::Multiply),
             TokenKind::Slash => Ok(BinaryOperator::Divide),
             _ => Err(Error::new(
-                ErrorKind::InvalidOperator {
+                CompileErrorKind::InvalidOperator {
                     operator: token.kind.to_string(),
                 },
                 token,
@@ -70,7 +70,7 @@ impl TryFrom<&Token<'_>> for UnaryOperator {
             TokenKind::Bang => Ok(UnaryOperator::Not),
             TokenKind::Minus => Ok(UnaryOperator::Negate),
             _ => Err(Error::new(
-                ErrorKind::InvalidOperator {
+                CompileErrorKind::InvalidOperator {
                     operator: token.kind.to_string(),
                 },
                 token,
@@ -93,7 +93,7 @@ impl TryFrom<&Token<'_>> for LogicalOperator {
             TokenKind::Keyword(KeywordKind::And) => Ok(LogicalOperator::And),
             TokenKind::Keyword(KeywordKind::Or) => Ok(LogicalOperator::Or),
             _ => Err(Error::new(
-                ErrorKind::InvalidOperator {
+                CompileErrorKind::InvalidOperator {
                     operator: token.kind.to_string(),
                 },
                 token,
@@ -416,7 +416,7 @@ impl Expr {
                 })
             }
             _ => Err(Error::new(
-                ErrorKind::UnrecognizedPrimary {
+                CompileErrorKind::UnrecognizedPrimary {
                     primary: parser.peek().to_string(),
                 },
                 parser.peek_token(),

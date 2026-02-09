@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::CompileErrorKind, Error};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{ast::NodeInfo, expect_token, Parsable, Parser};
@@ -80,7 +80,7 @@ impl Parsable for Literal {
                 })
             }
             _ => Err(Error::new(
-                ErrorKind::UnrecognizedLiteral {
+                CompileErrorKind::UnrecognizedLiteral {
                     literal: parser.previous().to_string(),
                 },
                 parser.peek_token(),

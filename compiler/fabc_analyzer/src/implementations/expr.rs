@@ -1,4 +1,7 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{
+    kind::{CompileErrorKind, InternalErrorKind},
+    Error,
+};
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
 
 use crate::{
@@ -15,7 +18,7 @@ impl Analyzable for Expr {
                 let primary_type = {
                     let Some(sym_type) = result.mod_sym_type.clone() else {
                         analyzer.push_error(Error::new(
-                            ErrorKind::TypeInference,
+                            CompileErrorKind::TypeInference,
                             self.info().span.clone(),
                         ));
                         return AnalysisResult::default();
@@ -38,8 +41,10 @@ impl Analyzable for Expr {
             } => {
                 let left_sym_type = {
                     let Some(sym_type) = left.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
@@ -47,8 +52,10 @@ impl Analyzable for Expr {
 
                 let right_sym_type = {
                     let Some(sym_type) = right.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
@@ -56,7 +63,7 @@ impl Analyzable for Expr {
 
                 if left_sym_type != right_sym_type {
                     analyzer.push_error(Error::new(
-                        ErrorKind::ExpectedType {
+                        CompileErrorKind::ExpectedType {
                             expected: left_sym_type.to_string(),
                             found: right_sym_type.to_string(),
                         },
@@ -81,8 +88,10 @@ impl Analyzable for Expr {
             Expr::Assignment { info, name, value } => {
                 let name_sym_type = {
                     let Some(sym_type) = name.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
@@ -90,8 +99,10 @@ impl Analyzable for Expr {
 
                 let value_sym_type = {
                     let Some(sym_type) = value.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
@@ -99,7 +110,7 @@ impl Analyzable for Expr {
 
                 if name_sym_type != value_sym_type {
                     analyzer.push_error(Error::new(
-                        ErrorKind::ExpectedType {
+                        CompileErrorKind::ExpectedType {
                             expected: name_sym_type.to_string(),
                             found: value_sym_type.to_string(),
                         },
@@ -128,8 +139,10 @@ impl Analyzable for Expr {
             } => {
                 let callee_sym_type = {
                     let Some(sym_type) = callee.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type.clone()
@@ -143,7 +156,7 @@ impl Analyzable for Expr {
                     } => {
                         if arguments.len() != arity {
                             analyzer.push_error(Error::new(
-                                ErrorKind::ArityMismatch {
+                                CompileErrorKind::ArityMismatch {
                                     expected: arity,
                                     found: arguments.len(),
                                 },
@@ -156,7 +169,7 @@ impl Analyzable for Expr {
                             let arg_sym_type = {
                                 let Some(sym_type) = argument.analyze(analyzer).mod_sym_type else {
                                     analyzer.push_error(Error::new(
-                                        ErrorKind::TypeInference,
+                                        CompileErrorKind::TypeInference,
                                         info.span.clone(),
                                     ));
                                     return AnalysisResult::default();
@@ -166,7 +179,7 @@ impl Analyzable for Expr {
 
                             if arg_sym_type != parameters[i] {
                                 analyzer.push_error(Error::new(
-                                    ErrorKind::ExpectedType {
+                                    CompileErrorKind::ExpectedType {
                                         expected: parameters[i].to_string(),
                                         found: arg_sym_type.to_string(),
                                     },
@@ -190,7 +203,10 @@ impl Analyzable for Expr {
                         }
                     }
                     _ => {
-                        analyzer.push_error(Error::new(ErrorKind::NotCallable, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::NotCallable,
+                            info.span.clone(),
+                        ));
                         AnalysisResult::default()
                     }
                 }
@@ -200,8 +216,10 @@ impl Analyzable for Expr {
 
                 let group_sym_type = {
                     let Some(sym_type) = result.mod_sym_type.clone() else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type
@@ -222,8 +240,10 @@ impl Analyzable for Expr {
 
                 let unary_sym_type = {
                     let Some(sym_type) = result.mod_sym_type.clone() else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
                     sym_type
@@ -246,8 +266,10 @@ impl Analyzable for Expr {
             } => {
                 let mut current_type = {
                     let Some(left_type) = left.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
 
@@ -255,7 +277,7 @@ impl Analyzable for Expr {
                         left_type
                     } else {
                         analyzer.push_error(Error::new(
-                            ErrorKind::ExpectedType {
+                            CompileErrorKind::ExpectedType {
                                 expected: "Record".to_string(),
                                 found: format!("{left_type}"),
                             },
@@ -267,8 +289,10 @@ impl Analyzable for Expr {
 
                 for member in members.iter() {
                     let Some(member_name_type) = member.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         return AnalysisResult::default();
                     };
 
@@ -280,7 +304,7 @@ impl Analyzable for Expr {
                             current_type = (*field.r#type).clone();
                         } else {
                             analyzer.push_error(Error::new(
-                                ErrorKind::InvalidMemberAccess {
+                                CompileErrorKind::InvalidMemberAccess {
                                     member: member_name_type.to_string(),
                                 },
                                 info.span.clone(),
@@ -289,7 +313,7 @@ impl Analyzable for Expr {
                         }
                     } else {
                         analyzer.push_error(Error::new(
-                            ErrorKind::ExpectedType {
+                            CompileErrorKind::ExpectedType {
                                 expected: "Record".to_string(),
                                 found: format!("{current_type}"),
                             },
@@ -345,7 +369,10 @@ impl Analyzable for Primitive {
         match self {
             Primitive::Object { info, value } => {
                 let Some(obj_type) = value.analyze(analyzer).mod_sym_type else {
-                    analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                    analyzer.push_error(Error::new(
+                        CompileErrorKind::TypeInference,
+                        info.span.clone(),
+                    ));
                     return AnalysisResult::default();
                 };
 
@@ -366,7 +393,7 @@ impl Analyzable for Primitive {
                 let ident_sym = {
                     let Some(ident_sym) = analyzer.mut_story_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
-                            ErrorKind::UninitializedVariable,
+                            CompileErrorKind::UninitializedVariable,
                             info.span.clone(),
                         ));
                         return AnalysisResult::default();
@@ -391,7 +418,7 @@ impl Analyzable for Primitive {
                 let ident_sym = {
                     let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
-                            ErrorKind::UninitializedVariable,
+                            CompileErrorKind::UninitializedVariable,
                             info.span.clone(),
                         ));
                         return AnalysisResult::default();
@@ -414,7 +441,10 @@ impl Analyzable for Primitive {
             }
             Primitive::Grouping { info, expr } => {
                 let Some(group_type) = expr.analyze(analyzer).mod_sym_type else {
-                    analyzer.push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                    analyzer.push_error(Error::new(
+                        CompileErrorKind::TypeInference,
+                        info.span.clone(),
+                    ));
                     return AnalysisResult::default();
                 };
 
@@ -453,8 +483,10 @@ impl Analyzable for Primitive {
                 let mut param_types = Vec::new();
                 for param in params {
                     let Some(param_sym_type) = param.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         analyzer.mut_mod_sym_table().exit_scope();
                         return AnalysisResult::default();
                     };
@@ -467,7 +499,7 @@ impl Analyzable for Primitive {
                             .is_none()
                         {
                             analyzer.push_error(Error::new(
-                                ErrorKind::InternalAssignment,
+                                InternalErrorKind::InvalidAssignment,
                                 info.span.clone(),
                             ));
                             analyzer.mut_mod_sym_table().exit_scope();
@@ -478,8 +510,10 @@ impl Analyzable for Primitive {
 
                 let body_sym_type = {
                     let Some(sym_type) = body.analyze(analyzer).mod_sym_type else {
-                        analyzer
-                            .push_error(Error::new(ErrorKind::TypeInference, info.span.clone()));
+                        analyzer.push_error(Error::new(
+                            CompileErrorKind::TypeInference,
+                            info.span.clone(),
+                        ));
                         analyzer.mut_mod_sym_table().exit_scope();
                         return AnalysisResult::default();
                     };

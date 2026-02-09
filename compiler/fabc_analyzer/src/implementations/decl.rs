@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::CompileErrorKind, Error};
 use fabc_parser::ast::decl::{object::ObjectDecl, quote::QuoteDecl};
 
 use crate::{
@@ -23,7 +23,7 @@ impl Analyzable for ObjectDecl {
             let expr_val = {
                 let Some(sym_type) = value_expr.analyze(analyzer).mod_sym_type else {
                     analyzer.push_error(Error::new(
-                        ErrorKind::TypeInference,
+                        CompileErrorKind::TypeInference,
                         value_expr.info().span.clone(),
                     ));
                     continue;

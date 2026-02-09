@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::CompileErrorKind, Error};
 use fabc_lexer::tokens::TokenKind;
 
 use crate::{
@@ -34,7 +34,7 @@ impl Parsable for Element {
             TokenKind::LeftBracket => Ok(Element::Dialogue(DialogueElement::parse(parser)?)),
             TokenKind::Asterisk => Ok(Element::Narration(NarrationElement::parse(parser)?)),
             _ => Err(Error::new(
-                ErrorKind::UnrecognizedElement {
+                CompileErrorKind::UnrecognizedElement {
                     element: parser.peek().to_string(),
                 },
                 parser.peek_token(),

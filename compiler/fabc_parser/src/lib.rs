@@ -1,6 +1,6 @@
 use std::slice;
 
-use fabc_error::{kind::ErrorKind, Error, LineCol};
+use fabc_error::{kind::CompileErrorKind, Error, LineCol};
 use fabc_lexer::{
     tokens::{Token, TokenKind},
     Lexer,
@@ -162,7 +162,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         let result = parser_fn(self)?;
         if self.consume(end).is_err() {
             return Err(Error::new(
-                ErrorKind::UnclosedDelimiter,
+                CompileErrorKind::UnclosedDelimiter,
                 &self.tokens[delimiter_start_index],
             ));
         }
@@ -220,7 +220,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
             Ok(self.advance())
         } else {
             Err(Error::new(
-                ErrorKind::ExpectedSymbol {
+                CompileErrorKind::ExpectedSymbol {
                     expected: expected.to_string(),
                     found: self.peek().to_string(),
                 },

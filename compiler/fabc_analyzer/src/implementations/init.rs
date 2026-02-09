@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error};
+use fabc_error::{kind::InternalErrorKind, Error};
 use fabc_parser::ast::init::{
     module::ModuleInit,
     story::{
@@ -42,7 +42,7 @@ impl Analyzable for ModuleInit {
                     .assign_symbol(module_alias, sym_type.clone())
                 else {
                     analyzer.push_error(Error::new(
-                        ErrorKind::InternalAssignment,
+                        InternalErrorKind::InvalidAssignment,
                         self.info.span.clone(),
                     ));
                     return AnalysisResult::default();
@@ -91,7 +91,7 @@ impl Analyzable for Part {
                 .assign_symbol(&self.ident, StorySymbolType::Part)
             else {
                 analyzer.push_error(Error::new(
-                    ErrorKind::InternalAssignment,
+                    InternalErrorKind::InvalidAssignment,
                     self.info.span.clone(),
                 ));
                 return AnalysisResult::default();
@@ -135,7 +135,7 @@ impl Analyzable for DialogueElement {
                 .assign_symbol(&self.speaker, StorySymbolType::Speaker)
             else {
                 analyzer.push_error(Error::new(
-                    ErrorKind::InternalAssignment,
+                    InternalErrorKind::InvalidAssignment,
                     self.info.span.clone(),
                 ));
                 return AnalysisResult::default();

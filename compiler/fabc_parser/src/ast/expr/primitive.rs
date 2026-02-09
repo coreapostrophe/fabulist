@@ -1,4 +1,4 @@
-use fabc_error::{kind::ErrorKind, Error, Span};
+use fabc_error::{kind::CompileErrorKind, Error, Span};
 use fabc_lexer::{keywords::KeywordKind, tokens::TokenKind};
 
 use crate::{
@@ -140,7 +140,7 @@ impl Parsable for Primitive {
                 })
             }
             _ => Err(Error::new(
-                ErrorKind::UnrecognizedPrimitive {
+                CompileErrorKind::UnrecognizedPrimitive {
                     primitive: parser.peek().to_string(),
                 },
                 parser.peek_token(),

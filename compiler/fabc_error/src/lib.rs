@@ -76,9 +76,9 @@ impl Error {
         .bold();
     const CODE_COLOR: Style = Style::new().fg_color(Some(Color::Ansi(AnsiColor::White)));
 
-    pub fn new(kind: ErrorKind, span: impl Into<Span>) -> Self {
+    pub fn new(kind: impl Into<ErrorKind>, span: impl Into<Span>) -> Self {
         Self {
-            kind,
+            kind: kind.into(),
             span: span.into(),
         }
     }
@@ -226,6 +226,7 @@ impl Error {
 #[cfg(test)]
 mod error_tests {
     use super::*;
+    use crate::kind::CompileErrorKind;
 
     #[test]
     fn formats_single_line_error() {
@@ -234,10 +235,10 @@ mod error_tests {
                 let x: i32 = "hello";
             }
         "#;
-        let kind = ErrorKind::ExpectedSymbol {
+        let kind = ErrorKind::Compile(CompileErrorKind::ExpectedSymbol {
             expected: "i32".to_string(),
             found: "string".to_string(),
-        };
+        });
         let span = Span::new(LineCol::new(3, 30), LineCol::new(3, 37));
         let error = Error::new(kind, span);
         let formatted = error.format(source);
@@ -264,10 +265,10 @@ mod error_tests {
                 );
             }
         "#;
-        let kind = ErrorKind::ExpectedSymbol {
+        let kind = ErrorKind::Compile(CompileErrorKind::ExpectedSymbol {
             expected: "i32".to_string(),
             found: "string".to_string(),
-        };
+        });
         let span = Span::new(LineCol::new(3, 30), LineCol::new(6, 19));
         let error = Error::new(kind, span);
         let formatted = error.format(source);
