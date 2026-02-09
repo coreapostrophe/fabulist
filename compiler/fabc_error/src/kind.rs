@@ -10,6 +10,11 @@ pub enum ErrorKind {
     ExpectedType { expected: String, found: String },
     ArityMismatch { expected: usize, found: usize },
     InvalidMemberAccess { member: String },
+    IrMissingOperand,
+    IrMissingCallee,
+    IrMissingArgument,
+    IrMissingMemberBase,
+    IrInvalidAssignmentTarget,
     InvalidGotoTarget,
     TypeInference,
     InternalAssignment,
@@ -31,6 +36,11 @@ impl ErrorKind {
             ErrorKind::InvalidOperator { .. } => "Invalid operator",
             ErrorKind::ArityMismatch { .. } => "Arity mismatch",
             ErrorKind::InvalidMemberAccess { .. } => "Invalid member access",
+            ErrorKind::IrMissingOperand => "IR missing operand",
+            ErrorKind::IrMissingCallee => "IR missing callee operand",
+            ErrorKind::IrMissingArgument => "IR missing argument operand",
+            ErrorKind::IrMissingMemberBase => "IR missing member base",
+            ErrorKind::IrInvalidAssignmentTarget => "IR invalid assignment target",
             ErrorKind::InvalidGotoTarget => "Invalid goto target",
             ErrorKind::TypeInference => "Type Inference",
             ErrorKind::InternalAssignment => "Internal assignment error",
@@ -46,6 +56,13 @@ impl ErrorKind {
             }
             ErrorKind::InvalidMemberAccess { member } => {
                 format!("Invalid member access '{}'", member)
+            }
+            ErrorKind::IrMissingOperand => "IR generation produced no operand".to_string(),
+            ErrorKind::IrMissingCallee => "Callee produced no operand".to_string(),
+            ErrorKind::IrMissingArgument => "Argument produced no operand".to_string(),
+            ErrorKind::IrMissingMemberBase => "Member access base produced no operand".to_string(),
+            ErrorKind::IrInvalidAssignmentTarget => {
+                "Assignment target is not addressable".to_string()
             }
             ErrorKind::ArityMismatch { expected, found } => {
                 format!("Expected {} arguments, found {}", expected, found)

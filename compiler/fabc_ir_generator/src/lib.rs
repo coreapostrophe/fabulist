@@ -1,4 +1,8 @@
 #![allow(unused)]
+use std::collections::HashMap;
+
+use fabc_error::Error;
+
 use fabc_parser::Parsable;
 
 pub mod implementations;
@@ -9,7 +13,7 @@ pub use quadruple::{
 };
 
 pub trait GenerateIR {
-    fn generate_ir(&self, generator: &mut IRGenerator);
+    fn generate_ir(&self, generator: &mut IRGenerator) -> IRResult;
 }
 
 #[derive(Default)]
@@ -17,6 +21,31 @@ pub struct IRGenerator {
     procedures: Vec<Procedure>,
     next_temp: usize,
     next_label: usize,
+    symbols: HashMap<String, TempId>,
+    errors: Vec<Error>,
+}
+
+#[derive(Default)]
+pub struct IRResult {
+    pub operand: Option<Operand>,
+    pub quadruples: Vec<Quadruple>,
+}
+
+impl IRResult {
+    pub fn with_operand(operand: Operand) -> Self {
+        Self {
+            operand: Some(operand),
+            quadruples: Vec::new(),
+        }
+    }
+
+    pub fn merge(mut self, mut other: IRResult) -> Self {
+        self.quadruples.append(&mut other.quadruples);
+        if self.operand.is_none() {
+            self.operand = other.operand;
+        }
+        self
+    }
 }
 
 impl IRGenerator {
@@ -29,12 +58,20 @@ impl IRGenerator {
         T: Parsable + GenerateIR,
     {
         let mut generator = IRGenerator::new();
-        ast.generate_ir(&mut generator);
+        let _ = ast.generate_ir(&mut generator);
         generator
     }
 
     pub fn procedures(&self) -> &[Procedure] {
         &self.procedures
+    }
+
+    pub fn errors(&self) -> &[Error] {
+        &self.errors
+    }
+
+    pub fn into_errors(self) -> Vec<Error> {
+        self.errors
     }
 
     pub fn into_procedures(self) -> Vec<Procedure> {
@@ -61,8 +98,23 @@ impl IRGenerator {
         }
     }
 
+    pub(crate) fn temp_for_symbol(&mut self, name: impl Into<String>) -> TempId {
+        let name = name.into();
+        if let Some(existing) = self.symbols.get(&name) {
+            return *existing;
+        }
+
+        let temp = self.fresh_temp();
+        self.symbols.insert(name, temp);
+        temp
+    }
+
     pub(crate) fn add_procedure(&mut self, procedure: Procedure) -> &mut Self {
         self.procedures.push(procedure);
         self
+    }
+
+    pub(crate) fn push_error(&mut self, error: Error) {
+        self.errors.push(error);
     }
 }

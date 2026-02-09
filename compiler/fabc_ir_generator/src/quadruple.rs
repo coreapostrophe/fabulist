@@ -3,8 +3,9 @@ use fabc_parser::ast::expr::{BinaryOperator, UnaryOperator};
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
     String(String),
-    Number(i64),
+    Number(f64),
     Boolean(bool),
+    None,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -17,6 +18,7 @@ pub struct LabelId(pub usize);
 pub enum Operand {
     Temp(TempId),
     Literal(Literal),
+    Context,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -56,9 +58,23 @@ pub enum Quadruple {
         dest: TempId,
     },
     Call {
-        procedure: String,
+        callee: Operand,
         args: Vec<Operand>,
         dest: Option<TempId>,
+    },
+    MemberAccess {
+        base: Operand,
+        member: String,
+        dest: TempId,
+    },
+    BuildObject {
+        fields: Vec<(String, Operand)>,
+        dest: TempId,
+    },
+    MakeClosure {
+        target: LabelId,
+        params: Vec<Param>,
+        dest: TempId,
     },
 }
 

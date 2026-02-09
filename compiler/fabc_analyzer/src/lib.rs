@@ -28,7 +28,6 @@ pub trait Analyzable {
 pub struct AnalyzerResult {
     pub story_sym_annotations: HashMap<usize, SymbolAnnotation<StorySymbolType>>,
     pub mod_sym_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
-    pub errors: Vec<Error>,
 }
 
 #[derive(Default)]
@@ -51,7 +50,6 @@ impl Analyzer {
         AnalyzerResult {
             story_sym_annotations: analyzer.story_sym_annotations,
             mod_sym_annotations: analyzer.mod_sym_annotations,
-            errors: analyzer.errors,
         }
     }
 
