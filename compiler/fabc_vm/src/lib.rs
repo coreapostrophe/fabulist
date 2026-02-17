@@ -4,6 +4,7 @@ pub mod error;
 pub mod instructions;
 pub mod program;
 pub mod value;
+pub mod translator;
 
 macro_rules! binary_op {
     ($self:expr, $operation:tt) => {{

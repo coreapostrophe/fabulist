@@ -324,15 +324,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fabc_ir_generator"
-version = "0.1.0"
-dependencies = [
- "fabc_analyzer",
- "fabc_error",
- "fabc_parser",
-]
-
-[[package]]
 name = "fabc_lexer"
 version = "0.1.0"
 dependencies = [
