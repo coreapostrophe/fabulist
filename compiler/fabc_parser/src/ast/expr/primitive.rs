@@ -110,8 +110,11 @@ impl Parsable for Primitive {
                     Ok(closure)
                 } else {
                     let start_span = parser.start_span();
-                    let expr =
-                        parser.enclosed(TokenKind::LeftParen, TokenKind::RightParen, Expr::parse)?;
+                    let expr = parser.enclosed(
+                        TokenKind::LeftParen,
+                        TokenKind::RightParen,
+                        Expr::parse,
+                    )?;
                     let end_span = parser.end_span();
 
                     Ok(Primitive::Grouping {

@@ -64,8 +64,8 @@ mod tests {
 
     #[test]
     fn parses_if_stmt_without_else() {
-        let if_stmt = Parser::parse_ast_str::<IfStmt>("if (true) { }")
-            .expect("Failed to parse if statement");
+        let if_stmt =
+            Parser::parse_ast_str::<IfStmt>("if (true) { }").expect("Failed to parse if statement");
 
         assert_debug_snapshot!(if_stmt);
     }

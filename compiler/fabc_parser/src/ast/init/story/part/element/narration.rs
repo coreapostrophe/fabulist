@@ -33,10 +33,7 @@ impl Parsable for NarrationElement {
 mod tests {
     use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::init::story::part::element::narration::NarrationElement,
-        Parser,
-    };
+    use crate::{ast::init::story::part::element::narration::NarrationElement, Parser};
 
     #[test]
     fn parses_narration_without_properties() {

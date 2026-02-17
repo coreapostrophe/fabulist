@@ -37,8 +37,8 @@ mod tests {
 
     #[test]
     fn parses_expr_statements() {
-        let expr_stmt = Parser::parse_ast_str::<ExprStmt>("x + 1;")
-            .expect("Failed to parse expr statement");
+        let expr_stmt =
+            Parser::parse_ast_str::<ExprStmt>("x + 1;").expect("Failed to parse expr statement");
 
         assert_debug_snapshot!(expr_stmt);
     }

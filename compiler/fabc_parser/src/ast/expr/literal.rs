@@ -97,12 +97,11 @@ mod tests {
 
     #[test]
     fn parses_literals() {
-        let literal =
-            Parser::parse_ast_str::<Literal>("42").expect("Failed to parse literal");
+        let literal = Parser::parse_ast_str::<Literal>("42").expect("Failed to parse literal");
         assert_debug_snapshot!("literal_number", literal);
 
-        let literal = Parser::parse_ast_str::<Literal>("\"hello\"")
-            .expect("Failed to parse literal");
+        let literal =
+            Parser::parse_ast_str::<Literal>("\"hello\"").expect("Failed to parse literal");
         assert_debug_snapshot!("literal_string", literal);
 
         let literal = Parser::parse_ast_str::<Literal>("true").expect("Failed to parse literal");

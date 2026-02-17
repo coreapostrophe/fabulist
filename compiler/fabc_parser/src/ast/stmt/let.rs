@@ -48,8 +48,7 @@ mod tests {
 
     #[test]
     fn parses_let_statements() {
-        let let_stmt =
-            Parser::parse_ast_str::<LetStmt>("let x = 42;").expect("Failed to parse");
+        let let_stmt = Parser::parse_ast_str::<LetStmt>("let x = 42;").expect("Failed to parse");
 
         assert_debug_snapshot!(let_stmt);
     }

@@ -439,32 +439,36 @@ mod tests {
 
     #[test]
     fn parses_arithmetic_binary_expr() {
-        let expr = Parser::parse_ast_str::<Expr>("1 + 2 * 3 / 4").expect("Failed to parse expression");
+        let expr =
+            Parser::parse_ast_str::<Expr>("1 + 2 * 3 / 4").expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_equality_expr() {
-        let expr = Parser::parse_ast_str::<Expr>("10 == 20 != 30").expect("Failed to parse expression");
+        let expr =
+            Parser::parse_ast_str::<Expr>("10 == 20 != 30").expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_comparison_expr() {
-        let expr =
-            Parser::parse_ast_str::<Expr>("5 > 3 < 9 >= 2 <= 10").expect("Failed to parse expression");
+        let expr = Parser::parse_ast_str::<Expr>("5 > 3 < 9 >= 2 <= 10")
+            .expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_call_expr() {
-        let expr = Parser::parse_ast_str::<Expr>("func(arg1, arg2)").expect("Failed to parse expression");
+        let expr =
+            Parser::parse_ast_str::<Expr>("func(arg1, arg2)").expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_member_access_expr() {
-        let expr = Parser::parse_ast_str::<Expr>("obj.prop1.prop2").expect("Failed to parse expression");
+        let expr =
+            Parser::parse_ast_str::<Expr>("obj.prop1.prop2").expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
@@ -476,14 +480,15 @@ mod tests {
 
     #[test]
     fn parses_logical_expr() {
-        let expr =
-            Parser::parse_ast_str::<Expr>("true and false or true").expect("Failed to parse expression");
+        let expr = Parser::parse_ast_str::<Expr>("true and false or true")
+            .expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_assignment_expr() {
-        let expr = Parser::parse_ast_str::<Expr>("x = 10 + 20").expect("Failed to parse expression");
+        let expr =
+            Parser::parse_ast_str::<Expr>("x = 10 + 20").expect("Failed to parse expression");
         assert_debug_snapshot!(expr);
     }
 }

@@ -57,8 +57,9 @@ mod tests {
 
     #[test]
     fn parses_module_init_with_alias() {
-        let module_init = Parser::parse_ast_str::<ModuleInit>(r#"module "my/module/path" as my_alias;"#)
-            .expect("Failed to parse module init");
+        let module_init =
+            Parser::parse_ast_str::<ModuleInit>(r#"module "my/module/path" as my_alias;"#)
+                .expect("Failed to parse module init");
 
         assert_debug_snapshot!(module_init);
     }
