@@ -3,8 +3,8 @@ use crate::{error::Error, instructions::Instruction, program::Program, value::Va
 pub mod error;
 pub mod instructions;
 pub mod program;
-pub mod value;
 pub mod translator;
+pub mod value;
 
 macro_rules! binary_op {
     ($self:expr, $operation:tt) => {{
