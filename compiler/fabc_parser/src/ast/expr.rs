@@ -432,7 +432,7 @@ impl Parsable for Expr {
 }
 
 #[cfg(test)]
-mod expr_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

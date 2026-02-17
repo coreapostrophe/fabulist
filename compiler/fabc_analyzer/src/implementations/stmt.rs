@@ -227,9 +227,15 @@ mod tests {
         goto.analyze(&mut analyzer);
 
         let kinds: Vec<_> = analyzer.errors.iter().map(|e| e.kind.clone()).collect();
-        assert!(kinds.iter().any(|k| matches!(
-            k,
-            fabc_error::kind::ErrorKind::Compile(fabc_error::kind::CompileErrorKind::TypeInference)
-        )), "unexpected error kinds: {:?}", kinds);
+        assert!(
+            kinds.iter().any(|k| matches!(
+                k,
+                fabc_error::kind::ErrorKind::Compile(
+                    fabc_error::kind::CompileErrorKind::TypeInference
+                )
+            )),
+            "unexpected error kinds: {:?}",
+            kinds
+        );
     }
 }

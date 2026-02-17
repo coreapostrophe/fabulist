@@ -38,7 +38,7 @@ impl Parsable for QuoteDecl {
 }
 
 #[cfg(test)]
-mod quote_decl_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

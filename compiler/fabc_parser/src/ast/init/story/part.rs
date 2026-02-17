@@ -40,7 +40,7 @@ impl Parsable for Part {
 }
 
 #[cfg(test)]
-mod part_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

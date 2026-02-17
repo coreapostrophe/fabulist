@@ -244,7 +244,7 @@ impl TryFrom<Pair<'_, Rule>> for Element {
 }
 
 #[cfg(test)]
-mod decl_converters_tests {
+mod tests {
     use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;

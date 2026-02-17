@@ -108,7 +108,7 @@ impl TryFrom<Pair<'_, Rule>> for ParameterBodyDfn {
 }
 
 #[cfg(test)]
-mod dfn_converters_tests {
+mod tests {
     use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;

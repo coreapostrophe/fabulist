@@ -90,7 +90,7 @@ impl Parsable for Literal {
 }
 
 #[cfg(test)]
-mod literal_tests {
+mod tests {
     use fabc_lexer::Lexer;
 
     use crate::{ast::expr::literal::Literal, Parser};

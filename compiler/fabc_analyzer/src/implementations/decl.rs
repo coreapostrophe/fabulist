@@ -67,7 +67,10 @@ mod tests {
         map.insert("x".to_string(), number_expr(2, 1.0));
         map.insert("name".to_string(), string_expr(3, "foo"));
 
-        let object = ObjectDecl { info: info(10), map };
+        let object = ObjectDecl {
+            info: info(10),
+            map,
+        };
 
         let analyzer = Analyzer::analyze_ast(&object).expect("analyze failed");
 
@@ -79,10 +82,13 @@ mod tests {
         match &annotation.r#type {
             ModuleSymbolType::Data(DataType::Record { fields }) => {
                 assert_eq!(fields.len(), 2);
-                assert!(fields.iter().any(|f| f.name == "x"
-                    && *f.r#type == ModuleSymbolType::Data(DataType::Number)));
-                assert!(fields.iter().any(|f| f.name == "name"
-                    && *f.r#type == ModuleSymbolType::Data(DataType::String)));
+                assert!(fields.iter().any(
+                    |f| f.name == "x" && *f.r#type == ModuleSymbolType::Data(DataType::Number)
+                ));
+                assert!(fields
+                    .iter()
+                    .any(|f| f.name == "name"
+                        && *f.r#type == ModuleSymbolType::Data(DataType::String)));
             }
             other => panic!("unexpected annotation: {other}"),
         }

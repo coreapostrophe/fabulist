@@ -150,7 +150,7 @@ impl Parsable for Primitive {
 }
 
 #[cfg(test)]
-mod primitive_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

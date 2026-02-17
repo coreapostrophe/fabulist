@@ -218,7 +218,7 @@ impl PartialOrd for RuntimeValue {
 }
 
 #[cfg(test)]
-mod expr_overrides_tests {
+mod tests {
     use crate::{interpreter::runtime_value::RuntimeValue, parser::error::SpanSlice};
 
     impl From<f32> for RuntimeValue {

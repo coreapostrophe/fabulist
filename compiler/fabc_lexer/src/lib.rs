@@ -244,7 +244,7 @@ impl<'src> Lexer<'src> {
 }
 
 #[cfg(test)]
-mod lexer_tests {
+mod tests {
     use super::*;
 
     #[test]

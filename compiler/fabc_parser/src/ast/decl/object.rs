@@ -46,7 +46,7 @@ impl Parsable for ObjectDecl {
 }
 
 #[cfg(test)]
-mod object_decl_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

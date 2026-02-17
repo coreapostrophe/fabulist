@@ -48,7 +48,7 @@ impl Parsable for StoryInit {
 }
 
 #[cfg(test)]
-mod story_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

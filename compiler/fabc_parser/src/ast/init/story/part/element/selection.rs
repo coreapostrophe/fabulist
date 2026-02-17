@@ -33,7 +33,7 @@ impl Parsable for SelectionElement {
 }
 
 #[cfg(test)]
-mod selection_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

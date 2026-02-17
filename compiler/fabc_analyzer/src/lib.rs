@@ -12,9 +12,9 @@ use crate::{
 
 pub mod implementations;
 pub mod symbol_table;
-pub mod types;
 #[cfg(test)]
 pub mod test_utils;
+pub mod types;
 
 #[derive(Default)]
 pub struct AnalysisResult {

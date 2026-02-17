@@ -35,7 +35,7 @@ impl Parsable for ReturnStmt {
 }
 
 #[cfg(test)]
-mod return_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
 
     use crate::{

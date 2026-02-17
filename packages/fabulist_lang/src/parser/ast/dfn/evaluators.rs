@@ -67,7 +67,7 @@ impl Evaluable for ArgumentBodyDfn {
 }
 
 #[cfg(test)]
-mod dfn_evaluators_tests {
+mod tests {
     use crate::{
         parser::ast::{AssertEvaluateOptions, AstTestHelper},
         parser::Rule,

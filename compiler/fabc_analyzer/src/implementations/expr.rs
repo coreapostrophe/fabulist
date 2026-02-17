@@ -605,11 +605,12 @@ mod tests {
         };
 
         let mut analyzer = Analyzer::default();
-        analyzer
-            .mut_mod_sym_table()
-            .assign_symbol("bar", ModuleSymbolType::Module {
+        analyzer.mut_mod_sym_table().assign_symbol(
+            "bar",
+            ModuleSymbolType::Module {
                 name: "bar".to_string(),
-            });
+            },
+        );
 
         access.analyze(&mut analyzer);
 

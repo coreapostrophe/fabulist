@@ -611,7 +611,7 @@ impl Evaluable for Expr {
 }
 
 #[cfg(test)]
-mod expr_evaluators_tests {
+mod tests {
     use crate::{
         interpreter::runtime_value::RuntimeValue,
         parser::{

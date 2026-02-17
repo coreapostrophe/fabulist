@@ -30,7 +30,7 @@ impl Parsable for Metadata {
 }
 
 #[cfg(test)]
-mod metadata_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

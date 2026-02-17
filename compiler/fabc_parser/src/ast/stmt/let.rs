@@ -41,7 +41,7 @@ impl Parsable for LetStmt {
 }
 
 #[cfg(test)]
-mod let_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

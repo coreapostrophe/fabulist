@@ -550,7 +550,7 @@ impl TryFrom<Pair<'_, Rule>> for LambdaPrimitive {
 }
 
 #[cfg(test)]
-mod expr_converters_tests {
+mod tests {
     use crate::{parser::ast::AstTestHelper, parser::Rule};
 
     use super::*;

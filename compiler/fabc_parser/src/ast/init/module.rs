@@ -42,7 +42,7 @@ impl Parsable for ModuleInit {
 }
 
 #[cfg(test)]
-mod module_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

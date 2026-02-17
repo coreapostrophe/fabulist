@@ -30,7 +30,7 @@ impl Parsable for NarrationElement {
 }
 
 #[cfg(test)]
-mod narration_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

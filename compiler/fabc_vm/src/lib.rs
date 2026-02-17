@@ -160,7 +160,7 @@ impl<'a> VirtualMachine<'a> {
 }
 
 #[cfg(test)]
-mod vm_tests {
+mod tests {
     use super::*;
     use crate::{instructions::Instruction, value::Value};
 

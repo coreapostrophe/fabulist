@@ -41,7 +41,7 @@ impl Parsable for DialogueElement {
 }
 
 #[cfg(test)]
-mod dialogue_tests {
+mod tests {
     use std::collections::HashMap;
 
     use fabc_error::{LineCol, Span};

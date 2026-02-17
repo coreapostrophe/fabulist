@@ -224,7 +224,7 @@ impl Error {
 }
 
 #[cfg(test)]
-mod error_tests {
+mod tests {
     use super::*;
     use crate::kind::CompileErrorKind;
 

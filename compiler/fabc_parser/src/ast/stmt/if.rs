@@ -57,7 +57,7 @@ impl Parsable for IfStmt {
 }
 
 #[cfg(test)]
-mod if_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

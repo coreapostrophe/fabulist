@@ -53,7 +53,7 @@ impl Parsable for BlockStmt {
 }
 
 #[cfg(test)]
-mod block_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 

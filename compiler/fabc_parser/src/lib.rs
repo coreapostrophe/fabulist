@@ -272,7 +272,7 @@ impl<'src, 'tok> Parser<'src, 'tok> {
 }
 
 #[cfg(test)]
-mod library_tests {
+mod tests {
     use fabc_lexer::Lexer;
 
     use crate::Parser;

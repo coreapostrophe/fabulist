@@ -137,7 +137,7 @@ impl Evaluable for Stmt {
 }
 
 #[cfg(test)]
-mod stmt_evaluators_tests {
+mod tests {
     use crate::{
         interpreter::{environment::RuntimeEnvironment, runtime_value::RuntimeValue},
         parser::{

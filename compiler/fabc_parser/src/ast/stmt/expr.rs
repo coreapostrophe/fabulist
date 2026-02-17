@@ -30,7 +30,7 @@ impl Parsable for ExprStmt {
 }
 
 #[cfg(test)]
-mod expr_stmt_tests {
+mod tests {
     use fabc_error::{LineCol, Span};
     use fabc_lexer::Lexer;
 
