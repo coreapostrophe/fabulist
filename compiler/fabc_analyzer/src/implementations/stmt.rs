@@ -156,3 +156,80 @@ impl Analyzable for ReturnStmt {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::{info, number_expr, story_identifier_expr};
+
+    #[test]
+    fn let_stmt_binds_symbol_and_annotation() {
+        let mut analyzer = Analyzer::default();
+
+        let let_stmt = LetStmt {
+            info: info(50),
+            name: "a".to_string(),
+            initializer: number_expr(51, 7.0),
+        };
+
+        let_stmt.analyze(&mut analyzer);
+
+        let sym = analyzer
+            .mut_mod_sym_table()
+            .lookup_symbol("a")
+            .expect("symbol missing")
+            .r#type
+            .clone();
+
+        assert_eq!(sym, ModuleSymbolType::Data(DataType::Number));
+
+        let annotation = analyzer
+            .mod_sym_annotations
+            .get(&50)
+            .expect("annotation missing");
+        assert_eq!(annotation.name.as_deref(), Some("a"));
+        assert_eq!(annotation.r#type, ModuleSymbolType::Data(DataType::Number));
+    }
+
+    #[test]
+    fn block_returns_inner_return_type() {
+        let return_stmt = Stmt::Return(ReturnStmt {
+            info: info(60),
+            value: Some(number_expr(61, 3.0)),
+        });
+
+        let block = BlockStmt {
+            info: info(62),
+            first_return: Some(0),
+            statements: vec![return_stmt],
+        };
+
+        let result = block.analyze(&mut Analyzer::default());
+
+        assert_eq!(
+            result.mod_sym_type,
+            Some(ModuleSymbolType::Data(DataType::Number))
+        );
+    }
+
+    #[test]
+    fn goto_requires_part_symbol() {
+        let mut analyzer = Analyzer::default();
+        analyzer
+            .mut_story_sym_table()
+            .assign_symbol("speaker", StorySymbolType::Speaker);
+
+        let goto = GotoStmt {
+            info: info(70),
+            target: Box::new(story_identifier_expr(71, "speaker")),
+        };
+
+        goto.analyze(&mut analyzer);
+
+        let kinds: Vec<_> = analyzer.errors.iter().map(|e| e.kind.clone()).collect();
+        assert!(kinds.iter().any(|k| matches!(
+            k,
+            fabc_error::kind::ErrorKind::Compile(fabc_error::kind::CompileErrorKind::TypeInference)
+        )), "unexpected error kinds: {:?}", kinds);
+    }
+}

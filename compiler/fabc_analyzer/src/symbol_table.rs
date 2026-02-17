@@ -74,3 +74,28 @@ impl<T> SymbolTable<T> {
         self.entries.get(name).and_then(|stack| stack.last())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn assign_and_lookup_symbol_in_current_scope() {
+        let mut table = SymbolTable::new();
+        table.assign_symbol("x", 1);
+        let sym = table.lookup_symbol("x").expect("symbol missing");
+        assert_eq!(sym.name, "x");
+        assert_eq!(sym.r#type, 1);
+    }
+
+    #[test]
+    fn respects_scopes_and_pops_on_exit() {
+        let mut table = SymbolTable::new();
+        table.assign_symbol("x", 1);
+        table.enter_scope();
+        table.assign_symbol("x", 2);
+        assert_eq!(table.lookup_symbol("x").unwrap().r#type, 2);
+        table.exit_scope();
+        assert_eq!(table.lookup_symbol("x").unwrap().r#type, 1);
+    }
+}

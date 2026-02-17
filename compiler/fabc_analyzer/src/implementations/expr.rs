@@ -555,3 +555,67 @@ impl Analyzable for Primary {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        test_utils::{identifier_expr, info, number_expr, string_expr},
+        Analyzer,
+    };
+    use fabc_error::kind::{CompileErrorKind, ErrorKind};
+    use fabc_parser::ast::expr::BinaryOperator;
+
+    #[test]
+    fn binary_mismatch_reports_error() {
+        let expr = Expr::Binary {
+            info: info(20),
+            left: Box::new(number_expr(21, 1.0)),
+            operator: BinaryOperator::Add,
+            right: Box::new(string_expr(22, "oops")),
+        };
+
+        let analyzer = Analyzer::analyze_ast(&expr).expect("analyze failed");
+
+        assert!(analyzer.errors.iter().any(|e| matches!(
+            e.kind,
+            ErrorKind::Compile(CompileErrorKind::ExpectedType { .. })
+        )));
+    }
+
+    #[test]
+    fn invalid_member_access_is_reported() {
+        let mut fields = std::collections::HashMap::new();
+        fields.insert("foo".to_string(), number_expr(30, 2.0));
+        let record = Primitive::Object {
+            info: info(31),
+            value: fabc_parser::ast::decl::object::ObjectDecl {
+                info: info(32),
+                map: fields,
+            },
+        };
+
+        let access = Expr::MemberAccess {
+            info: info(40),
+            left: Box::new(Expr::Primary {
+                info: info(33),
+                value: Primary::Primitive(record),
+            }),
+            members: vec![identifier_expr(34, "bar")],
+        };
+
+        let mut analyzer = Analyzer::default();
+        analyzer
+            .mut_mod_sym_table()
+            .assign_symbol("bar", ModuleSymbolType::Module {
+                name: "bar".to_string(),
+            });
+
+        access.analyze(&mut analyzer);
+
+        assert!(analyzer.errors.iter().any(|e| matches!(
+            e.kind,
+            ErrorKind::Compile(CompileErrorKind::InvalidMemberAccess { .. })
+        )));
+    }
+}

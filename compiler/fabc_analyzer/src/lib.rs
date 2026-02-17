@@ -11,9 +11,10 @@ use crate::{
 };
 
 pub mod implementations;
-pub mod reachability;
 pub mod symbol_table;
 pub mod types;
+#[cfg(test)]
+pub mod test_utils;
 
 #[derive(Default)]
 pub struct AnalysisResult {

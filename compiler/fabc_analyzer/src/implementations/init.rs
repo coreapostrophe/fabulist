@@ -170,3 +170,112 @@ impl Analyzable for NarrationElement {
         AnalysisResult::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::{info, string_expr};
+    use crate::Analyzer;
+    use fabc_parser::ast::{
+        decl::quote::QuoteDecl,
+        init::story::{
+            metadata::Metadata,
+            part::{
+                element::{dialogue::DialogueElement, narration::NarrationElement, Element},
+                Part,
+            },
+            StoryInit,
+        },
+        init::Init,
+    };
+
+    #[test]
+    fn module_init_alias_is_annotated() {
+        let init = ModuleInit {
+            info: info(1),
+            path: "path/to/module".to_string(),
+            alias: Some("utils".to_string()),
+        };
+
+        let analyzer = Analyzer::analyze_ast(&init).expect("analyze failed");
+
+        let annotation = analyzer
+            .mod_sym_annotations
+            .get(&1)
+            .expect("annotation missing");
+
+        assert_eq!(annotation.name.as_deref(), Some("utils"));
+        assert_eq!(
+            annotation.r#type,
+            ModuleSymbolType::Module {
+                name: "utils".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn part_and_dialogue_symbols_are_tracked() {
+        let part = Part {
+            info: info(80),
+            ident: "intro".to_string(),
+            elements: vec![Element::Dialogue(DialogueElement {
+                info: info(81),
+                speaker: "guide".to_string(),
+                quotes: vec![QuoteDecl {
+                    info: info(82),
+                    text: "hi".to_string(),
+                    properties: None,
+                }],
+            })],
+        };
+
+        let mut analyzer = Analyzer::default();
+        part.analyze(&mut analyzer);
+
+        let part_annotation = analyzer
+            .story_sym_annotations
+            .get(&80)
+            .expect("part annotation missing");
+        assert_eq!(part_annotation.r#type, StorySymbolType::Part);
+
+        let speaker_annotation = analyzer
+            .story_sym_annotations
+            .get(&81)
+            .expect("speaker annotation missing");
+        assert_eq!(speaker_annotation.r#type, StorySymbolType::Speaker);
+    }
+
+    #[test]
+    fn story_init_traverses_metadata_and_parts() {
+        let mut metadata_map = std::collections::HashMap::new();
+        metadata_map.insert("title".to_string(), string_expr(90, "Story"));
+
+        let story = StoryInit {
+            info: info(91),
+            metadata: Some(Metadata {
+                info: info(92),
+                object: fabc_parser::ast::decl::object::ObjectDecl {
+                    info: info(93),
+                    map: metadata_map,
+                },
+            }),
+            parts: vec![Part {
+                info: info(94),
+                ident: "p1".to_string(),
+                elements: vec![Element::Narration(NarrationElement {
+                    info: info(95),
+                    quote: QuoteDecl {
+                        info: info(96),
+                        text: "hello".to_string(),
+                        properties: None,
+                    },
+                })],
+            }],
+        };
+
+        let analyzer = Analyzer::analyze_ast(&Init::Story(story)).expect("analyze failed");
+
+        assert!(analyzer.story_sym_annotations.contains_key(&94));
+        assert!(analyzer.mod_sym_annotations.contains_key(&93));
+    }
+}

@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Field {
     pub name: String,
     pub r#type: Box<ModuleSymbolType>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum DataType {
     Number,
     Boolean,
@@ -35,7 +35,7 @@ impl Display for DataType {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ModuleSymbolType {
     Data(DataType),
     Module {
@@ -65,7 +65,7 @@ impl Display for ModuleSymbolType {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum StorySymbolType {
     Part,
     Speaker,
@@ -80,12 +80,13 @@ impl Display for StorySymbolType {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Symbol<T> {
     pub name: String,
     pub r#type: T,
 }
 
+#[derive(Debug)]
 pub struct SymbolAnnotation<T> {
     pub name: Option<String>,
     pub r#type: T,

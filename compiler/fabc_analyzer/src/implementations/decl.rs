@@ -52,3 +52,39 @@ impl Analyzable for ObjectDecl {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        test_utils::{info, number_expr, string_expr},
+        Analyzer,
+    };
+
+    #[test]
+    fn object_decl_turns_into_record_type() {
+        let mut map = std::collections::HashMap::new();
+        map.insert("x".to_string(), number_expr(2, 1.0));
+        map.insert("name".to_string(), string_expr(3, "foo"));
+
+        let object = ObjectDecl { info: info(10), map };
+
+        let analyzer = Analyzer::analyze_ast(&object).expect("analyze failed");
+
+        let annotation = analyzer
+            .mod_sym_annotations
+            .get(&10)
+            .expect("annotation missing");
+
+        match &annotation.r#type {
+            ModuleSymbolType::Data(DataType::Record { fields }) => {
+                assert_eq!(fields.len(), 2);
+                assert!(fields.iter().any(|f| f.name == "x"
+                    && *f.r#type == ModuleSymbolType::Data(DataType::Number)));
+                assert!(fields.iter().any(|f| f.name == "name"
+                    && *f.r#type == ModuleSymbolType::Data(DataType::String)));
+            }
+            other => panic!("unexpected annotation: {other}"),
+        }
+    }
+}
