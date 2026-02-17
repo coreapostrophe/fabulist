@@ -585,7 +585,7 @@ mod tests {
 
     #[test]
     fn invalid_member_access_is_reported() {
-        let mut fields = std::collections::HashMap::new();
+        let mut fields = std::collections::BTreeMap::new();
         fields.insert("foo".to_string(), number_expr(30, 2.0));
         let record = Primitive::Object {
             info: info(31),

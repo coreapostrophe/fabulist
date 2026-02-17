@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn object_decl_turns_into_record_type() {
-        let mut map = std::collections::HashMap::new();
+        let mut map = std::collections::BTreeMap::new();
         map.insert("x".to_string(), number_expr(2, 1.0));
         map.insert("name".to_string(), string_expr(3, "foo"));
 

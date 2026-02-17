@@ -1,0 +1,102 @@
+---
+source: compiler/fabc_parser/src/ast/expr/primitive.rs
+expression: primitive
+---
+Object {
+    info: NodeInfo {
+        id: 5,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                24,
+            ),
+        },
+    },
+    value: ObjectDecl {
+        info: NodeInfo {
+            id: 4,
+            span: Span {
+                start: LineCol(
+                    1,
+                    1,
+                ),
+                end: LineCol(
+                    1,
+                    24,
+                ),
+            },
+        },
+        map: {
+            "key1": Primary {
+                info: NodeInfo {
+                    id: 1,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            9,
+                        ),
+                        end: LineCol(
+                            1,
+                            10,
+                        ),
+                    },
+                },
+                value: Literal(
+                    Number {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span {
+                                start: LineCol(
+                                    1,
+                                    9,
+                                ),
+                                end: LineCol(
+                                    1,
+                                    10,
+                                ),
+                            },
+                        },
+                        value: 42.0,
+                    },
+                ),
+            },
+            "key2": Primary {
+                info: NodeInfo {
+                    id: 3,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            19,
+                        ),
+                        end: LineCol(
+                            1,
+                            22,
+                        ),
+                    },
+                },
+                value: Literal(
+                    Boolean {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span {
+                                start: LineCol(
+                                    1,
+                                    19,
+                                ),
+                                end: LineCol(
+                                    1,
+                                    22,
+                                ),
+                            },
+                        },
+                        value: true,
+                    },
+                ),
+            },
+        },
+    },
+}

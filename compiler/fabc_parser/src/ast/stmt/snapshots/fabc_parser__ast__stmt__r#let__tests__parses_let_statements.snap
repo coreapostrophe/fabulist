@@ -1,0 +1,53 @@
+---
+source: compiler/fabc_parser/src/ast/stmt/let.rs
+expression: let_stmt
+---
+LetStmt {
+    info: NodeInfo {
+        id: 2,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                11,
+            ),
+        },
+    },
+    name: "x",
+    initializer: Primary {
+        info: NodeInfo {
+            id: 1,
+            span: Span {
+                start: LineCol(
+                    1,
+                    9,
+                ),
+                end: LineCol(
+                    1,
+                    10,
+                ),
+            },
+        },
+        value: Literal(
+            Number {
+                info: NodeInfo {
+                    id: 0,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            9,
+                        ),
+                        end: LineCol(
+                            1,
+                            10,
+                        ),
+                    },
+                },
+                value: 42.0,
+            },
+        ),
+    },
+}

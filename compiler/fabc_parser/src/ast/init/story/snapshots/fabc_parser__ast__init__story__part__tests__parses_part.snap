@@ -1,0 +1,56 @@
+---
+source: compiler/fabc_parser/src/ast/init/story/part.rs
+expression: part
+---
+Part {
+    info: NodeInfo {
+        id: 2,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                3,
+                36,
+            ),
+        },
+    },
+    ident: "intro",
+    elements: [
+        Narration(
+            NarrationElement {
+                info: NodeInfo {
+                    id: 1,
+                    span: Span {
+                        start: LineCol(
+                            3,
+                            13,
+                        ),
+                        end: LineCol(
+                            3,
+                            36,
+                        ),
+                    },
+                },
+                quote: QuoteDecl {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span {
+                            start: LineCol(
+                                3,
+                                15,
+                            ),
+                            end: LineCol(
+                                3,
+                                36,
+                            ),
+                        },
+                    },
+                    text: "This is a narration.",
+                    properties: None,
+                },
+            },
+        ),
+    ],
+}

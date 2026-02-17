@@ -58,103 +58,23 @@ impl Parsable for IfStmt {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            expr::{literal::Literal, Expr, Primary},
-            stmt::{
-                block::BlockStmt,
-                r#if::{ElseClause, IfStmt},
-            },
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::stmt::r#if::IfStmt, Parser};
 
     #[test]
     fn parses_if_stmt_without_else() {
-        let source = "if (true) { }";
-        let tokens = Lexer::tokenize(source);
-        let if_stmt = Parser::parse_ast::<IfStmt>(&tokens).expect("Failed to parse if statement");
+        let if_stmt = Parser::parse_ast_str::<IfStmt>("if (true) { }")
+            .expect("Failed to parse if statement");
 
-        assert_eq!(
-            if_stmt,
-            IfStmt {
-                info: NodeInfo {
-                    id: 3,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13)))
-                },
-                condition: Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 8)))
-                    },
-                    value: Primary::Literal(Literal::Boolean {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 8))),
-                        },
-                        value: true
-                    }),
-                },
-                then_branch: Box::new(BlockStmt {
-                    info: NodeInfo {
-                        id: 2,
-                        span: Span::from((LineCol::new(1, 11), LineCol::new(1, 13)))
-                    },
-                    first_return: None,
-                    statements: vec![]
-                }),
-                else_branch: None,
-            }
-        );
+        assert_debug_snapshot!(if_stmt);
     }
 
     #[test]
     fn parses_if_stmt_with_else_block() {
-        let source = "if (false) { } else { }";
-        let tokens = Lexer::tokenize(source);
-        let if_stmt = Parser::parse_ast::<IfStmt>(&tokens).expect("Failed to parse if statement");
+        let if_stmt = Parser::parse_ast_str::<IfStmt>("if (false) { } else { }")
+            .expect("Failed to parse if statement");
 
-        assert_eq!(
-            if_stmt,
-            IfStmt {
-                info: NodeInfo {
-                    id: 4,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 23)))
-                },
-                condition: Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9)))
-                    },
-                    value: Primary::Literal(Literal::Boolean {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
-                        },
-                        value: false
-                    }),
-                },
-                then_branch: Box::new(BlockStmt {
-                    info: NodeInfo {
-                        id: 2,
-                        span: Span::from((LineCol::new(1, 12), LineCol::new(1, 14)))
-                    },
-                    first_return: None,
-                    statements: vec![]
-                }),
-                else_branch: Some(ElseClause::Block(Box::new(BlockStmt {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 21), LineCol::new(1, 23)))
-                    },
-                    first_return: None,
-                    statements: vec![]
-                }))),
-            }
-        );
+        assert_debug_snapshot!(if_stmt);
     }
 }

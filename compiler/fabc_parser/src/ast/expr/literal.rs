@@ -91,50 +91,27 @@ impl Parsable for Literal {
 
 #[cfg(test)]
 mod tests {
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
     use crate::{ast::expr::literal::Literal, Parser};
 
     #[test]
     fn parses_literals() {
-        let source = "42";
-        let tokens = Lexer::tokenize(source);
-        let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        match literal {
-            Literal::Number { value, .. } => assert_eq!(value, 42.0),
-            _ => panic!("Expected Number literal"),
-        }
+        let literal =
+            Parser::parse_ast_str::<Literal>("42").expect("Failed to parse literal");
+        assert_debug_snapshot!("literal_number", literal);
 
-        let source = "\"hello\"";
-        let tokens = Lexer::tokenize(source);
-        let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        match literal {
-            Literal::String { value, .. } => assert_eq!(value, "hello".to_string()),
-            _ => panic!("Expected String literal"),
-        }
+        let literal = Parser::parse_ast_str::<Literal>("\"hello\"")
+            .expect("Failed to parse literal");
+        assert_debug_snapshot!("literal_string", literal);
 
-        let source = "true";
-        let tokens = Lexer::tokenize(source);
-        let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        match literal {
-            Literal::Boolean { value, .. } => assert!(value),
-            _ => panic!("Expected Boolean literal"),
-        }
+        let literal = Parser::parse_ast_str::<Literal>("true").expect("Failed to parse literal");
+        assert_debug_snapshot!("literal_true", literal);
 
-        let source = "false";
-        let tokens = Lexer::tokenize(source);
-        let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        match literal {
-            Literal::Boolean { value, .. } => assert!(!value),
-            _ => panic!("Expected Boolean literal"),
-        }
+        let literal = Parser::parse_ast_str::<Literal>("false").expect("Failed to parse literal");
+        assert_debug_snapshot!("literal_false", literal);
 
-        let source = "none";
-        let tokens = Lexer::tokenize(source);
-        let literal = Parser::parse_ast::<Literal>(&tokens).expect("Failed to parse literal");
-        match literal {
-            Literal::None { .. } => {}
-            _ => panic!("Expected None literal"),
-        }
+        let literal = Parser::parse_ast_str::<Literal>("none").expect("Failed to parse literal");
+        assert_debug_snapshot!("literal_none", literal);
     }
 }

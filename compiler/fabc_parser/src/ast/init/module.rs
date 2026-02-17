@@ -43,48 +43,23 @@ impl Parsable for ModuleInit {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{init::module::ModuleInit, NodeInfo},
-        Parser,
-    };
+    use crate::{ast::init::module::ModuleInit, Parser};
 
     #[test]
     fn parses_module_init_without_alias() {
-        let source = r#"module "my/module/path";"#;
-        let tokens = Lexer::tokenize(source);
-        let module_init =
-            Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
-        let expected = ModuleInit {
-            info: NodeInfo {
-                id: 0,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 24))),
-            },
-            path: "my/module/path".to_string(),
-            alias: None,
-        };
+        let module_init = Parser::parse_ast_str::<ModuleInit>(r#"module "my/module/path";"#)
+            .expect("Failed to parse module init");
 
-        assert_eq!(module_init, expected);
+        assert_debug_snapshot!(module_init);
     }
 
     #[test]
     fn parses_module_init_with_alias() {
-        let source = r#"module "my/module/path" as my_alias;"#;
-        let tokens = Lexer::tokenize(source);
-        let module_init =
-            Parser::parse_ast::<ModuleInit>(&tokens).expect("Failed to parse module init");
+        let module_init = Parser::parse_ast_str::<ModuleInit>(r#"module "my/module/path" as my_alias;"#)
+            .expect("Failed to parse module init");
 
-        let expected = ModuleInit {
-            info: NodeInfo {
-                id: 0,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 36))),
-            },
-            path: "my/module/path".to_string(),
-            alias: Some("my_alias".to_string()),
-        };
-
-        assert_eq!(module_init, expected);
+        assert_debug_snapshot!(module_init);
     }
 }

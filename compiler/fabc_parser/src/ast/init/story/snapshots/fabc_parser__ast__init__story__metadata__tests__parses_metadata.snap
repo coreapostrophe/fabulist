@@ -1,0 +1,69 @@
+---
+source: compiler/fabc_parser/src/ast/init/story/metadata.rs
+expression: metadata
+---
+Metadata {
+    info: NodeInfo {
+        id: 3,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                4,
+                13,
+            ),
+        },
+    },
+    object: ObjectDecl {
+        info: NodeInfo {
+            id: 2,
+            span: Span {
+                start: LineCol(
+                    2,
+                    19,
+                ),
+                end: LineCol(
+                    4,
+                    13,
+                ),
+            },
+        },
+        map: {
+            "title": Primary {
+                info: NodeInfo {
+                    id: 1,
+                    span: Span {
+                        start: LineCol(
+                            3,
+                            24,
+                        ),
+                        end: LineCol(
+                            3,
+                            33,
+                        ),
+                    },
+                },
+                value: Literal(
+                    String {
+                        info: NodeInfo {
+                            id: 0,
+                            span: Span {
+                                start: LineCol(
+                                    3,
+                                    24,
+                                ),
+                                end: LineCol(
+                                    3,
+                                    33,
+                                ),
+                            },
+                        },
+                        value: "My Story",
+                    },
+                ),
+            },
+        },
+    },
+}

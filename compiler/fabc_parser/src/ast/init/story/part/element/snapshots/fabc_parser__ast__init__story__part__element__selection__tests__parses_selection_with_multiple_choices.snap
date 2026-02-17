@@ -1,0 +1,190 @@
+---
+source: compiler/fabc_parser/src/ast/init/story/part/element/selection.rs
+expression: selection
+---
+SelectionElement {
+    info: NodeInfo {
+        id: 10,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                3,
+                38,
+            ),
+        },
+    },
+    choices: [
+        QuoteDecl {
+            info: NodeInfo {
+                id: 5,
+                span: Span {
+                    start: LineCol(
+                        2,
+                        15,
+                    ),
+                    end: LineCol(
+                        2,
+                        49,
+                    ),
+                },
+            },
+            text: "Go left.",
+            properties: Some(
+                ObjectDecl {
+                    info: NodeInfo {
+                        id: 4,
+                        span: Span {
+                            start: LineCol(
+                                2,
+                                26,
+                            ),
+                            end: LineCol(
+                                2,
+                                49,
+                            ),
+                        },
+                    },
+                    map: {
+                        "health": Primary {
+                            info: NodeInfo {
+                                id: 3,
+                                span: Span {
+                                    start: LineCol(
+                                        2,
+                                        47,
+                                    ),
+                                    end: LineCol(
+                                        2,
+                                        47,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                Number {
+                                    info: NodeInfo {
+                                        id: 2,
+                                        span: Span {
+                                            start: LineCol(
+                                                2,
+                                                47,
+                                            ),
+                                            end: LineCol(
+                                                2,
+                                                47,
+                                            ),
+                                        },
+                                    },
+                                    value: 5.0,
+                                },
+                            ),
+                        },
+                        "score": Primary {
+                            info: NodeInfo {
+                                id: 1,
+                                span: Span {
+                                    start: LineCol(
+                                        2,
+                                        35,
+                                    ),
+                                    end: LineCol(
+                                        2,
+                                        36,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                Number {
+                                    info: NodeInfo {
+                                        id: 0,
+                                        span: Span {
+                                            start: LineCol(
+                                                2,
+                                                35,
+                                            ),
+                                            end: LineCol(
+                                                2,
+                                                36,
+                                            ),
+                                        },
+                                    },
+                                    value: 10.0,
+                                },
+                            ),
+                        },
+                    },
+                },
+            ),
+        },
+        QuoteDecl {
+            info: NodeInfo {
+                id: 9,
+                span: Span {
+                    start: LineCol(
+                        3,
+                        15,
+                    ),
+                    end: LineCol(
+                        3,
+                        38,
+                    ),
+                },
+            },
+            text: "Go right.",
+            properties: Some(
+                ObjectDecl {
+                    info: NodeInfo {
+                        id: 8,
+                        span: Span {
+                            start: LineCol(
+                                3,
+                                27,
+                            ),
+                            end: LineCol(
+                                3,
+                                38,
+                            ),
+                        },
+                    },
+                    map: {
+                        "score": Primary {
+                            info: NodeInfo {
+                                id: 7,
+                                span: Span {
+                                    start: LineCol(
+                                        3,
+                                        36,
+                                    ),
+                                    end: LineCol(
+                                        3,
+                                        36,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                Number {
+                                    info: NodeInfo {
+                                        id: 6,
+                                        span: Span {
+                                            start: LineCol(
+                                                3,
+                                                36,
+                                            ),
+                                            end: LineCol(
+                                                3,
+                                                36,
+                                            ),
+                                        },
+                                    },
+                                    value: 5.0,
+                                },
+                            ),
+                        },
+                    },
+                },
+            ),
+        },
+    ],
+}

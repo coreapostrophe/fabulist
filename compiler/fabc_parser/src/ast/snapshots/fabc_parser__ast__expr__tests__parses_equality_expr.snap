@@ -1,0 +1,135 @@
+---
+source: compiler/fabc_parser/src/ast/expr.rs
+expression: expr
+---
+Binary {
+    info: NodeInfo {
+        id: 7,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                14,
+            ),
+        },
+    },
+    left: Binary {
+        info: NodeInfo {
+            id: 4,
+            span: Span {
+                start: LineCol(
+                    1,
+                    1,
+                ),
+                end: LineCol(
+                    1,
+                    8,
+                ),
+            },
+        },
+        left: Primary {
+            info: NodeInfo {
+                id: 1,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        1,
+                    ),
+                    end: LineCol(
+                        1,
+                        2,
+                    ),
+                },
+            },
+            value: Literal(
+                Number {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                1,
+                            ),
+                            end: LineCol(
+                                1,
+                                2,
+                            ),
+                        },
+                    },
+                    value: 10.0,
+                },
+            ),
+        },
+        operator: EqualEqual,
+        right: Primary {
+            info: NodeInfo {
+                id: 3,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        7,
+                    ),
+                    end: LineCol(
+                        1,
+                        8,
+                    ),
+                },
+            },
+            value: Literal(
+                Number {
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                7,
+                            ),
+                            end: LineCol(
+                                1,
+                                8,
+                            ),
+                        },
+                    },
+                    value: 20.0,
+                },
+            ),
+        },
+    },
+    operator: NotEqual,
+    right: Primary {
+        info: NodeInfo {
+            id: 6,
+            span: Span {
+                start: LineCol(
+                    1,
+                    13,
+                ),
+                end: LineCol(
+                    1,
+                    14,
+                ),
+            },
+        },
+        value: Literal(
+            Number {
+                info: NodeInfo {
+                    id: 5,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            13,
+                        ),
+                        end: LineCol(
+                            1,
+                            14,
+                        ),
+                    },
+                },
+                value: 30.0,
+            },
+        ),
+    },
+}

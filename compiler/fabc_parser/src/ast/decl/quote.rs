@@ -39,93 +39,25 @@ impl Parsable for QuoteDecl {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use insta::assert_debug_snapshot;
 
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
-
-    use crate::{
-        ast::{
-            decl::{object::ObjectDecl, quote::QuoteDecl},
-            expr::{literal::Literal, Expr, Primary},
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::decl::quote::QuoteDecl, Parser};
 
     #[test]
     fn parses_quote_decl_without_properties() {
-        let source = "\"This is a quote.\"";
-        let tokens = Lexer::tokenize(source);
-        let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
+        let quote_decl = Parser::parse_ast_str::<QuoteDecl>("\"This is a quote.\"")
+            .expect("Failed to parse quote");
 
-        let expected = QuoteDecl {
-            info: NodeInfo {
-                id: 0,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 18))),
-            },
-            text: "This is a quote.".to_string(),
-            properties: None,
-        };
-
-        assert_eq!(quote_decl, expected);
+        assert_debug_snapshot!(quote_decl);
     }
 
     #[test]
     fn parses_quote_decl_with_properties() {
-        let source = "\"This is a quote with properties.\" { author: \"Alice\", length: 30 }";
-        let tokens = Lexer::tokenize(source);
-        let quote_decl = Parser::parse_ast::<QuoteDecl>(&tokens).expect("Failed to parse quote");
+        let quote_decl = Parser::parse_ast_str::<QuoteDecl>(
+            "\"This is a quote with properties.\" { author: \"Alice\", length: 30 }",
+        )
+        .expect("Failed to parse quote");
 
-        let expected = QuoteDecl {
-            info: NodeInfo {
-                id: 5,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 66))),
-            },
-            text: "This is a quote with properties.".to_string(),
-            properties: Some(ObjectDecl {
-                info: NodeInfo {
-                    id: 4,
-                    span: Span::from((LineCol::new(1, 36), LineCol::new(1, 66))),
-                },
-                map: {
-                    let mut map = HashMap::new();
-                    map.insert(
-                        "author".to_string(),
-                        Expr::Primary {
-                            info: NodeInfo {
-                                id: 1,
-                                span: Span::from((LineCol::new(1, 46), LineCol::new(1, 52))),
-                            },
-                            value: Primary::Literal(Literal::String {
-                                info: NodeInfo {
-                                    id: 0,
-                                    span: Span::from((LineCol::new(1, 46), LineCol::new(1, 52))),
-                                },
-                                value: "Alice".to_string(),
-                            }),
-                        },
-                    );
-                    map.insert(
-                        "length".to_string(),
-                        Expr::Primary {
-                            info: NodeInfo {
-                                id: 3,
-                                span: Span::from((LineCol::new(1, 63), LineCol::new(1, 64))),
-                            },
-                            value: Primary::Literal(Literal::Number {
-                                info: NodeInfo {
-                                    id: 2,
-                                    span: Span::from((LineCol::new(1, 63), LineCol::new(1, 64))),
-                                },
-                                value: 30.0,
-                            }),
-                        },
-                    );
-                    map
-                },
-            }),
-        };
-        assert_eq!(quote_decl, expected);
+        assert_debug_snapshot!(quote_decl);
     }
 }

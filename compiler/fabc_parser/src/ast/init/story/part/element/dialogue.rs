@@ -42,142 +42,21 @@ impl Parsable for DialogueElement {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use insta::assert_debug_snapshot;
 
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
-
-    use crate::{
-        ast::{
-            decl::{object::ObjectDecl, quote::QuoteDecl},
-            expr::{literal::Literal, Expr, Primary},
-            init::story::part::element::dialogue::DialogueElement,
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::init::story::part::element::dialogue::DialogueElement, Parser};
 
     #[test]
     fn parses_dialogue_element() {
-        let source = r#"
+        let dialogue = Parser::parse_ast_str::<DialogueElement>(
+            r#"
             [narrator]
             > "Hello there!" { emotion: "happy", volume: 5 }
             > "How are you?" { emotion: "curious" }
-        "#;
-        let tokens = Lexer::tokenize(source);
-        let dialogue =
-            Parser::parse_ast::<DialogueElement>(&tokens).expect("Failed to parse dialogue");
+        "#,
+        )
+        .expect("Failed to parse dialogue");
 
-        let expected = DialogueElement {
-            info: NodeInfo {
-                id: 10,
-                span: Span::from((LineCol::new(2, 13), LineCol::new(4, 51))),
-            },
-            speaker: "narrator".to_string(),
-            quotes: vec![
-                QuoteDecl {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(3, 15), LineCol::new(3, 60))),
-                    },
-                    text: "Hello there!".to_string(),
-                    properties: Some(ObjectDecl {
-                        info: NodeInfo {
-                            id: 4,
-                            span: Span::from((LineCol::new(3, 30), LineCol::new(3, 60))),
-                        },
-                        map: {
-                            let mut map = HashMap::new();
-                            map.insert(
-                                "emotion".to_string(),
-                                Expr::Primary {
-                                    info: NodeInfo {
-                                        id: 1,
-                                        span: Span::from((
-                                            LineCol::new(3, 41),
-                                            LineCol::new(3, 47),
-                                        )),
-                                    },
-                                    value: Primary::Literal(Literal::String {
-                                        info: NodeInfo {
-                                            id: 0,
-                                            span: Span::from((
-                                                LineCol::new(3, 41),
-                                                LineCol::new(3, 47),
-                                            )),
-                                        },
-                                        value: "happy".to_string(),
-                                    }),
-                                },
-                            );
-                            map.insert(
-                                "volume".to_string(),
-                                Expr::Primary {
-                                    info: NodeInfo {
-                                        id: 3,
-                                        span: Span::from((
-                                            LineCol::new(3, 58),
-                                            LineCol::new(3, 58),
-                                        )),
-                                    },
-                                    value: Primary::Literal(Literal::Number {
-                                        info: NodeInfo {
-                                            id: 2,
-                                            span: Span::from((
-                                                LineCol::new(3, 58),
-                                                LineCol::new(3, 58),
-                                            )),
-                                        },
-                                        value: 5.0,
-                                    }),
-                                },
-                            );
-                            map
-                        },
-                    }),
-                },
-                QuoteDecl {
-                    info: NodeInfo {
-                        id: 9,
-                        span: Span::from((LineCol::new(4, 15), LineCol::new(4, 51))),
-                    },
-                    text: "How are you?".to_string(),
-                    properties: Some(ObjectDecl {
-                        info: NodeInfo {
-                            id: 8,
-                            span: Span::from((LineCol::new(4, 30), LineCol::new(4, 51))),
-                        },
-                        map: {
-                            let mut map = HashMap::new();
-                            map.insert(
-                                "emotion".to_string(),
-                                Expr::Primary {
-                                    info: NodeInfo {
-                                        id: 7,
-                                        span: Span::from((
-                                            LineCol::new(4, 41),
-                                            LineCol::new(4, 49),
-                                        )),
-                                    },
-                                    value: Primary::Literal(Literal::String {
-                                        info: NodeInfo {
-                                            id: 6,
-                                            span: Span::from((
-                                                LineCol::new(4, 41),
-                                                LineCol::new(4, 49),
-                                            )),
-                                        },
-                                        value: "curious".to_string(),
-                                    }),
-                                },
-                            );
-                            map
-                        },
-                    }),
-                },
-            ],
-        };
-
-        assert_eq!(dialogue, expected);
+        assert_debug_snapshot!(dialogue);
     }
 }

@@ -36,16 +36,9 @@ impl Parsable for ReturnStmt {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            expr::{literal::Literal, Expr, Primary},
-            stmt::r#return::ReturnStmt,
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::stmt::r#return::ReturnStmt, Parser};
 
     #[test]
     fn parses_return_with_value() {
@@ -53,28 +46,7 @@ mod tests {
         let return_stmt =
             Parser::parse_ast_str::<ReturnStmt>(source).expect("Failed to parse return stmt");
 
-        assert_eq!(
-            return_stmt,
-            ReturnStmt {
-                info: NodeInfo {
-                    id: 2,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 10))),
-                },
-                value: Some(Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 8), LineCol::new(1, 9))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 8), LineCol::new(1, 9))),
-                        },
-                        value: 42.0
-                    }),
-                }),
-            }
-        );
+        assert_debug_snapshot!(return_stmt);
     }
 
     #[test]
@@ -83,15 +55,6 @@ mod tests {
         let return_stmt =
             Parser::parse_ast_str::<ReturnStmt>(source).expect("Failed to parse return stmt");
 
-        assert_eq!(
-            return_stmt,
-            ReturnStmt {
-                info: NodeInfo {
-                    id: 0,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 7))),
-                },
-                value: None,
-            }
-        );
+        assert_debug_snapshot!(return_stmt);
     }
 }

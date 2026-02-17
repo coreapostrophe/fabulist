@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use fabc_error::{Error, Span};
 use fabc_lexer::tokens::TokenKind;
@@ -11,7 +11,7 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub struct ObjectDecl {
     pub info: NodeInfo,
-    pub map: HashMap<String, Expr>,
+    pub map: BTreeMap<String, Expr>,
 }
 
 impl Parsable for ObjectDecl {
@@ -31,7 +31,7 @@ impl Parsable for ObjectDecl {
             )?;
             punctuated_vec
                 .into_iter()
-                .collect::<HashMap<String, Expr>>()
+                .collect::<BTreeMap<String, Expr>>()
         };
         let end_span = parser.end_span();
 
@@ -47,75 +47,22 @@ impl Parsable for ObjectDecl {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use insta::assert_debug_snapshot;
 
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
-
-    use crate::{
-        ast::{
-            decl::object::ObjectDecl,
-            expr::{literal::Literal, Expr, Primary},
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::decl::object::ObjectDecl, Parser};
 
     #[test]
     fn parses_object_decl() {
-        let source = r#"
+        let object_decl = Parser::parse_ast_str::<ObjectDecl>(
+            r#"
             {
                 key1: "value1",
                 key2: 42
             }
-        "#;
-        let tokens = Lexer::tokenize(source);
-        let object_decl =
-            Parser::parse_ast::<ObjectDecl>(&tokens).expect("Failed to parse object declaration");
+        "#,
+        )
+        .expect("Failed to parse object declaration");
 
-        let expected = ObjectDecl {
-            info: NodeInfo {
-                id: 4,
-                span: Span::from((LineCol::new(2, 13), LineCol::new(5, 13))),
-            },
-            map: {
-                let mut map = HashMap::new();
-                map.insert(
-                    "key1".to_string(),
-                    Expr::Primary {
-                        info: NodeInfo {
-                            id: 1,
-                            span: Span::from((LineCol::new(3, 23), LineCol::new(3, 30))),
-                        },
-                        value: Primary::Literal(Literal::String {
-                            info: NodeInfo {
-                                id: 0,
-                                span: Span::from((LineCol::new(3, 23), LineCol::new(3, 30))),
-                            },
-                            value: "value1".to_string(),
-                        }),
-                    },
-                );
-                map.insert(
-                    "key2".to_string(),
-                    Expr::Primary {
-                        info: NodeInfo {
-                            id: 3,
-                            span: Span::from((LineCol::new(4, 23), LineCol::new(4, 24))),
-                        },
-                        value: Primary::Literal(Literal::Number {
-                            info: NodeInfo {
-                                id: 2,
-                                span: Span::from((LineCol::new(4, 23), LineCol::new(4, 24))),
-                            },
-                            value: 42.0,
-                        }),
-                    },
-                );
-                map
-            },
-        };
-
-        assert_eq!(object_decl, expected);
+        assert_debug_snapshot!(object_decl);
     }
 }

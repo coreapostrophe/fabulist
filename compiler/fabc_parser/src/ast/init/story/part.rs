@@ -41,52 +41,20 @@ impl Parsable for Part {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            decl::quote::QuoteDecl,
-            init::story::part::{
-                element::{narration::NarrationElement, Element},
-                Part,
-            },
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::init::story::part::Part, Parser};
 
     #[test]
     fn parses_part() {
-        let source = r##"
+        let part = Parser::parse_ast_str::<Part>(
+            r##"
             # intro
             * "This is a narration."
-        "##;
-        let tokens = Lexer::tokenize(source);
-        let part = Parser::parse_ast::<Part>(&tokens).expect("Failed to parse part");
+        "##,
+        )
+        .expect("Failed to parse part");
 
-        let expected = Part {
-            info: NodeInfo {
-                id: 2,
-                span: Span::from((LineCol::new(2, 13), LineCol::new(3, 36))),
-            },
-            ident: "intro".to_string(),
-            elements: vec![Element::Narration(NarrationElement {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(3, 13), LineCol::new(3, 36))),
-                },
-                quote: QuoteDecl {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(3, 15), LineCol::new(3, 36))),
-                    },
-                    text: "This is a narration.".to_string(),
-                    properties: None,
-                },
-            })],
-        };
-
-        assert_eq!(part, expected);
+        assert_debug_snapshot!(part);
     }
 }

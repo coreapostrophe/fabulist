@@ -1,0 +1,90 @@
+---
+source: compiler/fabc_parser/src/ast/stmt/if.rs
+expression: if_stmt
+---
+IfStmt {
+    info: NodeInfo {
+        id: 4,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                23,
+            ),
+        },
+    },
+    condition: Primary {
+        info: NodeInfo {
+            id: 1,
+            span: Span {
+                start: LineCol(
+                    1,
+                    5,
+                ),
+                end: LineCol(
+                    1,
+                    9,
+                ),
+            },
+        },
+        value: Literal(
+            Boolean {
+                info: NodeInfo {
+                    id: 0,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            5,
+                        ),
+                        end: LineCol(
+                            1,
+                            9,
+                        ),
+                    },
+                },
+                value: false,
+            },
+        ),
+    },
+    then_branch: BlockStmt {
+        info: NodeInfo {
+            id: 2,
+            span: Span {
+                start: LineCol(
+                    1,
+                    12,
+                ),
+                end: LineCol(
+                    1,
+                    14,
+                ),
+            },
+        },
+        first_return: None,
+        statements: [],
+    },
+    else_branch: Some(
+        Block(
+            BlockStmt {
+                info: NodeInfo {
+                    id: 3,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            21,
+                        ),
+                        end: LineCol(
+                            1,
+                            23,
+                        ),
+                    },
+                },
+                first_return: None,
+                statements: [],
+            },
+        ),
+    ),
+}

@@ -32,64 +32,15 @@ impl Parsable for GotoStmt {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            expr::{primitive::Primitive, Expr, Primary},
-            stmt::goto::GotoStmt,
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::stmt::goto::GotoStmt, Parser};
 
     #[test]
     fn parses_goto_statements() {
-        let source = "goto module_ns.part_ident;";
-        let tokens = Lexer::tokenize(source);
-        let goto_stmt =
-            Parser::parse_ast::<GotoStmt>(&tokens).expect("Failed to parse goto statement");
+        let goto_stmt = Parser::parse_ast_str::<GotoStmt>("goto module_ns.part_ident;")
+            .expect("Failed to parse goto statement");
 
-        let expected = GotoStmt {
-            info: NodeInfo {
-                id: 5,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 26))),
-            },
-            target: Box::new(Expr::MemberAccess {
-                info: NodeInfo {
-                    id: 4,
-                    span: Span::from((LineCol::new(1, 6), LineCol::new(1, 25))),
-                },
-                left: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 6), LineCol::new(1, 14))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 6), LineCol::new(1, 14))),
-                        },
-                        name: "module_ns".to_string(),
-                    }),
-                }),
-                members: vec![Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 16), LineCol::new(1, 25))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 16), LineCol::new(1, 25))),
-                        },
-                        name: "part_ident".to_string(),
-                    }),
-                }],
-            }),
-        };
-
-        assert_eq!(goto_stmt, expected);
+        assert_debug_snapshot!(goto_stmt);
     }
 }

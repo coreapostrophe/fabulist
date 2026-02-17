@@ -1,0 +1,19 @@
+---
+source: compiler/fabc_parser/src/ast/expr/primitive.rs
+expression: primitive
+---
+Context {
+    info: NodeInfo {
+        id: 0,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                7,
+            ),
+        },
+    },
+}

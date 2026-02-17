@@ -1,0 +1,70 @@
+---
+source: compiler/fabc_parser/src/ast/stmt/if.rs
+expression: if_stmt
+---
+IfStmt {
+    info: NodeInfo {
+        id: 3,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                13,
+            ),
+        },
+    },
+    condition: Primary {
+        info: NodeInfo {
+            id: 1,
+            span: Span {
+                start: LineCol(
+                    1,
+                    5,
+                ),
+                end: LineCol(
+                    1,
+                    8,
+                ),
+            },
+        },
+        value: Literal(
+            Boolean {
+                info: NodeInfo {
+                    id: 0,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            5,
+                        ),
+                        end: LineCol(
+                            1,
+                            8,
+                        ),
+                    },
+                },
+                value: true,
+            },
+        ),
+    },
+    then_branch: BlockStmt {
+        info: NodeInfo {
+            id: 2,
+            span: Span {
+                start: LineCol(
+                    1,
+                    11,
+                ),
+                end: LineCol(
+                    1,
+                    13,
+                ),
+            },
+        },
+        first_return: None,
+        statements: [],
+    },
+    else_branch: None,
+}

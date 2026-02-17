@@ -1,0 +1,54 @@
+---
+source: compiler/fabc_parser/src/ast/stmt/return.rs
+expression: return_stmt
+---
+ReturnStmt {
+    info: NodeInfo {
+        id: 2,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                10,
+            ),
+        },
+    },
+    value: Some(
+        Primary {
+            info: NodeInfo {
+                id: 1,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        8,
+                    ),
+                    end: LineCol(
+                        1,
+                        9,
+                    ),
+                },
+            },
+            value: Literal(
+                Number {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                8,
+                            ),
+                            end: LineCol(
+                                1,
+                                9,
+                            ),
+                        },
+                    },
+                    value: 42.0,
+                },
+            ),
+        },
+    ),
+}

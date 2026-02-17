@@ -42,45 +42,15 @@ impl Parsable for LetStmt {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            expr::{literal::Literal, Expr, Primary},
-            stmt::r#let::LetStmt,
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::stmt::r#let::LetStmt, Parser};
 
     #[test]
     fn parses_let_statements() {
-        let source = "let x = 42;";
-        let tokens = Lexer::tokenize(source);
-        let let_stmt = Parser::parse_ast::<LetStmt>(&tokens).expect("Failed to parse");
+        let let_stmt =
+            Parser::parse_ast_str::<LetStmt>("let x = 42;").expect("Failed to parse");
 
-        let expected = LetStmt {
-            info: NodeInfo {
-                id: 2,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
-            },
-            name: "x".to_string(),
-            initializer: Expr::Primary {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
-                },
-                value: Primary::Literal(Literal::Number {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(1, 9), LineCol::new(1, 10))),
-                    },
-                    value: 42.0,
-                }),
-            },
-        };
-
-        assert_eq!(let_stmt, expected);
+        assert_debug_snapshot!(let_stmt);
     }
 }

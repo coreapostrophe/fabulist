@@ -1,0 +1,120 @@
+---
+source: compiler/fabc_parser/src/ast/expr.rs
+expression: expr
+---
+Call {
+    info: NodeInfo {
+        id: 6,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                16,
+            ),
+        },
+    },
+    callee: Primary {
+        info: NodeInfo {
+            id: 1,
+            span: Span {
+                start: LineCol(
+                    1,
+                    1,
+                ),
+                end: LineCol(
+                    1,
+                    4,
+                ),
+            },
+        },
+        value: Primitive(
+            Identifier {
+                info: NodeInfo {
+                    id: 0,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            1,
+                        ),
+                        end: LineCol(
+                            1,
+                            4,
+                        ),
+                    },
+                },
+                name: "func",
+            },
+        ),
+    },
+    arguments: [
+        Primary {
+            info: NodeInfo {
+                id: 3,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        6,
+                    ),
+                    end: LineCol(
+                        1,
+                        9,
+                    ),
+                },
+            },
+            value: Primitive(
+                Identifier {
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                6,
+                            ),
+                            end: LineCol(
+                                1,
+                                9,
+                            ),
+                        },
+                    },
+                    name: "arg1",
+                },
+            ),
+        },
+        Primary {
+            info: NodeInfo {
+                id: 5,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        12,
+                    ),
+                    end: LineCol(
+                        1,
+                        15,
+                    ),
+                },
+            },
+            value: Primitive(
+                Identifier {
+                    info: NodeInfo {
+                        id: 4,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                12,
+                            ),
+                            end: LineCol(
+                                1,
+                                15,
+                            ),
+                        },
+                    },
+                    name: "arg2",
+                },
+            ),
+        },
+    ],
+}

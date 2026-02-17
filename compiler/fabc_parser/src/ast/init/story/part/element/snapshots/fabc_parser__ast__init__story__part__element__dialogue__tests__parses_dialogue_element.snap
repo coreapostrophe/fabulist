@@ -1,0 +1,191 @@
+---
+source: compiler/fabc_parser/src/ast/init/story/part/element/dialogue.rs
+expression: dialogue
+---
+DialogueElement {
+    info: NodeInfo {
+        id: 10,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                4,
+                51,
+            ),
+        },
+    },
+    speaker: "narrator",
+    quotes: [
+        QuoteDecl {
+            info: NodeInfo {
+                id: 5,
+                span: Span {
+                    start: LineCol(
+                        3,
+                        15,
+                    ),
+                    end: LineCol(
+                        3,
+                        60,
+                    ),
+                },
+            },
+            text: "Hello there!",
+            properties: Some(
+                ObjectDecl {
+                    info: NodeInfo {
+                        id: 4,
+                        span: Span {
+                            start: LineCol(
+                                3,
+                                30,
+                            ),
+                            end: LineCol(
+                                3,
+                                60,
+                            ),
+                        },
+                    },
+                    map: {
+                        "emotion": Primary {
+                            info: NodeInfo {
+                                id: 1,
+                                span: Span {
+                                    start: LineCol(
+                                        3,
+                                        41,
+                                    ),
+                                    end: LineCol(
+                                        3,
+                                        47,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                String {
+                                    info: NodeInfo {
+                                        id: 0,
+                                        span: Span {
+                                            start: LineCol(
+                                                3,
+                                                41,
+                                            ),
+                                            end: LineCol(
+                                                3,
+                                                47,
+                                            ),
+                                        },
+                                    },
+                                    value: "happy",
+                                },
+                            ),
+                        },
+                        "volume": Primary {
+                            info: NodeInfo {
+                                id: 3,
+                                span: Span {
+                                    start: LineCol(
+                                        3,
+                                        58,
+                                    ),
+                                    end: LineCol(
+                                        3,
+                                        58,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                Number {
+                                    info: NodeInfo {
+                                        id: 2,
+                                        span: Span {
+                                            start: LineCol(
+                                                3,
+                                                58,
+                                            ),
+                                            end: LineCol(
+                                                3,
+                                                58,
+                                            ),
+                                        },
+                                    },
+                                    value: 5.0,
+                                },
+                            ),
+                        },
+                    },
+                },
+            ),
+        },
+        QuoteDecl {
+            info: NodeInfo {
+                id: 9,
+                span: Span {
+                    start: LineCol(
+                        4,
+                        15,
+                    ),
+                    end: LineCol(
+                        4,
+                        51,
+                    ),
+                },
+            },
+            text: "How are you?",
+            properties: Some(
+                ObjectDecl {
+                    info: NodeInfo {
+                        id: 8,
+                        span: Span {
+                            start: LineCol(
+                                4,
+                                30,
+                            ),
+                            end: LineCol(
+                                4,
+                                51,
+                            ),
+                        },
+                    },
+                    map: {
+                        "emotion": Primary {
+                            info: NodeInfo {
+                                id: 7,
+                                span: Span {
+                                    start: LineCol(
+                                        4,
+                                        41,
+                                    ),
+                                    end: LineCol(
+                                        4,
+                                        49,
+                                    ),
+                                },
+                            },
+                            value: Literal(
+                                String {
+                                    info: NodeInfo {
+                                        id: 6,
+                                        span: Span {
+                                            start: LineCol(
+                                                4,
+                                                41,
+                                            ),
+                                            end: LineCol(
+                                                4,
+                                                49,
+                                            ),
+                                        },
+                                    },
+                                    value: "curious",
+                                },
+                            ),
+                        },
+                    },
+                },
+            ),
+        },
+    ],
+}

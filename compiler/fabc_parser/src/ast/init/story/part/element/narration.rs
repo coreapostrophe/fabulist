@@ -31,113 +31,28 @@ impl Parsable for NarrationElement {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
     use crate::{
-        ast::{
-            decl::{object::ObjectDecl, quote::QuoteDecl},
-            expr::{primitive::Primitive, Expr, Primary},
-            init::story::part::element::narration::NarrationElement,
-            NodeInfo,
-        },
+        ast::init::story::part::element::narration::NarrationElement,
         Parser,
     };
 
     #[test]
     fn parses_narration_without_properties() {
-        let source = "* \"This is a narration.\"";
-        let tokens = Lexer::tokenize(source);
-        let narration =
-            Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
+        let narration = Parser::parse_ast_str::<NarrationElement>("* \"This is a narration.\"")
+            .expect("Failed to parse narration");
 
-        let expected = NarrationElement {
-            info: NodeInfo {
-                id: 1,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 24))),
-            },
-            quote: QuoteDecl {
-                info: NodeInfo {
-                    id: 0,
-                    span: Span::from((LineCol::new(1, 3), LineCol::new(1, 24))),
-                },
-                text: "This is a narration.".to_string(),
-                properties: None,
-            },
-        };
-
-        assert_eq!(narration, expected);
+        assert_debug_snapshot!(narration);
     }
 
     #[test]
     fn parses_narration_with_properties() {
-        let source = "* \"This is a narration.\" { mood: happy, volume: loud }";
-        let tokens = Lexer::tokenize(source);
-        let narration =
-            Parser::parse_ast::<NarrationElement>(&tokens).expect("Failed to parse narration");
+        let narration = Parser::parse_ast_str::<NarrationElement>(
+            "* \"This is a narration.\" { mood: happy, volume: loud }",
+        )
+        .expect("Failed to parse narration");
 
-        let expected = NarrationElement {
-            info: NodeInfo {
-                id: 6,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 54))),
-            },
-            quote: QuoteDecl {
-                info: NodeInfo {
-                    id: 5,
-                    span: Span::from((LineCol::new(1, 3), LineCol::new(1, 54))),
-                },
-                text: "This is a narration.".to_string(),
-                properties: Some(ObjectDecl {
-                    info: NodeInfo {
-                        id: 4,
-                        span: Span::from((LineCol::new(1, 26), LineCol::new(1, 54))),
-                    },
-                    map: {
-                        let mut map = std::collections::HashMap::new();
-                        map.insert(
-                            "mood".to_string(),
-                            Expr::Primary {
-                                info: NodeInfo {
-                                    id: 1,
-                                    span: Span::from((LineCol::new(1, 34), LineCol::new(1, 38))),
-                                },
-                                value: Primary::Primitive(Primitive::Identifier {
-                                    info: NodeInfo {
-                                        id: 0,
-                                        span: Span::from((
-                                            LineCol::new(1, 34),
-                                            LineCol::new(1, 38),
-                                        )),
-                                    },
-                                    name: "happy".to_string(),
-                                }),
-                            },
-                        );
-                        map.insert(
-                            "volume".to_string(),
-                            Expr::Primary {
-                                info: NodeInfo {
-                                    id: 3,
-                                    span: Span::from((LineCol::new(1, 49), LineCol::new(1, 52))),
-                                },
-                                value: Primary::Primitive(Primitive::Identifier {
-                                    info: NodeInfo {
-                                        id: 2,
-                                        span: Span::from((
-                                            LineCol::new(1, 49),
-                                            LineCol::new(1, 52),
-                                        )),
-                                    },
-                                    name: "loud".to_string(),
-                                }),
-                            },
-                        );
-                        map
-                    },
-                }),
-            },
-        };
-
-        assert_eq!(narration, expected);
+        assert_debug_snapshot!(narration);
     }
 }

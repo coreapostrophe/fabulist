@@ -433,542 +433,57 @@ impl Parsable for Expr {
 
 #[cfg(test)]
 mod tests {
-    use fabc_error::{LineCol, Span};
-    use fabc_lexer::Lexer;
+    use insta::assert_debug_snapshot;
 
-    use crate::{
-        ast::{
-            expr::{
-                literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary,
-                UnaryOperator,
-            },
-            NodeInfo,
-        },
-        Parser,
-    };
+    use crate::{ast::expr::Expr, Parser};
 
     #[test]
     fn parses_arithmetic_binary_expr() {
-        let source = "1 + 2 * 3 / 4";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Binary {
-            info: NodeInfo {
-                id: 10,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 13))),
-            },
-            left: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                },
-                value: Primary::Literal(Literal::Number {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                    },
-                    value: 1.0,
-                }),
-            }),
-            operator: BinaryOperator::Add,
-            right: Box::new(Expr::Binary {
-                info: NodeInfo {
-                    id: 9,
-                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 13))),
-                },
-                left: Box::new(Expr::Binary {
-                    info: NodeInfo {
-                        id: 6,
-                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
-                    },
-                    left: Box::new(Expr::Primary {
-                        info: NodeInfo {
-                            id: 3,
-                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
-                        },
-                        value: Primary::Literal(Literal::Number {
-                            info: NodeInfo {
-                                id: 2,
-                                span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
-                            },
-                            value: 2.0,
-                        }),
-                    }),
-                    operator: BinaryOperator::Multiply,
-                    right: Box::new(Expr::Primary {
-                        info: NodeInfo {
-                            id: 5,
-                            span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
-                        },
-                        value: Primary::Literal(Literal::Number {
-                            info: NodeInfo {
-                                id: 4,
-                                span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
-                            },
-                            value: 3.0,
-                        }),
-                    }),
-                }),
-                operator: BinaryOperator::Divide,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 8,
-                        span: Span::from((LineCol::new(1, 13), LineCol::new(1, 13))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 7,
-                            span: Span::from((LineCol::new(1, 13), LineCol::new(1, 13))),
-                        },
-                        value: 4.0,
-                    }),
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("1 + 2 * 3 / 4").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_equality_expr() {
-        let source = "10 == 20 != 30";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Binary {
-            info: NodeInfo {
-                id: 7,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
-            },
-            left: Box::new(Expr::Binary {
-                info: NodeInfo {
-                    id: 4,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 8))),
-                },
-                left: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 2))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 2))),
-                        },
-                        value: 10.0,
-                    }),
-                }),
-                operator: BinaryOperator::EqualEqual,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 7), LineCol::new(1, 8))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 7), LineCol::new(1, 8))),
-                        },
-                        value: 20.0,
-                    }),
-                }),
-            }),
-            operator: BinaryOperator::NotEqual,
-            right: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 6,
-                    span: Span::from((LineCol::new(1, 13), LineCol::new(1, 14))),
-                },
-                value: Primary::Literal(Literal::Number {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(1, 13), LineCol::new(1, 14))),
-                    },
-                    value: 30.0,
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("10 == 20 != 30").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_comparison_expr() {
-        let source = "5 > 3 < 9 >= 2 <= 10";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Binary {
-            info: NodeInfo {
-                id: 13,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 20))),
-            },
-            left: Box::new(Expr::Binary {
-                info: NodeInfo {
-                    id: 10,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
-                },
-                left: Box::new(Expr::Binary {
-                    info: NodeInfo {
-                        id: 7,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 9))),
-                    },
-                    left: Box::new(Expr::Binary {
-                        info: NodeInfo {
-                            id: 4,
-                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 5))),
-                        },
-                        left: Box::new(Expr::Primary {
-                            info: NodeInfo {
-                                id: 1,
-                                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                            },
-                            value: Primary::Literal(Literal::Number {
-                                info: NodeInfo {
-                                    id: 0,
-                                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                                },
-                                value: 5.0,
-                            }),
-                        }),
-                        operator: BinaryOperator::Greater,
-                        right: Box::new(Expr::Primary {
-                            info: NodeInfo {
-                                id: 3,
-                                span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
-                            },
-                            value: Primary::Literal(Literal::Number {
-                                info: NodeInfo {
-                                    id: 2,
-                                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 5))),
-                                },
-                                value: 3.0,
-                            }),
-                        }),
-                    }),
-                    operator: BinaryOperator::Less,
-                    right: Box::new(Expr::Primary {
-                        info: NodeInfo {
-                            id: 6,
-                            span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
-                        },
-                        value: Primary::Literal(Literal::Number {
-                            info: NodeInfo {
-                                id: 5,
-                                span: Span::from((LineCol::new(1, 9), LineCol::new(1, 9))),
-                            },
-                            value: 9.0,
-                        }),
-                    }),
-                }),
-                operator: BinaryOperator::GreaterEqual,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 9,
-                        span: Span::from((LineCol::new(1, 14), LineCol::new(1, 14))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 8,
-                            span: Span::from((LineCol::new(1, 14), LineCol::new(1, 14))),
-                        },
-                        value: 2.0,
-                    }),
-                }),
-            }),
-            operator: BinaryOperator::LessEqual,
-            right: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 12,
-                    span: Span::from((LineCol::new(1, 19), LineCol::new(1, 20))),
-                },
-                value: Primary::Literal(Literal::Number {
-                    info: NodeInfo {
-                        id: 11,
-                        span: Span::from((LineCol::new(1, 19), LineCol::new(1, 20))),
-                    },
-                    value: 10.0,
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr =
+            Parser::parse_ast_str::<Expr>("5 > 3 < 9 >= 2 <= 10").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_call_expr() {
-        let source = "func(arg1, arg2)";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Call {
-            info: NodeInfo {
-                id: 6,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 16))),
-            },
-            callee: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
-                },
-                value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
-                    },
-                    name: "func".to_string(),
-                }),
-            }),
-            arguments: vec![
-                Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 6), LineCol::new(1, 9))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 6), LineCol::new(1, 9))),
-                        },
-                        name: "arg1".to_string(),
-                    }),
-                },
-                Expr::Primary {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(1, 12), LineCol::new(1, 15))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 4,
-                            span: Span::from((LineCol::new(1, 12), LineCol::new(1, 15))),
-                        },
-                        name: "arg2".to_string(),
-                    }),
-                },
-            ],
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("func(arg1, arg2)").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_member_access_expr() {
-        let source = "obj.prop1.prop2";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::MemberAccess {
-            info: NodeInfo {
-                id: 6,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 15))),
-            },
-            left: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 3))),
-                },
-                value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 3))),
-                    },
-                    name: "obj".to_string(),
-                }),
-            }),
-            members: vec![
-                Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 9))),
-                        },
-                        name: "prop1".to_string(),
-                    }),
-                },
-                Expr::Primary {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(1, 11), LineCol::new(1, 15))),
-                    },
-                    value: Primary::Primitive(Primitive::Identifier {
-                        info: NodeInfo {
-                            id: 4,
-                            span: Span::from((LineCol::new(1, 11), LineCol::new(1, 15))),
-                        },
-                        name: "prop2".to_string(),
-                    }),
-                },
-            ],
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("obj.prop1.prop2").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_unary_expr() {
-        let source = "-!42";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Unary {
-            info: NodeInfo {
-                id: 3,
-                span: Span::from((LineCol::new(1, 2), LineCol::new(1, 3))),
-            },
-            operator: UnaryOperator::Negate,
-            right: Box::new(Expr::Unary {
-                info: NodeInfo {
-                    id: 2,
-                    span: Span::from((LineCol::new(1, 3), LineCol::new(1, 3))),
-                },
-                operator: UnaryOperator::Not,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 3), LineCol::new(1, 4))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 3), LineCol::new(1, 4))),
-                        },
-                        value: 42.0,
-                    }),
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("-!42").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_logical_expr() {
-        let source = "true and false or true";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Binary {
-            info: NodeInfo {
-                id: 7,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 22))),
-            },
-            left: Box::new(Expr::Binary {
-                info: NodeInfo {
-                    id: 4,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 14))),
-                },
-                left: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 1,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
-                    },
-                    value: Primary::Literal(Literal::Boolean {
-                        info: NodeInfo {
-                            id: 0,
-                            span: Span::from((LineCol::new(1, 1), LineCol::new(1, 4))),
-                        },
-                        value: true,
-                    }),
-                }),
-                operator: BinaryOperator::And,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 10), LineCol::new(1, 14))),
-                    },
-                    value: Primary::Literal(Literal::Boolean {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 10), LineCol::new(1, 14))),
-                        },
-                        value: false,
-                    }),
-                }),
-            }),
-            operator: BinaryOperator::Or,
-            right: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 6,
-                    span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
-                },
-                value: Primary::Literal(Literal::Boolean {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(1, 19), LineCol::new(1, 22))),
-                    },
-                    value: true,
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr =
+            Parser::parse_ast_str::<Expr>("true and false or true").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 
     #[test]
     fn parses_assignment_expr() {
-        let source = "x = 10 + 20";
-        let tokens = Lexer::tokenize(source);
-        let expr = Parser::parse_ast::<Expr>(&tokens).expect("Failed to parse expression");
-
-        let expected = Expr::Assignment {
-            info: NodeInfo {
-                id: 7,
-                span: Span::from((LineCol::new(1, 1), LineCol::new(1, 11))),
-            },
-            name: Box::new(Expr::Primary {
-                info: NodeInfo {
-                    id: 1,
-                    span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                },
-                value: Primary::Primitive(Primitive::Identifier {
-                    info: NodeInfo {
-                        id: 0,
-                        span: Span::from((LineCol::new(1, 1), LineCol::new(1, 1))),
-                    },
-                    name: "x".to_string(),
-                }),
-            }),
-            value: Box::new(Expr::Binary {
-                info: NodeInfo {
-                    id: 6,
-                    span: Span::from((LineCol::new(1, 5), LineCol::new(1, 11))),
-                },
-                left: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 3,
-                        span: Span::from((LineCol::new(1, 5), LineCol::new(1, 6))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 2,
-                            span: Span::from((LineCol::new(1, 5), LineCol::new(1, 6))),
-                        },
-                        value: 10.0,
-                    }),
-                }),
-                operator: BinaryOperator::Add,
-                right: Box::new(Expr::Primary {
-                    info: NodeInfo {
-                        id: 5,
-                        span: Span::from((LineCol::new(1, 10), LineCol::new(1, 11))),
-                    },
-                    value: Primary::Literal(Literal::Number {
-                        info: NodeInfo {
-                            id: 4,
-                            span: Span::from((LineCol::new(1, 10), LineCol::new(1, 11))),
-                        },
-                        value: 20.0,
-                    }),
-                }),
-            }),
-        };
-
-        assert_eq!(expr, expected);
+        let expr = Parser::parse_ast_str::<Expr>("x = 10 + 20").expect("Failed to parse expression");
+        assert_debug_snapshot!(expr);
     }
 }

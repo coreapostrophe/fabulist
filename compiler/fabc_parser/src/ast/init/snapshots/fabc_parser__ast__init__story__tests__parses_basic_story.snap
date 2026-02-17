@@ -1,0 +1,349 @@
+---
+source: compiler/fabc_parser/src/ast/init/story.rs
+expression: story
+---
+StoryInit {
+    info: NodeInfo {
+        id: 19,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                12,
+                42,
+            ),
+        },
+    },
+    metadata: Some(
+        Metadata {
+            info: NodeInfo {
+                id: 3,
+                span: Span {
+                    start: LineCol(
+                        2,
+                        13,
+                    ),
+                    end: LineCol(
+                        4,
+                        13,
+                    ),
+                },
+            },
+            object: ObjectDecl {
+                info: NodeInfo {
+                    id: 2,
+                    span: Span {
+                        start: LineCol(
+                            2,
+                            19,
+                        ),
+                        end: LineCol(
+                            4,
+                            13,
+                        ),
+                    },
+                },
+                map: {
+                    "start": Primary {
+                        info: NodeInfo {
+                            id: 1,
+                            span: Span {
+                                start: LineCol(
+                                    3,
+                                    24,
+                                ),
+                                end: LineCol(
+                                    3,
+                                    35,
+                                ),
+                            },
+                        },
+                        value: Literal(
+                            String {
+                                info: NodeInfo {
+                                    id: 0,
+                                    span: Span {
+                                        start: LineCol(
+                                            3,
+                                            24,
+                                        ),
+                                        end: LineCol(
+                                            3,
+                                            35,
+                                        ),
+                                    },
+                                },
+                                value: "dialogue_1",
+                            },
+                        ),
+                    },
+                },
+            },
+        },
+    ),
+    parts: [
+        Part {
+            info: NodeInfo {
+                id: 18,
+                span: Span {
+                    start: LineCol(
+                        6,
+                        13,
+                    ),
+                    end: LineCol(
+                        12,
+                        42,
+                    ),
+                },
+            },
+            ident: "dialogue_1",
+            elements: [
+                Narration(
+                    NarrationElement {
+                        info: NodeInfo {
+                            id: 5,
+                            span: Span {
+                                start: LineCol(
+                                    7,
+                                    13,
+                                ),
+                                end: LineCol(
+                                    7,
+                                    37,
+                                ),
+                            },
+                        },
+                        quote: QuoteDecl {
+                            info: NodeInfo {
+                                id: 4,
+                                span: Span {
+                                    start: LineCol(
+                                        7,
+                                        15,
+                                    ),
+                                    end: LineCol(
+                                        7,
+                                        37,
+                                    ),
+                                },
+                            },
+                            text: "Welcome to the story!",
+                            properties: None,
+                        },
+                    },
+                ),
+                Dialogue(
+                    DialogueElement {
+                        info: NodeInfo {
+                            id: 8,
+                            span: Span {
+                                start: LineCol(
+                                    8,
+                                    13,
+                                ),
+                                end: LineCol(
+                                    10,
+                                    33,
+                                ),
+                            },
+                        },
+                        speaker: "traveller",
+                        quotes: [
+                            QuoteDecl {
+                                info: NodeInfo {
+                                    id: 6,
+                                    span: Span {
+                                        start: LineCol(
+                                            9,
+                                            15,
+                                        ),
+                                        end: LineCol(
+                                            9,
+                                            28,
+                                        ),
+                                    },
+                                },
+                                text: "Hello there!",
+                                properties: None,
+                            },
+                            QuoteDecl {
+                                info: NodeInfo {
+                                    id: 7,
+                                    span: Span {
+                                        start: LineCol(
+                                            10,
+                                            15,
+                                        ),
+                                        end: LineCol(
+                                            10,
+                                            33,
+                                        ),
+                                    },
+                                },
+                                text: "Choose your path.",
+                                properties: None,
+                            },
+                        ],
+                    },
+                ),
+                Selection(
+                    SelectionElement {
+                        info: NodeInfo {
+                            id: 17,
+                            span: Span {
+                                start: LineCol(
+                                    11,
+                                    17,
+                                ),
+                                end: LineCol(
+                                    12,
+                                    42,
+                                ),
+                            },
+                        },
+                        choices: [
+                            QuoteDecl {
+                                info: NodeInfo {
+                                    id: 12,
+                                    span: Span {
+                                        start: LineCol(
+                                            11,
+                                            19,
+                                        ),
+                                        end: LineCol(
+                                            11,
+                                            42,
+                                        ),
+                                    },
+                                },
+                                text: "Go left.",
+                                properties: Some(
+                                    ObjectDecl {
+                                        info: NodeInfo {
+                                            id: 11,
+                                            span: Span {
+                                                start: LineCol(
+                                                    11,
+                                                    30,
+                                                ),
+                                                end: LineCol(
+                                                    11,
+                                                    42,
+                                                ),
+                                            },
+                                        },
+                                        map: {
+                                            "score": Primary {
+                                                info: NodeInfo {
+                                                    id: 10,
+                                                    span: Span {
+                                                        start: LineCol(
+                                                            11,
+                                                            39,
+                                                        ),
+                                                        end: LineCol(
+                                                            11,
+                                                            40,
+                                                        ),
+                                                    },
+                                                },
+                                                value: Literal(
+                                                    Number {
+                                                        info: NodeInfo {
+                                                            id: 9,
+                                                            span: Span {
+                                                                start: LineCol(
+                                                                    11,
+                                                                    39,
+                                                                ),
+                                                                end: LineCol(
+                                                                    11,
+                                                                    40,
+                                                                ),
+                                                            },
+                                                        },
+                                                        value: 10.0,
+                                                    },
+                                                ),
+                                            },
+                                        },
+                                    },
+                                ),
+                            },
+                            QuoteDecl {
+                                info: NodeInfo {
+                                    id: 16,
+                                    span: Span {
+                                        start: LineCol(
+                                            12,
+                                            19,
+                                        ),
+                                        end: LineCol(
+                                            12,
+                                            42,
+                                        ),
+                                    },
+                                },
+                                text: "Go right.",
+                                properties: Some(
+                                    ObjectDecl {
+                                        info: NodeInfo {
+                                            id: 15,
+                                            span: Span {
+                                                start: LineCol(
+                                                    12,
+                                                    31,
+                                                ),
+                                                end: LineCol(
+                                                    12,
+                                                    42,
+                                                ),
+                                            },
+                                        },
+                                        map: {
+                                            "score": Primary {
+                                                info: NodeInfo {
+                                                    id: 14,
+                                                    span: Span {
+                                                        start: LineCol(
+                                                            12,
+                                                            40,
+                                                        ),
+                                                        end: LineCol(
+                                                            12,
+                                                            40,
+                                                        ),
+                                                    },
+                                                },
+                                                value: Literal(
+                                                    Number {
+                                                        info: NodeInfo {
+                                                            id: 13,
+                                                            span: Span {
+                                                                start: LineCol(
+                                                                    12,
+                                                                    40,
+                                                                ),
+                                                                end: LineCol(
+                                                                    12,
+                                                                    40,
+                                                                ),
+                                                            },
+                                                        },
+                                                        value: 5.0,
+                                                    },
+                                                ),
+                                            },
+                                        },
+                                    },
+                                ),
+                            },
+                        ],
+                    },
+                ),
+            ],
+        },
+    ],
+}

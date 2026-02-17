@@ -1,0 +1,105 @@
+---
+source: compiler/fabc_parser/src/ast/decl/quote.rs
+expression: quote_decl
+---
+QuoteDecl {
+    info: NodeInfo {
+        id: 5,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                66,
+            ),
+        },
+    },
+    text: "This is a quote with properties.",
+    properties: Some(
+        ObjectDecl {
+            info: NodeInfo {
+                id: 4,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        36,
+                    ),
+                    end: LineCol(
+                        1,
+                        66,
+                    ),
+                },
+            },
+            map: {
+                "author": Primary {
+                    info: NodeInfo {
+                        id: 1,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                46,
+                            ),
+                            end: LineCol(
+                                1,
+                                52,
+                            ),
+                        },
+                    },
+                    value: Literal(
+                        String {
+                            info: NodeInfo {
+                                id: 0,
+                                span: Span {
+                                    start: LineCol(
+                                        1,
+                                        46,
+                                    ),
+                                    end: LineCol(
+                                        1,
+                                        52,
+                                    ),
+                                },
+                            },
+                            value: "Alice",
+                        },
+                    ),
+                },
+                "length": Primary {
+                    info: NodeInfo {
+                        id: 3,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                63,
+                            ),
+                            end: LineCol(
+                                1,
+                                64,
+                            ),
+                        },
+                    },
+                    value: Literal(
+                        Number {
+                            info: NodeInfo {
+                                id: 2,
+                                span: Span {
+                                    start: LineCol(
+                                        1,
+                                        63,
+                                    ),
+                                    end: LineCol(
+                                        1,
+                                        64,
+                                    ),
+                                },
+                            },
+                            value: 30.0,
+                        },
+                    ),
+                },
+            },
+        },
+    ),
+}

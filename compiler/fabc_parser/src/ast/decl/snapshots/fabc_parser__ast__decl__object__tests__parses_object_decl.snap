@@ -1,0 +1,87 @@
+---
+source: compiler/fabc_parser/src/ast/decl/object.rs
+expression: object_decl
+---
+ObjectDecl {
+    info: NodeInfo {
+        id: 4,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                5,
+                13,
+            ),
+        },
+    },
+    map: {
+        "key1": Primary {
+            info: NodeInfo {
+                id: 1,
+                span: Span {
+                    start: LineCol(
+                        3,
+                        23,
+                    ),
+                    end: LineCol(
+                        3,
+                        30,
+                    ),
+                },
+            },
+            value: Literal(
+                String {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span {
+                            start: LineCol(
+                                3,
+                                23,
+                            ),
+                            end: LineCol(
+                                3,
+                                30,
+                            ),
+                        },
+                    },
+                    value: "value1",
+                },
+            ),
+        },
+        "key2": Primary {
+            info: NodeInfo {
+                id: 3,
+                span: Span {
+                    start: LineCol(
+                        4,
+                        23,
+                    ),
+                    end: LineCol(
+                        4,
+                        24,
+                    ),
+                },
+            },
+            value: Literal(
+                Number {
+                    info: NodeInfo {
+                        id: 2,
+                        span: Span {
+                            start: LineCol(
+                                4,
+                                23,
+                            ),
+                            end: LineCol(
+                                4,
+                                24,
+                            ),
+                        },
+                    },
+                    value: 42.0,
+                },
+            ),
+        },
+    },
+}

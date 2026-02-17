@@ -1,0 +1,87 @@
+---
+source: compiler/fabc_parser/src/ast/init/story.rs
+expression: story
+---
+StoryInit {
+    info: NodeInfo {
+        id: 4,
+        span: Span {
+            start: LineCol(
+                2,
+                13,
+            ),
+            end: LineCol(
+                4,
+                13,
+            ),
+        },
+    },
+    metadata: Some(
+        Metadata {
+            info: NodeInfo {
+                id: 3,
+                span: Span {
+                    start: LineCol(
+                        2,
+                        13,
+                    ),
+                    end: LineCol(
+                        4,
+                        13,
+                    ),
+                },
+            },
+            object: ObjectDecl {
+                info: NodeInfo {
+                    id: 2,
+                    span: Span {
+                        start: LineCol(
+                            2,
+                            19,
+                        ),
+                        end: LineCol(
+                            4,
+                            13,
+                        ),
+                    },
+                },
+                map: {
+                    "description": Primary {
+                        info: NodeInfo {
+                            id: 1,
+                            span: Span {
+                                start: LineCol(
+                                    3,
+                                    30,
+                                ),
+                                end: LineCol(
+                                    3,
+                                    52,
+                                ),
+                            },
+                        },
+                        value: Literal(
+                            String {
+                                info: NodeInfo {
+                                    id: 0,
+                                    span: Span {
+                                        start: LineCol(
+                                            3,
+                                            30,
+                                        ),
+                                        end: LineCol(
+                                            3,
+                                            52,
+                                        ),
+                                    },
+                                },
+                                value: "This is a test story.",
+                            },
+                        ),
+                    },
+                },
+            },
+        },
+    ),
+    parts: [],
+}

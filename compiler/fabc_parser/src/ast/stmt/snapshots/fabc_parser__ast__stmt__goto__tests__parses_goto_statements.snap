@@ -1,0 +1,102 @@
+---
+source: compiler/fabc_parser/src/ast/stmt/goto.rs
+expression: goto_stmt
+---
+GotoStmt {
+    info: NodeInfo {
+        id: 5,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                26,
+            ),
+        },
+    },
+    target: MemberAccess {
+        info: NodeInfo {
+            id: 4,
+            span: Span {
+                start: LineCol(
+                    1,
+                    6,
+                ),
+                end: LineCol(
+                    1,
+                    25,
+                ),
+            },
+        },
+        left: Primary {
+            info: NodeInfo {
+                id: 1,
+                span: Span {
+                    start: LineCol(
+                        1,
+                        6,
+                    ),
+                    end: LineCol(
+                        1,
+                        14,
+                    ),
+                },
+            },
+            value: Primitive(
+                Identifier {
+                    info: NodeInfo {
+                        id: 0,
+                        span: Span {
+                            start: LineCol(
+                                1,
+                                6,
+                            ),
+                            end: LineCol(
+                                1,
+                                14,
+                            ),
+                        },
+                    },
+                    name: "module_ns",
+                },
+            ),
+        },
+        members: [
+            Primary {
+                info: NodeInfo {
+                    id: 3,
+                    span: Span {
+                        start: LineCol(
+                            1,
+                            16,
+                        ),
+                        end: LineCol(
+                            1,
+                            25,
+                        ),
+                    },
+                },
+                value: Primitive(
+                    Identifier {
+                        info: NodeInfo {
+                            id: 2,
+                            span: Span {
+                                start: LineCol(
+                                    1,
+                                    16,
+                                ),
+                                end: LineCol(
+                                    1,
+                                    25,
+                                ),
+                            },
+                        },
+                        name: "part_ident",
+                    },
+                ),
+            },
+        ],
+    },
+}

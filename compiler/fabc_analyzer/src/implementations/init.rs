@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn story_init_traverses_metadata_and_parts() {
-        let mut metadata_map = std::collections::HashMap::new();
+        let mut metadata_map = std::collections::BTreeMap::new();
         metadata_map.insert("title".to_string(), string_expr(90, "Story"));
 
         let story = StoryInit {

@@ -1,0 +1,21 @@
+---
+source: compiler/fabc_parser/src/ast/decl/quote.rs
+expression: quote_decl
+---
+QuoteDecl {
+    info: NodeInfo {
+        id: 0,
+        span: Span {
+            start: LineCol(
+                1,
+                1,
+            ),
+            end: LineCol(
+                1,
+                18,
+            ),
+        },
+    },
+    text: "This is a quote.",
+    properties: None,
+}
