@@ -403,10 +403,10 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "fabc_analyzer",
+ "fabc_error",
  "fabc_lexer",
  "fabc_parser",
  "insta",
- "thiserror",
 ]
 
 [[package]]

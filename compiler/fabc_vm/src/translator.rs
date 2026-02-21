@@ -4,6 +4,7 @@ use fabc_analyzer::{
     types::{BindingDetails, ModuleSymbolType, SymbolAnnotation},
     AnalyzerResult,
 };
+use fabc_error::Error;
 
 use crate::instructions::Instruction;
 
@@ -23,6 +24,12 @@ pub trait Translatable {
 pub struct AstTranslator {
     mod_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
     frame_size: usize,
+    errors: Vec<Error>,
+}
+
+pub struct TranslatorResult {
+    pub instructions: Vec<Instruction>,
+    pub errors: Vec<Error>,
 }
 
 impl AstTranslator {
@@ -30,8 +37,20 @@ impl AstTranslator {
     where
         T: Translatable,
     {
-        let translator = &mut AstTranslator::default();
-        node.translate(translator)
+        Self::translate_result(node).instructions
+    }
+
+    pub fn translate_result<T>(node: &T) -> TranslatorResult
+    where
+        T: Translatable,
+    {
+        let mut translator = AstTranslator::default();
+        let instructions = node.translate(&mut translator);
+
+        TranslatorResult {
+            instructions,
+            errors: translator.errors,
+        }
     }
 
     pub fn translate_with_annotations<T>(
@@ -41,8 +60,23 @@ impl AstTranslator {
     where
         T: Translatable,
     {
-        let translator = &mut AstTranslator::with_mod_annotations(mod_annotations);
-        node.translate(translator)
+        Self::translate_with_annotations_result(node, mod_annotations).instructions
+    }
+
+    pub fn translate_with_annotations_result<T>(
+        node: &T,
+        mod_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
+    ) -> TranslatorResult
+    where
+        T: Translatable,
+    {
+        let mut translator = AstTranslator::with_mod_annotations(mod_annotations);
+        let instructions = node.translate(&mut translator);
+
+        TranslatorResult {
+            instructions,
+            errors: translator.errors,
+        }
     }
 
     pub fn from_analyzer(result: AnalyzerResult) -> Self {
@@ -57,6 +91,7 @@ impl AstTranslator {
         Self {
             mod_annotations: result.mod_sym_annotations,
             frame_size,
+            errors: Vec::new(),
         }
     }
 
@@ -73,6 +108,7 @@ impl AstTranslator {
         Self {
             mod_annotations,
             frame_size,
+            errors: Vec::new(),
         }
     }
 
@@ -80,6 +116,14 @@ impl AstTranslator {
         self.mod_annotations
             .get(&node_id)
             .and_then(|annotation| annotation.binding.as_ref())
+    }
+
+    pub fn errors(&self) -> &[Error] {
+        &self.errors
+    }
+
+    fn push_error(&mut self, error: Error) {
+        self.errors.push(error);
     }
 
     fn finalize(&self, mut buffer: Vec<Instruction>) -> Vec<Instruction> {
