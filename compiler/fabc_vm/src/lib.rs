@@ -70,6 +70,14 @@ impl<'a> VirtualMachine<'a> {
         Ok(vm)
     }
 
+    pub fn stack(&self) -> &[Value] {
+        &self.stack
+    }
+
+    pub fn last_value(&self) -> Option<&Value> {
+        self.stack.last()
+    }
+
     fn run(&mut self) -> Result<(), Error> {
         'runtime: loop {
             let instruction = self
