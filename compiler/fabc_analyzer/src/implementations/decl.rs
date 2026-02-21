@@ -43,6 +43,7 @@ impl Analyzable for ObjectDecl {
             SymbolAnnotation {
                 name: None,
                 r#type: object_sym_type.clone(),
+                binding: None,
             },
         );
 

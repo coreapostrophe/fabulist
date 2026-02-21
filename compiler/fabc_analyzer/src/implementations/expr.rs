@@ -31,6 +31,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: primary_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -77,6 +78,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: left_sym_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -124,6 +126,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: value_sym_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -194,6 +197,7 @@ impl Analyzable for Expr {
                             SymbolAnnotation {
                                 name: None,
                                 r#type: (*return_type).clone(),
+                                binding: None,
                             },
                         );
 
@@ -230,6 +234,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: group_sym_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -254,6 +259,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: unary_sym_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -328,6 +334,7 @@ impl Analyzable for Expr {
                     SymbolAnnotation {
                         name: None,
                         r#type: current_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -354,6 +361,7 @@ impl Analyzable for Literal {
             SymbolAnnotation {
                 name: None,
                 r#type: ModuleSymbolType::Data(data_type.clone()),
+                binding: None,
             },
         );
 
@@ -381,6 +389,7 @@ impl Analyzable for Primitive {
                     SymbolAnnotation {
                         name: None,
                         r#type: obj_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -406,6 +415,11 @@ impl Analyzable for Primitive {
                     SymbolAnnotation {
                         name: Some(name.clone()),
                         r#type: ident_sym.r#type.clone(),
+                        binding: Some(crate::types::BindingDetails {
+                            slot: ident_sym.slot,
+                            depth: ident_sym.depth,
+                            kind: crate::types::BindingKind::Local,
+                        }),
                     },
                 );
 
@@ -426,13 +440,7 @@ impl Analyzable for Primitive {
                     ident_sym.clone()
                 };
 
-                analyzer.annotate_mod_symbol(
-                    self.info().id,
-                    SymbolAnnotation {
-                        name: Some(name.clone()),
-                        r#type: ident_sym.r#type.clone(),
-                    },
-                );
+                analyzer.annotate_mod_symbol(self.info().id, ident_sym.clone().into());
 
                 AnalysisResult {
                     mod_sym_type: Some(ident_sym.r#type),
@@ -453,6 +461,7 @@ impl Analyzable for Primitive {
                     SymbolAnnotation {
                         name: None,
                         r#type: group_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -469,6 +478,7 @@ impl Analyzable for Primitive {
                     SymbolAnnotation {
                         name: None,
                         r#type: context_type.clone(),
+                        binding: None,
                     },
                 );
 
@@ -531,6 +541,7 @@ impl Analyzable for Primitive {
                             parameters: param_types.clone(),
                             arity: params.len(),
                         },
+                        binding: None,
                     },
                 );
 

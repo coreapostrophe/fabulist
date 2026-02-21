@@ -4,10 +4,10 @@ expression: instructions
 ---
 [
     EnterFrame(
-        0,
+        1,
     ),
-    LoadConstant(
-        None,
+    LoadLocal(
+        0,
     ),
     ExitFrame,
 ]
