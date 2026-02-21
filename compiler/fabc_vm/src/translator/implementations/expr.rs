@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use fabc_error::{kind::InternalErrorKind as TranslationError, Error};
 use fabc_parser::ast::expr::{
     literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
 };
@@ -93,11 +94,19 @@ impl Translatable for Primitive {
         buffer: &mut Vec<Instruction>,
     ) {
         match self {
-            Primitive::Identifier { info, .. } => {
-                let binding = translator.resolve_binding(info.id).expect(
-                    "identifier binding missing; ensure analyzer ran and provided annotations",
-                );
-                buffer.push(Instruction::LoadLocal(binding.slot));
+            Primitive::Identifier { info, name } => {
+                if let Some(binding) = translator.resolve_binding(info.id) {
+                    buffer.push(Instruction::LoadLocal(binding.slot));
+                } else {
+                    translator.push_error(Error::new(
+                        TranslationError::MissingIdentifierBinding {
+                            node_id: info.id,
+                            name: name.clone(),
+                        },
+                        info.span.clone(),
+                    ));
+                    buffer.push(Instruction::LoadConstant(Value::None));
+                }
             }
             Primitive::Grouping { expr, .. } => expr.translate_with(translator, buffer),
             Primitive::Object { .. } => todo!(),
@@ -123,6 +132,7 @@ mod tests {
     use insta::assert_debug_snapshot;
 
     use crate::translator::AstTranslator;
+    use fabc_error::{kind::ErrorKind, kind::InternalErrorKind as TranslationError};
 
     #[test]
     fn translates_literals() {
@@ -184,7 +194,33 @@ mod tests {
             },
         );
 
-        let instructions = AstTranslator::translate_with_annotations(&ast, annotations);
+        let result = AstTranslator::translate_with_annotations_result(&ast, annotations);
+        assert!(result.errors.is_empty());
+        let instructions = result.instructions;
         assert_debug_snapshot!("translates_identifier", instructions);
+    }
+
+    #[test]
+    fn reports_missing_identifier_binding() {
+        let ast = Parser::parse_ast_str::<Expr>("foo").expect("Failed to parse source");
+        let ident_info = match &ast {
+            Expr::Primary {
+                value: Primary::Primitive(Primitive::Identifier { info, .. }),
+                ..
+            } => info,
+            _ => panic!("unexpected AST for identifier"),
+        };
+
+        let result = AstTranslator::translate_with_annotations_result(&ast, HashMap::new());
+
+        assert_eq!(result.errors.len(), 1);
+        assert_eq!(result.errors[0].span, ident_info.span);
+        assert_eq!(
+            result.errors[0].kind,
+            ErrorKind::Internal(TranslationError::MissingIdentifierBinding {
+                node_id: ident_info.id,
+                name: "foo".to_string(),
+            })
+        );
     }
 }

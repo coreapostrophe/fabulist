@@ -19,16 +19,18 @@ pub enum CompileErrorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InternalErrorKind {
-    MissingOperand,
-    MissingCallee,
-    MissingArgument,
-    MissingMemberBase,
-    InvalidAssignmentTarget,
     InvalidAssignment,
+    MissingIdentifierBinding { node_id: usize, name: String },
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RuntimeErrorKind {}
+pub enum RuntimeErrorKind {
+    InvalidLocalAddress,
+    TypeMismatch,
+    StackUnderflow,
+    ConstantDoesNotExist,
+    InstructionOutOfBounds,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
@@ -142,28 +144,21 @@ impl CompileErrorKind {
 impl InternalErrorKind {
     pub fn name(&self) -> &'static str {
         match self {
-            InternalErrorKind::MissingOperand => "IR missing operand",
-            InternalErrorKind::MissingCallee => "IR missing callee operand",
-            InternalErrorKind::MissingArgument => "IR missing argument operand",
-            InternalErrorKind::MissingMemberBase => "IR missing member base",
-            InternalErrorKind::InvalidAssignmentTarget => "IR invalid assignment target",
             InternalErrorKind::InvalidAssignment => "Internal assignment error",
+            InternalErrorKind::MissingIdentifierBinding { .. } => "Identifier binding missing",
         }
     }
 
     pub fn message(&self) -> String {
         match self {
-            InternalErrorKind::MissingOperand => "IR generation produced no operand".to_string(),
-            InternalErrorKind::MissingCallee => "Callee produced no operand".to_string(),
-            InternalErrorKind::MissingArgument => "Argument produced no operand".to_string(),
-            InternalErrorKind::MissingMemberBase => {
-                "Member access base produced no operand".to_string()
-            }
-            InternalErrorKind::InvalidAssignmentTarget => {
-                "Assignment target is not addressable".to_string()
-            }
             InternalErrorKind::InvalidAssignment => {
                 "An internal error occurred during assignment".to_string()
+            }
+            InternalErrorKind::MissingIdentifierBinding { node_id, name } => {
+                format!(
+                    "Identifier '{}' is missing a symbol binding annotation (node id: {})",
+                    name, node_id
+                )
             }
         }
     }
@@ -171,9 +166,23 @@ impl InternalErrorKind {
 
 impl RuntimeErrorKind {
     pub fn name(&self) -> &'static str {
-        match *self {}
+        match self {
+            RuntimeErrorKind::InvalidLocalAddress => "Invalid local address",
+            RuntimeErrorKind::TypeMismatch => "Type mismatch",
+            RuntimeErrorKind::StackUnderflow => "Stack underflow",
+            RuntimeErrorKind::ConstantDoesNotExist => "Constant does not exist",
+            RuntimeErrorKind::InstructionOutOfBounds => "Instruction pointer out of bounds",
+        }
     }
     pub fn message(&self) -> String {
-        match *self {}
+        match self {
+            RuntimeErrorKind::InvalidLocalAddress => "Invalid local address".to_string(),
+            RuntimeErrorKind::TypeMismatch => "Type mismatch".to_string(),
+            RuntimeErrorKind::StackUnderflow => "Stack underflow".to_string(),
+            RuntimeErrorKind::ConstantDoesNotExist => "Constant does not exist".to_string(),
+            RuntimeErrorKind::InstructionOutOfBounds => {
+                "Instruction pointer out of bounds".to_string()
+            }
+        }
     }
 }

@@ -34,7 +34,6 @@ pub struct Parser<'src, 'tok> {
     current: usize,
     save: Option<Save>,
     id_counter: usize,
-    #[allow(unused)]
     errors: Vec<Error>,
 }
 

@@ -1,6 +1,6 @@
-use crate::{error::Error, instructions::Instruction, program::Program, value::Value};
+use crate::{instructions::Instruction, program::Program, value::Value};
+use fabc_error::kind::RuntimeErrorKind as Error;
 
-pub mod error;
 pub mod instructions;
 pub mod program;
 pub mod translator;
@@ -148,7 +148,7 @@ impl<'a> VirtualMachine<'a> {
                     let value = frame
                         .locals
                         .get(*index)
-                        .ok_or(Error::InvalidStackAddress)?
+                        .ok_or(Error::InvalidLocalAddress)?
                         .clone();
                     self.stack.push(value);
                 }
@@ -158,7 +158,7 @@ impl<'a> VirtualMachine<'a> {
                     let slot = frame
                         .locals
                         .get_mut(*index)
-                        .ok_or(Error::InvalidStackAddress)?;
+                        .ok_or(Error::InvalidLocalAddress)?;
                     *slot = value;
                 }
 
