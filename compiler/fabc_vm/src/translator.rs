@@ -127,7 +127,7 @@ impl AstTranslator {
     }
 
     fn finalize(&self, mut buffer: Vec<Instruction>) -> Vec<Instruction> {
-        let mut instructions = Vec::with_capacity(self.frame_size + buffer.len() + 2);
+        let mut instructions = Vec::with_capacity(buffer.len() + 2);
 
         instructions.push(Instruction::EnterFrame(self.frame_size));
         instructions.append(&mut buffer);
