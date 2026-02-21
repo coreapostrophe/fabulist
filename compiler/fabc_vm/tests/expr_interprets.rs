@@ -34,3 +34,12 @@ fn respects_arithmetic_precedence() {
     let value = interpret_expr("10 - 2 * 3 + 1");
     assert_eq!(value, Value::Number(5));
 }
+
+#[test]
+fn interprets_unary_expressions() {
+    let value = interpret_expr("-42");
+    assert_eq!(value, Value::Number(-42));
+
+    let value = interpret_expr("!true");
+    assert_eq!(value, Value::Boolean(false));
+}
