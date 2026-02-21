@@ -3,6 +3,9 @@ source: compiler/fabc_vm/src/translator/implementations/expr.rs
 expression: instructions
 ---
 [
+    EnterFrame(
+        0,
+    ),
     LoadConstant(
         Number(
             42,
@@ -10,4 +13,5 @@ expression: instructions
     ),
     Neg,
     Not,
+    ExitFrame,
 ]

@@ -51,9 +51,14 @@ macro_rules! binary_bool {
     }};
 }
 
+struct Frame {
+    locals: Vec<Value>,
+}
+
 pub struct VirtualMachine<'a> {
     program: &'a Program,
     stack: Vec<Value>,
+    frames: Vec<Frame>,
     program_counter: usize,
 }
 
@@ -62,6 +67,7 @@ impl<'a> VirtualMachine<'a> {
         let mut vm = VirtualMachine {
             program,
             stack: Vec::new(),
+            frames: Vec::new(),
             program_counter: 0,
         };
 
@@ -88,9 +94,17 @@ impl<'a> VirtualMachine<'a> {
             self.program_counter += 1;
 
             match instruction {
-                Instruction::LoadConstant(value) => {
-                    self.stack.push(value.clone());
+                Instruction::EnterFrame(local_count) => {
+                    let mut locals = Vec::with_capacity(*local_count);
+                    locals.resize(*local_count, Value::None);
+                    self.frames.push(Frame { locals });
                 }
+
+                Instruction::ExitFrame => {
+                    self.frames.pop().ok_or(Error::StackUnderflow)?;
+                }
+
+                Instruction::LoadConstant(value) => self.stack.push(value.clone()),
 
                 Instruction::Add => binary_op!(self, +),
                 Instruction::Sub => binary_op!(self, -),
@@ -129,31 +143,23 @@ impl<'a> VirtualMachine<'a> {
                 Instruction::Gr => binary_bool!(self, >),
                 Instruction::Geq => binary_bool!(self, >=),
 
-                Instruction::Load => {
-                    let address = self.stack.last().ok_or(Error::StackUnderflow)?;
-                    let value = match address {
-                        Value::Address(addr) => self
-                            .stack
-                            .get(*addr)
-                            .ok_or(Error::InvalidStackAddress)?
-                            .clone(),
-                        _ => return Err(Error::TypeMismatch),
-                    };
-                    let last_mut = self.stack.last_mut().ok_or(Error::StackUnderflow)?;
-                    *last_mut = value;
+                Instruction::LoadLocal(index) => {
+                    let frame = self.frames.last().ok_or(Error::StackUnderflow)?;
+                    let value = frame
+                        .locals
+                        .get(*index)
+                        .ok_or(Error::InvalidStackAddress)?
+                        .clone();
+                    self.stack.push(value);
                 }
-                Instruction::Store => {
-                    let address = self.stack.pop().ok_or(Error::StackUnderflow)?;
-                    let value = self.stack.last().ok_or(Error::StackUnderflow)?.clone();
-
-                    match address {
-                        Value::Address(addr) => {
-                            let slot =
-                                self.stack.get_mut(addr).ok_or(Error::InvalidStackAddress)?;
-                            *slot = value;
-                        }
-                        _ => return Err(Error::TypeMismatch),
-                    }
+                Instruction::StoreLocal(index) => {
+                    let value = self.stack.pop().ok_or(Error::StackUnderflow)?;
+                    let frame = self.frames.last_mut().ok_or(Error::StackUnderflow)?;
+                    let slot = frame
+                        .locals
+                        .get_mut(*index)
+                        .ok_or(Error::InvalidStackAddress)?;
+                    *slot = value;
                 }
 
                 Instruction::Halt => {
@@ -464,30 +470,14 @@ mod tests {
     }
 
     #[test]
-    fn load_instruction_works() {
+    fn frame_and_locals_work() {
         let program = Program::new(vec![
-            Instruction::LoadConstant(Value::Number(42)), // Push 42 onto the stack
-            Instruction::LoadConstant(Value::Address(0)), // Push address 0 onto the stack
-            Instruction::Load,                            // Load value at address 0 (first 42)
-            Instruction::Halt,
-        ]);
-
-        let vm = VirtualMachine::interpret(&program).expect("Failed to interpret program");
-        assert_eq!(vm.stack.len(), 2);
-
-        match &vm.stack[1] {
-            Value::Number(n) => assert_eq!(*n, 42),
-            _ => panic!("Expected Number value"),
-        }
-    }
-
-    #[test]
-    fn store_instruction_works() {
-        let program = Program::new(vec![
-            Instruction::LoadConstant(Value::Number(0)), // Push  0 onto the stack
-            Instruction::LoadConstant(Value::Number(42)), // Push 42 onto the stack
-            Instruction::LoadConstant(Value::Address(0)), // Push address 0 onto the stack
-            Instruction::Store,                          // Store 42 at address 0
+            Instruction::EnterFrame(1),
+            Instruction::LoadLocal(0),
+            Instruction::LoadConstant(Value::Number(42)),
+            Instruction::StoreLocal(0),
+            Instruction::LoadLocal(0),
+            Instruction::ExitFrame,
             Instruction::Halt,
         ]);
 
@@ -495,6 +485,11 @@ mod tests {
         assert_eq!(vm.stack.len(), 2);
 
         match &vm.stack[0] {
+            Value::None => {}
+            _ => panic!("Expected initial None local value"),
+        }
+
+        match &vm.stack[1] {
             Value::Number(n) => assert_eq!(*n, 42),
             _ => panic!("Expected Number value"),
         }

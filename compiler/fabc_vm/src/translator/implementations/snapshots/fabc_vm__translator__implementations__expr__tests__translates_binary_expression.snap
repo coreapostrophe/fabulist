@@ -3,6 +3,9 @@ source: compiler/fabc_vm/src/translator/implementations/expr.rs
 expression: instructions
 ---
 [
+    EnterFrame(
+        0,
+    ),
     LoadConstant(
         Number(
             1,
@@ -80,4 +83,5 @@ expression: instructions
         ),
     ),
     Or,
+    ExitFrame,
 ]

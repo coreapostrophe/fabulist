@@ -80,16 +80,31 @@ impl Display for StorySymbolType {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BindingKind {
+    Local,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct BindingDetails {
+    pub slot: usize,
+    pub depth: usize,
+    pub kind: BindingKind,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Symbol<T> {
     pub name: String,
     pub r#type: T,
+    pub slot: usize,
+    pub depth: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SymbolAnnotation<T> {
     pub name: Option<String>,
     pub r#type: T,
+    pub binding: Option<BindingDetails>,
 }
 
 impl<T> From<Symbol<T>> for SymbolAnnotation<T> {
@@ -97,6 +112,11 @@ impl<T> From<Symbol<T>> for SymbolAnnotation<T> {
         SymbolAnnotation {
             name: Some(symbol.name),
             r#type: symbol.r#type,
+            binding: Some(BindingDetails {
+                slot: symbol.slot,
+                depth: symbol.depth,
+                kind: BindingKind::Local,
+            }),
         }
     }
 }

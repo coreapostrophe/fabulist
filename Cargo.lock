@@ -402,6 +402,7 @@ name = "fabc_vm"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "fabc_analyzer",
  "fabc_lexer",
  "fabc_parser",
  "insta",

@@ -93,7 +93,12 @@ impl Translatable for Primitive {
         buffer: &mut Vec<Instruction>,
     ) {
         match self {
-            Primitive::Identifier { .. } => todo!(),
+            Primitive::Identifier { info, .. } => {
+                let binding = translator.resolve_binding(info.id).expect(
+                    "identifier binding missing; ensure analyzer ran and provided annotations",
+                );
+                buffer.push(Instruction::LoadLocal(binding.slot));
+            }
             Primitive::Grouping { expr, .. } => expr.translate_with(translator, buffer),
             Primitive::Object { .. } => todo!(),
             Primitive::Closure { .. } => todo!(),
@@ -105,8 +110,14 @@ impl Translatable for Primitive {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use fabc_analyzer::types::{
+        BindingDetails, BindingKind, DataType, ModuleSymbolType, SymbolAnnotation,
+    };
     use fabc_parser::{
-        ast::expr::{literal::Literal, Expr},
+        ast::expr::primitive::Primitive,
+        ast::expr::{literal::Literal, Expr, Primary},
         Parser,
     };
     use insta::assert_debug_snapshot;
@@ -146,5 +157,34 @@ mod tests {
         let ast = Parser::parse_ast_str::<Expr>(source).expect("Failed to parse source");
         let instructions = AstTranslator::translate(&ast);
         assert_debug_snapshot!("translates_unary_expression", instructions);
+    }
+
+    #[test]
+    fn translates_identifier() {
+        let ast = Parser::parse_ast_str::<Expr>("foo").expect("Failed to parse source");
+        let ident_id = match &ast {
+            Expr::Primary {
+                value: Primary::Primitive(Primitive::Identifier { info, .. }),
+                ..
+            } => info.id,
+            _ => panic!("unexpected AST for identifier"),
+        };
+
+        let mut annotations = HashMap::new();
+        annotations.insert(
+            ident_id,
+            SymbolAnnotation {
+                name: Some("foo".to_string()),
+                r#type: ModuleSymbolType::Data(DataType::None),
+                binding: Some(BindingDetails {
+                    slot: 0,
+                    depth: 0,
+                    kind: BindingKind::Local,
+                }),
+            },
+        );
+
+        let instructions = AstTranslator::translate_with_annotations(&ast, annotations);
+        assert_debug_snapshot!("translates_identifier", instructions);
     }
 }

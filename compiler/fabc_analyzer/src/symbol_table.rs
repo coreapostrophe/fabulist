@@ -6,6 +6,7 @@ pub struct SymbolTable<T> {
     entries: HashMap<String, Vec<Symbol<T>>>,
     scope_display: Vec<Vec<String>>,
     current_level: usize,
+    scope_slots: Vec<usize>,
 }
 
 impl<T> Default for SymbolTable<T> {
@@ -14,6 +15,7 @@ impl<T> Default for SymbolTable<T> {
             entries: HashMap::new(),
             scope_display: vec![Vec::new()],
             current_level: 0,
+            scope_slots: vec![0],
         }
     }
 }
@@ -26,6 +28,7 @@ impl<T> SymbolTable<T> {
     pub fn enter_scope(&mut self) {
         self.current_level += 1;
         self.scope_display.push(Vec::new());
+        self.scope_slots.push(0);
     }
 
     pub fn exit_scope(&mut self) {
@@ -45,6 +48,7 @@ impl<T> SymbolTable<T> {
         if self.current_level > 0 {
             self.current_level -= 1;
         }
+        self.scope_slots.pop();
     }
 
     fn insert_symbol(&mut self, symbol: Symbol<T>) -> Option<&Symbol<T>> {
@@ -62,9 +66,21 @@ impl<T> SymbolTable<T> {
     }
 
     pub fn assign_symbol(&mut self, name: &str, r#type: T) -> Option<&Symbol<T>> {
+        let slot = self
+            .scope_slots
+            .last_mut()
+            .map(|counter| {
+                let current = *counter;
+                *counter += 1;
+                current
+            })
+            .unwrap_or(0);
+
         let symbol = Symbol {
             name: name.to_string(),
             r#type,
+            slot,
+            depth: self.current_level,
         };
 
         self.insert_symbol(symbol)

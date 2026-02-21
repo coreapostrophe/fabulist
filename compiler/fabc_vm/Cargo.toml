@@ -9,6 +9,7 @@ license.workspace = true
 thiserror.workspace = true
 
 fabc_parser = { path = "../fabc_parser" }
+fabc_analyzer = { path = "../fabc_analyzer" }
 
 [dev-dependencies]
 criterion.workspace = true

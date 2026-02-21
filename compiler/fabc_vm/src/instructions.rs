@@ -2,9 +2,12 @@ use crate::value::Value;
 
 #[derive(Debug)]
 pub enum Instruction {
+    EnterFrame(usize),
+    ExitFrame,
+
     LoadConstant(Value),
-    Load,
-    Store,
+    LoadLocal(usize),
+    StoreLocal(usize),
 
     Add,
     Mul,
