@@ -12,6 +12,7 @@ fabc_parser = { path = "../fabc_parser" }
 
 [dev-dependencies]
 criterion.workspace = true
+insta.workspace = true
 
 fabc_lexer = { path = "../fabc_lexer" }
 

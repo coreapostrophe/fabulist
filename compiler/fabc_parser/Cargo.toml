@@ -11,7 +11,7 @@ fabc_error = { path = "../fabc_error" }
 
 [dev-dependencies]
 criterion.workspace = true
-insta = { version = "1", features = ["glob"] }
+insta.workspace = true
 
 fabc_reg_test = { path = "../fabc_reg_test" }
 [[bench]]

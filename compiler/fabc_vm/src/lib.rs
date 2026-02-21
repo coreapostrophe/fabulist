@@ -136,7 +136,6 @@ impl<'a> VirtualMachine<'a> {
                 }
                 Instruction::Store => {
                     let address = self.stack.pop().ok_or(Error::StackUnderflow)?;
-                    // TODO: Consider popping as a future optimization
                     let value = self.stack.last().ok_or(Error::StackUnderflow)?.clone();
 
                     match address {

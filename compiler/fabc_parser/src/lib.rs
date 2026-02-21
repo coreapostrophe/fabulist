@@ -61,7 +61,6 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         }
     }
 
-    #[cfg(test)]
     pub fn parse_ast_str<T>(source: &str) -> Result<T, Error>
     where
         T: Parsable,
@@ -70,7 +69,6 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         Parser::parse_ast::<T>(&tokens)
     }
 
-    #[cfg(test)]
     pub fn parse_ast<T>(tokens: &[Token<'src>]) -> Result<T, Error>
     where
         T: Parsable,
@@ -84,12 +82,6 @@ impl<'src, 'tok> Parser<'src, 'tok> {
         };
 
         T::parse(&mut parser)
-    }
-
-    #[cfg(test)]
-    #[allow(unused)]
-    pub(crate) fn errors(&self) -> &Vec<Error> {
-        &self.errors
     }
 
     pub(crate) fn start_span(&self) -> LineCol {

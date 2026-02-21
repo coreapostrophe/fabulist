@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum Value {
     String(Rc<String>),
     Number(i64),

@@ -8,3 +8,4 @@ RUN rustup update stable && \
 USER vscode
 
 RUN cargo install pest-language-server
+RUN cargo install cargo-insta

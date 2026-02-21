@@ -8,7 +8,8 @@ rust-version = "1.91.0"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-pest = "2.8.4"
-pest_derive = "2.8.4"
-thiserror = "2.0.17"
-criterion = "0.8.1"
+pest = "2.8.6"
+pest_derive = "2.8.6"
+thiserror = "2.0.18"
+criterion = "0.8.2"
+insta = { version = "1.46.3", features = ["glob"] }
