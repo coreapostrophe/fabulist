@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use fabc_parser::ast::expr::{
-    literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary,
+    literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
 };
 
 use crate::{instructions::Instruction, translator::Translatable, value::Value};
@@ -34,6 +34,16 @@ impl Translatable for Expr {
                     BinaryOperator::GreaterEqual => Instruction::Geq,
                     BinaryOperator::And => Instruction::And,
                     BinaryOperator::Or => Instruction::Or,
+                };
+                buffer.push(operator_instruction);
+            }
+            Expr::Unary {
+                operator, right, ..
+            } => {
+                right.translate_with(translator, buffer);
+                let operator_instruction = match operator {
+                    UnaryOperator::Negate => Instruction::Neg,
+                    UnaryOperator::Not => Instruction::Not,
                 };
                 buffer.push(operator_instruction);
             }
@@ -128,5 +138,13 @@ mod tests {
         let ast = Parser::parse_ast_str::<Expr>(source).expect("Failed to parse source");
         let instructions = AstTranslator::translate(&ast);
         assert_debug_snapshot!("translates_binary_expression", instructions);
+    }
+
+    #[test]
+    fn translates_unary_expression() {
+        let source = "!-42";
+        let ast = Parser::parse_ast_str::<Expr>(source).expect("Failed to parse source");
+        let instructions = AstTranslator::translate(&ast);
+        assert_debug_snapshot!("translates_unary_expression", instructions);
     }
 }
