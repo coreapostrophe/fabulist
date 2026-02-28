@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use fabc_analyzer::types::BindingKind;
 use fabc_error::{kind::InternalErrorKind as TranslationError, Error};
 use fabc_parser::ast::expr::{
     literal::Literal, primitive::Primitive, BinaryOperator, Expr, Primary, UnaryOperator,
@@ -96,7 +97,20 @@ impl Translatable for Primitive {
         match self {
             Primitive::Identifier { info, name } => {
                 if let Some(binding) = translator.resolve_binding(info.id) {
-                    buffer.push(Instruction::LoadLocal(binding.slot));
+                    match binding.kind {
+                        BindingKind::Local => {
+                            buffer.push(Instruction::LoadLocal(binding.slot));
+                        }
+                        BindingKind::Global => {
+                            buffer.push(Instruction::LoadGlobal(binding.slot));
+                        }
+                        BindingKind::Upvalue => {
+                            buffer.push(Instruction::LoadUpvalue {
+                                distance: binding.distance,
+                                slot: binding.slot,
+                            });
+                        }
+                    }
                 } else {
                     translator.push_error(Error::new(
                         TranslationError::MissingIdentifierBinding {
@@ -190,7 +204,7 @@ mod tests {
                     slot: 0,
                     depth: 0,
                     distance: 0,
-                    kind: BindingKind::Local,
+                    kind: BindingKind::Global,
                 }),
             },
         );

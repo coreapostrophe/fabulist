@@ -26,6 +26,8 @@ pub enum InternalErrorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuntimeErrorKind {
     InvalidLocalAddress,
+    InvalidGlobalAddress,
+    InvalidUpvalueAddress,
     TypeMismatch,
     StackUnderflow,
     ConstantDoesNotExist,
@@ -168,6 +170,8 @@ impl RuntimeErrorKind {
     pub fn name(&self) -> &'static str {
         match self {
             RuntimeErrorKind::InvalidLocalAddress => "Invalid local address",
+            RuntimeErrorKind::InvalidGlobalAddress => "Invalid global address",
+            RuntimeErrorKind::InvalidUpvalueAddress => "Invalid upvalue address",
             RuntimeErrorKind::TypeMismatch => "Type mismatch",
             RuntimeErrorKind::StackUnderflow => "Stack underflow",
             RuntimeErrorKind::ConstantDoesNotExist => "Constant does not exist",
@@ -177,6 +181,8 @@ impl RuntimeErrorKind {
     pub fn message(&self) -> String {
         match self {
             RuntimeErrorKind::InvalidLocalAddress => "Invalid local address".to_string(),
+            RuntimeErrorKind::InvalidGlobalAddress => "Invalid global address".to_string(),
+            RuntimeErrorKind::InvalidUpvalueAddress => "Invalid upvalue address".to_string(),
             RuntimeErrorKind::TypeMismatch => "Type mismatch".to_string(),
             RuntimeErrorKind::StackUnderflow => "Stack underflow".to_string(),
             RuntimeErrorKind::ConstantDoesNotExist => "Constant does not exist".to_string(),

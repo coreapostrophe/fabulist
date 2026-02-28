@@ -60,6 +60,7 @@ pub struct VirtualMachine<'a> {
     stack: Vec<Value>,
     frames: Vec<Frame>,
     program_counter: usize,
+    globals: Vec<Value>,
 }
 
 impl<'a> VirtualMachine<'a> {
@@ -69,6 +70,7 @@ impl<'a> VirtualMachine<'a> {
             stack: Vec::new(),
             frames: Vec::new(),
             program_counter: 0,
+            globals: vec![Value::None; program.global_count()],
         };
 
         vm.run()?;
@@ -105,6 +107,23 @@ impl<'a> VirtualMachine<'a> {
                 }
 
                 Instruction::LoadConstant(value) => self.stack.push(value.clone()),
+
+                Instruction::LoadGlobal(index) => {
+                    let value = self
+                        .globals
+                        .get(*index)
+                        .ok_or(Error::InvalidGlobalAddress)?
+                        .clone();
+                    self.stack.push(value);
+                }
+                Instruction::StoreGlobal(index) => {
+                    let value = self.stack.pop().ok_or(Error::StackUnderflow)?;
+                    let slot = self
+                        .globals
+                        .get_mut(*index)
+                        .ok_or(Error::InvalidGlobalAddress)?;
+                    *slot = value;
+                }
 
                 Instruction::Add => binary_op!(self, +),
                 Instruction::Sub => binary_op!(self, -),
@@ -160,6 +179,40 @@ impl<'a> VirtualMachine<'a> {
                         .get_mut(*index)
                         .ok_or(Error::InvalidLocalAddress)?;
                     *slot = value;
+                }
+
+                Instruction::LoadUpvalue { distance, slot } => {
+                    let target_frame_index = self
+                        .frames
+                        .len()
+                        .checked_sub(1 + distance)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    let frame = self
+                        .frames
+                        .get(target_frame_index)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    let value = frame
+                        .locals
+                        .get(*slot)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    self.stack.push(value.clone());
+                }
+                Instruction::StoreUpvalue { distance, slot } => {
+                    let value = self.stack.pop().ok_or(Error::StackUnderflow)?;
+                    let target_frame_index = self
+                        .frames
+                        .len()
+                        .checked_sub(1 + distance)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    let frame = self
+                        .frames
+                        .get_mut(target_frame_index)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    let slot_ref = frame
+                        .locals
+                        .get_mut(*slot)
+                        .ok_or(Error::InvalidUpvalueAddress)?;
+                    *slot_ref = value;
                 }
 
                 Instruction::Halt => {
