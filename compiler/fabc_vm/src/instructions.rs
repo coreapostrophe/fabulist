@@ -8,6 +8,10 @@ pub enum Instruction {
     LoadConstant(Value),
     LoadLocal(usize),
     StoreLocal(usize),
+    LoadGlobal(usize),
+    StoreGlobal(usize),
+    LoadUpvalue { distance: usize, slot: usize },
+    StoreUpvalue { distance: usize, slot: usize },
 
     Add,
     Mul,

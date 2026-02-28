@@ -4,9 +4,9 @@ expression: instructions
 ---
 [
     EnterFrame(
-        1,
+        0,
     ),
-    LoadLocal(
+    LoadGlobal(
         0,
     ),
     ExitFrame,

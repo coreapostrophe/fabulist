@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use fabc_analyzer::{
-    types::{BindingDetails, ModuleSymbolType, SymbolAnnotation},
+    types::{BindingDetails, BindingKind, ModuleSymbolType, SymbolAnnotation},
     AnalyzerResult,
 };
 use fabc_error::Error;
@@ -80,13 +80,7 @@ impl AstTranslator {
     }
 
     pub fn from_analyzer(result: AnalyzerResult) -> Self {
-        let frame_size = result
-            .mod_sym_annotations
-            .values()
-            .filter_map(|annotation| annotation.binding.as_ref())
-            .map(|binding| binding.slot + 1)
-            .max()
-            .unwrap_or(0);
+        let (frame_size, _) = Self::compute_sizes(result.mod_sym_annotations.values());
 
         Self {
             mod_annotations: result.mod_sym_annotations,
@@ -98,12 +92,7 @@ impl AstTranslator {
     pub fn with_mod_annotations(
         mod_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
     ) -> Self {
-        let frame_size = mod_annotations
-            .values()
-            .filter_map(|annotation| annotation.binding.as_ref())
-            .map(|binding| binding.slot + 1)
-            .max()
-            .unwrap_or(0);
+        let (frame_size, _) = Self::compute_sizes(mod_annotations.values());
 
         Self {
             mod_annotations,
@@ -134,5 +123,28 @@ impl AstTranslator {
         instructions.push(Instruction::ExitFrame);
 
         instructions
+    }
+
+    fn compute_sizes<'a>(
+        annotations: impl Iterator<Item = &'a SymbolAnnotation<ModuleSymbolType>>,
+    ) -> (usize, usize) {
+        let mut frame_size = 0;
+        let mut global_count = 0;
+
+        for binding in annotations.filter_map(|ann| ann.binding.as_ref()) {
+            match binding.kind {
+                BindingKind::Local => {
+                    frame_size = frame_size.max(binding.slot + 1);
+                }
+                BindingKind::Global => {
+                    global_count = global_count.max(binding.slot + 1);
+                }
+                BindingKind::Upvalue => {
+                    // Upvalues live in an outer frame; they do not affect this frame's locals.
+                }
+            }
+        }
+
+        (frame_size, global_count)
     }
 }
