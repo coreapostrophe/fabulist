@@ -82,13 +82,16 @@ impl Display for StorySymbolType {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BindingKind {
+    Global,
     Local,
+    Upvalue,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BindingDetails {
     pub slot: usize,
     pub depth: usize,
+    pub distance: usize,
     pub kind: BindingKind,
 }
 
@@ -109,13 +112,20 @@ pub struct SymbolAnnotation<T> {
 
 impl<T> From<Symbol<T>> for SymbolAnnotation<T> {
     fn from(symbol: Symbol<T>) -> Self {
+        let kind = if symbol.depth == 0 {
+            BindingKind::Global
+        } else {
+            BindingKind::Local
+        };
+
         SymbolAnnotation {
             name: Some(symbol.name),
             r#type: symbol.r#type,
             binding: Some(BindingDetails {
                 slot: symbol.slot,
                 depth: symbol.depth,
-                kind: BindingKind::Local,
+                distance: 0,
+                kind,
             }),
         }
     }

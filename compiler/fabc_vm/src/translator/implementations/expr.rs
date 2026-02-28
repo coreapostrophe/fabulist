@@ -189,6 +189,7 @@ mod tests {
                 binding: Some(BindingDetails {
                     slot: 0,
                     depth: 0,
+                    distance: 0,
                     kind: BindingKind::Local,
                 }),
             },
