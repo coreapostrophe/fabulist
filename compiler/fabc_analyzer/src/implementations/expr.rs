@@ -5,7 +5,7 @@ use fabc_error::{
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
 
 use crate::{
-    types::{DataType, ModuleSymbolType, SymbolAnnotation},
+    types::{BindingDetails, BindingKind, DataType, ModuleSymbolType, SymbolAnnotation},
     AnalysisResult, Analyzable,
 };
 
@@ -399,8 +399,10 @@ impl Analyzable for Primitive {
                 }
             }
             Primitive::StoryIdentifier { info, name } => {
+                let story_table = analyzer.mut_story_sym_table();
+                let current_level = story_table.current_level();
                 let ident_sym = {
-                    let Some(ident_sym) = analyzer.mut_story_sym_table().lookup_symbol(name) else {
+                    let Some(ident_sym) = story_table.lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             CompileErrorKind::UninitializedVariable,
                             info.span.clone(),
@@ -410,15 +412,25 @@ impl Analyzable for Primitive {
                     ident_sym.clone()
                 };
 
+                let binding_kind = if ident_sym.depth == 0 {
+                    BindingKind::Global
+                } else if ident_sym.depth == current_level {
+                    BindingKind::Local
+                } else {
+                    BindingKind::Upvalue
+                };
+                let distance = current_level.saturating_sub(ident_sym.depth);
+
                 analyzer.annotate_story_symbol(
                     self.info().id,
                     SymbolAnnotation {
                         name: Some(name.clone()),
                         r#type: ident_sym.r#type.clone(),
-                        binding: Some(crate::types::BindingDetails {
+                        binding: Some(BindingDetails {
                             slot: ident_sym.slot,
                             depth: ident_sym.depth,
-                            kind: crate::types::BindingKind::Local,
+                            distance,
+                            kind: binding_kind,
                         }),
                     },
                 );
@@ -429,8 +441,10 @@ impl Analyzable for Primitive {
                 }
             }
             Primitive::Identifier { info, name } => {
+                let mod_table = analyzer.mut_mod_sym_table();
+                let current_level = mod_table.current_level();
                 let ident_sym = {
-                    let Some(ident_sym) = analyzer.mut_mod_sym_table().lookup_symbol(name) else {
+                    let Some(ident_sym) = mod_table.lookup_symbol(name) else {
                         analyzer.push_error(Error::new(
                             CompileErrorKind::UninitializedVariable,
                             info.span.clone(),
@@ -440,7 +454,28 @@ impl Analyzable for Primitive {
                     ident_sym.clone()
                 };
 
-                analyzer.annotate_mod_symbol(self.info().id, ident_sym.clone().into());
+                let binding_kind = if ident_sym.depth == 0 {
+                    BindingKind::Global
+                } else if ident_sym.depth == current_level {
+                    BindingKind::Local
+                } else {
+                    BindingKind::Upvalue
+                };
+                let distance = current_level.saturating_sub(ident_sym.depth);
+
+                analyzer.annotate_mod_symbol(
+                    self.info().id,
+                    SymbolAnnotation {
+                        name: Some(ident_sym.name.clone()),
+                        r#type: ident_sym.r#type.clone(),
+                        binding: Some(BindingDetails {
+                            slot: ident_sym.slot,
+                            depth: ident_sym.depth,
+                            distance,
+                            kind: binding_kind,
+                        }),
+                    },
+                );
 
                 AnalysisResult {
                     mod_sym_type: Some(ident_sym.r#type),
@@ -570,12 +605,14 @@ impl Analyzable for Primary {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::BindingKind;
     use crate::{
         test_utils::{identifier_expr, info, number_expr, string_expr},
         Analyzer,
     };
     use fabc_error::kind::{CompileErrorKind, ErrorKind};
     use fabc_parser::ast::expr::BinaryOperator;
+    use fabc_parser::ast::stmt::{block::BlockStmt, expr::ExprStmt, r#let::LetStmt, Stmt};
 
     #[test]
     fn binary_mismatch_reports_error() {
@@ -629,5 +666,58 @@ mod tests {
             e.kind,
             ErrorKind::Compile(CompileErrorKind::InvalidMemberAccess { .. })
         )));
+    }
+
+    #[test]
+    fn identifier_inside_closure_marks_upvalue_binding() {
+        let mut analyzer = Analyzer::default();
+
+        let outer_let = Stmt::Let(LetStmt {
+            info: info(200),
+            name: "x".to_string(),
+            initializer: number_expr(201, 1.0),
+        });
+
+        let captured_ident_expr = identifier_expr(210, "x");
+        let captured_node_id = 1210;
+
+        let closure_body = BlockStmt {
+            info: info(211),
+            first_return: None,
+            statements: vec![Stmt::Expr(ExprStmt {
+                info: info(212),
+                expr: captured_ident_expr,
+            })],
+        };
+
+        let closure_stmt = Stmt::Expr(ExprStmt {
+            info: info(213),
+            expr: Expr::Primary {
+                info: info(214),
+                value: Primary::Primitive(Primitive::Closure {
+                    info: info(215),
+                    params: Vec::new(),
+                    body: closure_body,
+                }),
+            },
+        });
+
+        let block = BlockStmt {
+            info: info(216),
+            first_return: None,
+            statements: vec![outer_let, closure_stmt],
+        };
+
+        block.analyze(&mut analyzer);
+
+        let annotation = analyzer
+            .mod_sym_annotations
+            .get(&captured_node_id)
+            .expect("identifier annotation missing");
+        let binding = annotation.binding.as_ref().expect("binding missing");
+
+        assert_eq!(binding.kind, BindingKind::Upvalue);
+        assert_eq!(binding.distance, 2);
+        assert_eq!(binding.slot, 0);
     }
 }

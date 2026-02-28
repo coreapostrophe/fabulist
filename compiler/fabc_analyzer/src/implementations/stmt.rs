@@ -161,6 +161,7 @@ impl Analyzable for ReturnStmt {
 mod tests {
     use super::*;
     use crate::test_utils::{info, number_expr, story_identifier_expr};
+    use crate::types::BindingKind;
 
     #[test]
     fn let_stmt_binds_symbol_and_annotation() {
@@ -189,6 +190,29 @@ mod tests {
             .expect("annotation missing");
         assert_eq!(annotation.name.as_deref(), Some("a"));
         assert_eq!(annotation.r#type, ModuleSymbolType::Data(DataType::Number));
+    }
+
+    #[test]
+    fn let_stmt_in_root_scope_is_global_binding() {
+        let mut analyzer = Analyzer::default();
+
+        let let_stmt = LetStmt {
+            info: info(150),
+            name: "g".to_string(),
+            initializer: number_expr(151, 2.14),
+        };
+
+        let_stmt.analyze(&mut analyzer);
+
+        let annotation = analyzer
+            .mod_sym_annotations
+            .get(&150)
+            .expect("annotation missing");
+
+        let binding = annotation.binding.as_ref().expect("binding missing");
+        assert_eq!(binding.kind, BindingKind::Global);
+        assert_eq!(binding.depth, 0);
+        assert_eq!(binding.distance, 0);
     }
 
     #[test]

@@ -31,6 +31,10 @@ impl<T> SymbolTable<T> {
         self.scope_slots.push(0);
     }
 
+    pub fn current_level(&self) -> usize {
+        self.current_level
+    }
+
     pub fn exit_scope(&mut self) {
         if self.scope_display.len() == 1 {
             return;
