@@ -1,4 +1,7 @@
-use std::{collections::VecDeque, fmt::{Display, Formatter, Result as FmtResult}};
+use std::{
+    collections::VecDeque,
+    fmt::{Display, Formatter, Result as FmtResult},
+};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct ListKey<T>(pub VecDeque<T>);

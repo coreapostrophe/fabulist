@@ -153,7 +153,8 @@ impl StoryCompiler {
                 let target_machine = target
                     .create_target_machine(
                         &triple,
-                        cpu.to_str().map_err(|error| Error::TargetMachine(error.to_string()))?,
+                        cpu.to_str()
+                            .map_err(|error| Error::TargetMachine(error.to_string()))?,
                         features
                             .to_str()
                             .map_err(|error| Error::TargetMachine(error.to_string()))?,

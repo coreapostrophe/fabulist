@@ -209,8 +209,11 @@ impl Compiler {
         let launcher_main_path = launcher_dir.join("src/main.rs");
         let launcher_functions_path = launcher_dir.join("src/linked_functions.rs");
 
-        let compiled =
-            StoryCompiler.emit_program_object_file(&program, &module_name, &launcher_object_path)?;
+        let compiled = StoryCompiler.emit_program_object_file(
+            &program,
+            &module_name,
+            &launcher_object_path,
+        )?;
 
         fs::write(
             &launcher_manifest_path,
@@ -220,16 +223,17 @@ impl Compiler {
             path: launcher_manifest_path.clone(),
             source,
         })?;
-        fs::write(&launcher_build_path, standalone_launcher_build()).map_err(|source| Error::Io {
-            path: launcher_build_path.clone(),
-            source,
+        fs::write(&launcher_build_path, standalone_launcher_build()).map_err(|source| {
+            Error::Io {
+                path: launcher_build_path.clone(),
+                source,
+            }
         })?;
         fs::write(&launcher_story_path, story_json).map_err(|source| Error::Io {
             path: launcher_story_path.clone(),
             source,
         })?;
-        fs::write(&launcher_main_path, standalone_launcher_main())
-        .map_err(|source| Error::Io {
+        fs::write(&launcher_main_path, standalone_launcher_main()).map_err(|source| Error::Io {
             path: launcher_main_path.clone(),
             source,
         })?;
@@ -258,9 +262,14 @@ impl Compiler {
         })?;
         if !build_output.status.success() {
             return Err(Error::StandaloneBuildCommand {
-                command: format!("{cargo} build{}", if options.release { " --release" } else { "" }),
+                command: format!(
+                    "{cargo} build{}",
+                    if options.release { " --release" } else { "" }
+                ),
                 status: build_output.status.code().unwrap_or(-1),
-                stderr: String::from_utf8_lossy(&build_output.stderr).trim().to_string(),
+                stderr: String::from_utf8_lossy(&build_output.stderr)
+                    .trim()
+                    .to_string(),
             });
         }
 

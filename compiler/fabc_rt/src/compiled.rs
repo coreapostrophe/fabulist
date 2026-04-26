@@ -8,12 +8,22 @@ use std::{
 
 use fabc_ir::FunctionId;
 
-use super::{ClosureValue, CompiledFunctionHost, CompiledInvocationResult, ObjectRef, Scope, Value};
+use super::{
+    ClosureValue, CompiledFunctionHost, CompiledInvocationResult, ObjectRef, Scope, Value,
+};
 
 type RawPtr = *mut c_void;
 
 pub type CompiledClosureFn = unsafe extern "C" fn(RawPtr, RawPtr) -> RawPtr;
 pub type RuntimeSymbol = (&'static str, usize);
+
+type InvokeFunctionFn = unsafe fn(
+    *const c_void,
+    FunctionId,
+    Scope,
+    ObjectRef,
+    Vec<Value>,
+) -> Result<CompiledInvocationResult, String>;
 
 #[derive(Debug, Clone, Copy)]
 pub struct LinkedFunctionDescriptor {
@@ -37,13 +47,7 @@ pub struct LinkedCompiledFunctionHost {
 #[derive(Clone, Copy)]
 struct ActiveHostDispatch {
     host: *const c_void,
-    invoke_function: unsafe fn(
-        *const c_void,
-        FunctionId,
-        Scope,
-        ObjectRef,
-        Vec<Value>,
-    ) -> Result<CompiledInvocationResult, String>,
+    invoke_function: InvokeFunctionFn,
     resolve_function_symbol: unsafe fn(*const c_void, &str) -> Result<FunctionId, String>,
 }
 
@@ -66,7 +70,11 @@ impl LinkedCompiledFunctionHost {
             functions.insert(
                 descriptor.id,
                 LinkedFunctionMetadata {
-                    params: descriptor.params.iter().map(|param| (*param).to_string()).collect(),
+                    params: descriptor
+                        .params
+                        .iter()
+                        .map(|param| (*param).to_string())
+                        .collect(),
                     function: descriptor.function,
                 },
             );
@@ -177,7 +185,10 @@ pub fn invoke_compiled_with_active_host<T: CompiledFunctionHost>(
 
 pub fn runtime_symbols() -> [RuntimeSymbol; 36] {
     [
-        ("fabc_rt_value_none", runtime_addr(fabc_rt_value_none as *const ())),
+        (
+            "fabc_rt_value_none",
+            runtime_addr(fabc_rt_value_none as *const ()),
+        ),
         (
             "fabc_rt_value_number",
             runtime_addr(fabc_rt_value_number as *const ()),
@@ -198,13 +209,22 @@ pub fn runtime_symbols() -> [RuntimeSymbol; 36] {
             "fabc_rt_context_value",
             runtime_addr(fabc_rt_context_value as *const ()),
         ),
-        ("fabc_rt_object_new", runtime_addr(fabc_rt_object_new as *const ())),
+        (
+            "fabc_rt_object_new",
+            runtime_addr(fabc_rt_object_new as *const ()),
+        ),
         (
             "fabc_rt_object_insert",
             runtime_addr(fabc_rt_object_insert as *const ()),
         ),
-        ("fabc_rt_env_child", runtime_addr(fabc_rt_env_child as *const ())),
-        ("fabc_rt_env_load", runtime_addr(fabc_rt_env_load as *const ())),
+        (
+            "fabc_rt_env_child",
+            runtime_addr(fabc_rt_env_child as *const ()),
+        ),
+        (
+            "fabc_rt_env_load",
+            runtime_addr(fabc_rt_env_load as *const ()),
+        ),
         (
             "fabc_rt_env_define",
             runtime_addr(fabc_rt_env_define as *const ()),
@@ -226,7 +246,10 @@ pub fn runtime_symbols() -> [RuntimeSymbol; 36] {
             "fabc_rt_closure_new",
             runtime_addr(fabc_rt_closure_new as *const ()),
         ),
-        ("fabc_rt_unary_not", runtime_addr(fabc_rt_unary_not as *const ())),
+        (
+            "fabc_rt_unary_not",
+            runtime_addr(fabc_rt_unary_not as *const ()),
+        ),
         (
             "fabc_rt_unary_negate",
             runtime_addr(fabc_rt_unary_negate as *const ()),
@@ -275,8 +298,14 @@ pub fn runtime_symbols() -> [RuntimeSymbol; 36] {
             "fabc_rt_binary_and",
             runtime_addr(fabc_rt_binary_and as *const ()),
         ),
-        ("fabc_rt_binary_or", runtime_addr(fabc_rt_binary_or as *const ())),
-        ("fabc_rt_is_truthy", runtime_addr(fabc_rt_is_truthy as *const ())),
+        (
+            "fabc_rt_binary_or",
+            runtime_addr(fabc_rt_binary_or as *const ()),
+        ),
+        (
+            "fabc_rt_is_truthy",
+            runtime_addr(fabc_rt_is_truthy as *const ()),
+        ),
         (
             "fabc_rt_outcome_continue",
             runtime_addr(fabc_rt_outcome_continue as *const ()),
@@ -368,7 +397,15 @@ impl CompiledFunctionHost for ActiveCompiledFunctionHostRef {
         context: ObjectRef,
         args: Vec<Value>,
     ) -> Result<CompiledInvocationResult, String> {
-        unsafe { (self.dispatch.invoke_function)(self.dispatch.host, function_id, captured, context, args) }
+        unsafe {
+            (self.dispatch.invoke_function)(
+                self.dispatch.host,
+                function_id,
+                captured,
+                context,
+                args,
+            )
+        }
     }
 
     fn resolve_function_symbol(&self, symbol: &str) -> Result<FunctionId, String> {
@@ -668,12 +705,20 @@ macro_rules! binary_value_fn {
     };
 }
 
-binary_value_fn!(fabc_rt_binary_add, |left: Value, right: Value| left.add(&right));
-binary_value_fn!(fabc_rt_binary_subtract, |left: Value, right: Value| left.subtract(&right));
-binary_value_fn!(fabc_rt_binary_multiply, |left: Value, right: Value| left.multiply(&right));
-binary_value_fn!(fabc_rt_binary_divide, |left: Value, right: Value| left.divide(&right));
-binary_value_fn!(fabc_rt_binary_equal, |left: Value, right: Value| Ok(Value::Boolean(left == right)));
-binary_value_fn!(fabc_rt_binary_not_equal, |left: Value, right: Value| Ok(Value::Boolean(left != right)));
+binary_value_fn!(fabc_rt_binary_add, |left: Value, right: Value| left
+    .add(&right));
+binary_value_fn!(fabc_rt_binary_subtract, |left: Value, right: Value| left
+    .subtract(&right));
+binary_value_fn!(fabc_rt_binary_multiply, |left: Value, right: Value| left
+    .multiply(&right));
+binary_value_fn!(fabc_rt_binary_divide, |left: Value, right: Value| left
+    .divide(&right));
+binary_value_fn!(fabc_rt_binary_equal, |left: Value, right: Value| Ok(
+    Value::Boolean(left == right)
+));
+binary_value_fn!(fabc_rt_binary_not_equal, |left: Value, right: Value| Ok(
+    Value::Boolean(left != right)
+));
 binary_value_fn!(fabc_rt_binary_greater, |left: Value, right: Value| {
     Ok(Value::Boolean(left.to_number()? > right.to_number()?))
 });

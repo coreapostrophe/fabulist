@@ -51,7 +51,11 @@ fn build_command_emits_runnable_standalone_executable() {
         String::from_utf8_lossy(&cli_output.stdout),
         String::from_utf8_lossy(&cli_output.stderr)
     );
-    assert!(output.exists(), "expected executable at {}", output.display());
+    assert!(
+        output.exists(),
+        "expected executable at {}",
+        output.display()
+    );
 
     let stdout = String::from_utf8_lossy(&cli_output.stdout);
     assert!(stdout.contains("Wrote standalone executable"));
