@@ -25,7 +25,9 @@ thiserror.workspace = true
 
 fabc_analyzer = { path = "../fabc_analyzer" }
 fabc_error = { path = "../fabc_error" }
+fabc_ir = { path = "../fabc_ir" }
 fabc_parser = { path = "../fabc_parser" }
+fabc_rt = { path = "../fabc_rt" }
 inkwell = { version = "0.4", optional = true, default-features = false }
 
 [dev-dependencies]

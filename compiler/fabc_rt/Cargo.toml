@@ -1,0 +1,14 @@
+[package]
+name = "fabc_rt"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+
+fabc_ir = { path = "../fabc_ir" }
+
+[lib]
+bench = false

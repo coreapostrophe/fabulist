@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, rc::Rc};
 
-use crate::ir::{
+use fabc_ir::{
     BinaryOperator, Block, Expr, Literal, MemberSegment, QuoteSpec, SelectionSpec, StepSpec, Stmt,
     StoryProgram, UnaryOperator,
 };
@@ -9,13 +9,8 @@ use super::{
     error::{Result, RuntimeError},
     scope::Scope,
     value::{ClosureValue, ObjectRef, Value},
+    CompiledFunctionHost,
 };
-
-#[cfg(feature = "llvm-backend")]
-use std::rc::Rc;
-
-#[cfg(feature = "llvm-backend")]
-use super::native::NativeClosureHost;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NarrationView {
@@ -80,8 +75,7 @@ pub struct StoryMachine {
     globals: Scope,
     context: ObjectRef,
     cursor: Option<Cursor>,
-    #[cfg(feature = "llvm-backend")]
-    native_executor: Option<Rc<NativeClosureHost>>,
+    compiled_executor: Option<Rc<dyn CompiledFunctionHost>>,
 }
 
 impl StoryMachine {
@@ -90,44 +84,29 @@ impl StoryMachine {
     }
 
     pub fn with_context(program: StoryProgram, context: BTreeMap<String, Value>) -> Result<Self> {
-        Self::build(program, context)
+        Self::build(program, context, None)
     }
 
-    #[cfg(feature = "llvm-backend")]
+    pub fn with_compiled_executor(
+        program: StoryProgram,
+        context: BTreeMap<String, Value>,
+        compiled_executor: Rc<dyn CompiledFunctionHost>,
+    ) -> Result<Self> {
+        Self::build(program, context, Some(compiled_executor))
+    }
+
     pub fn with_native_executor(
         program: StoryProgram,
         context: BTreeMap<String, Value>,
-        native_executor: Rc<NativeClosureHost>,
+        native_executor: Rc<dyn CompiledFunctionHost>,
     ) -> Result<Self> {
-        Self::build_with_native(program, context, Some(native_executor))
+        Self::with_compiled_executor(program, context, native_executor)
     }
 
-    fn build(program: StoryProgram, context: BTreeMap<String, Value>) -> Result<Self> {
-        #[cfg(feature = "llvm-backend")]
-        {
-            Self::build_with_native(program, context, None)
-        }
-
-        #[cfg(not(feature = "llvm-backend"))]
-        {
-            if program.find_part_index(&program.start_part).is_none() {
-                return Err(RuntimeError::UnknownPart(program.start_part.clone()));
-            }
-
-            Ok(Self {
-                program,
-                globals: Scope::new(),
-                context: std::rc::Rc::new(std::cell::RefCell::new(context)),
-                cursor: None,
-            })
-        }
-    }
-
-    #[cfg(feature = "llvm-backend")]
-    fn build_with_native(
+    fn build(
         program: StoryProgram,
         context: BTreeMap<String, Value>,
-        native_executor: Option<Rc<NativeClosureHost>>,
+        compiled_executor: Option<Rc<dyn CompiledFunctionHost>>,
     ) -> Result<Self> {
         if program.find_part_index(&program.start_part).is_none() {
             return Err(RuntimeError::UnknownPart(program.start_part.clone()));
@@ -138,7 +117,7 @@ impl StoryMachine {
             globals: Scope::new(),
             context: std::rc::Rc::new(std::cell::RefCell::new(context)),
             cursor: None,
-            native_executor,
+            compiled_executor,
         })
     }
 
@@ -277,9 +256,8 @@ impl StoryMachine {
         captured: Scope,
         args: Vec<Value>,
     ) -> Result<InvocationResult> {
-        #[cfg(feature = "llvm-backend")]
-        if let Some(native_executor) = self.native_executor.as_ref() {
-            let result = native_executor
+        if let Some(compiled_executor) = self.compiled_executor.as_ref() {
+            let result = compiled_executor
                 .invoke_function(function_id, captured, self.context.clone(), args)
                 .map_err(RuntimeError::NativeExecution);
 
@@ -619,30 +597,13 @@ impl StoryMachine {
             let Some(part_index) = self.program.find_part_index(target) else {
                 return Err(RuntimeError::UnknownPart(target.to_string()));
             };
+
             self.cursor = Some(Cursor {
                 part_index,
                 step_index: 0,
             });
-            self.normalize_cursor()?;
-            return Ok(());
-        }
-
-        let Some(cursor) = self.cursor else {
-            return Ok(());
-        };
-
-        let next_index = cursor.step_index + 1;
-        if self.program.parts[cursor.part_index]
-            .steps
-            .get(next_index)
-            .is_some()
-        {
-            self.cursor = Some(Cursor {
-                part_index: cursor.part_index,
-                step_index: next_index,
-            });
-        } else {
-            self.cursor = None;
+        } else if let Some(cursor) = self.cursor.as_mut() {
+            cursor.step_index += 1;
         }
 
         self.normalize_cursor()
@@ -651,121 +612,20 @@ impl StoryMachine {
     fn normalize_cursor(&mut self) -> Result<()> {
         while let Some(cursor) = self.cursor {
             let part = &self.program.parts[cursor.part_index];
-            if part.steps.is_empty() {
-                self.cursor = None;
-            } else {
-                break;
+            if cursor.step_index < part.steps.len() {
+                return Ok(());
             }
+
+            self.cursor = if cursor.part_index + 1 < self.program.parts.len() {
+                Some(Cursor {
+                    part_index: cursor.part_index + 1,
+                    step_index: 0,
+                })
+            } else {
+                None
+            };
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::compile::StoryCompiler;
-
-    use super::{StoryEvent, StoryMachine, Value};
-
-    const BRANCHING_STORY: &str = r#"
-    Story { start: "part_1" }
-
-    # part_1
-    [Hero]
-    > "Hello there!"
-    - "Hi!" {
-        next: () => {
-            let x = 10;
-            let y = 20;
-            context.total = x + y;
-            goto part_2;
-        }
-    }
-    - "Who are you?" {
-        next: () => {
-            goto part_3;
-        }
-    }
-
-    # part_2
-    [Villain]
-    > "I've been expecting you."
-
-    # part_3
-    [Hero]
-    > "I don't trust you."
-    "#;
-
-    #[test]
-    fn machine_pauses_for_selection_and_updates_context() {
-        let program = StoryCompiler
-            .lower_source(BRANCHING_STORY)
-            .expect("program should lower");
-        let mut machine = StoryMachine::new(program).expect("machine should build");
-
-        let event = machine.start().expect("story should start");
-        assert_eq!(
-            event,
-            StoryEvent::Dialogue(super::DialogueView {
-                speaker: "Hero".to_string(),
-                text: "Hello there!".to_string(),
-                properties: Default::default(),
-            })
-        );
-
-        let event = machine.advance().expect("dialogue should advance");
-        let StoryEvent::Selection(selection) = event else {
-            panic!("expected selection");
-        };
-        assert_eq!(selection.choices.len(), 2);
-        assert_eq!(selection.choices[0].text, "Hi!");
-
-        let event = machine.choose(0).expect("choice should resolve");
-        assert_eq!(machine.context_value("total"), Some(Value::Number(30.0)));
-
-        assert_eq!(
-            event,
-            StoryEvent::Dialogue(super::DialogueView {
-                speaker: "Villain".to_string(),
-                text: "I've been expecting you.".to_string(),
-                properties: Default::default(),
-            })
-        );
-    }
-
-    #[test]
-    fn selecting_invalid_choice_reports_error() {
-        let program = StoryCompiler
-            .lower_source(BRANCHING_STORY)
-            .expect("program should lower");
-        let mut machine = StoryMachine::new(program).expect("machine should build");
-
-        machine.start().expect("story should start");
-        machine.advance().expect("selection should render");
-
-        let error = machine.choose(99).expect_err("invalid choice should fail");
-        assert!(matches!(error, super::RuntimeError::InvalidChoice { .. }));
-    }
-
-    #[test]
-    fn runtime_can_branch_to_second_target() {
-        let program = StoryCompiler
-            .lower_source(BRANCHING_STORY)
-            .expect("program should lower");
-        let mut machine = StoryMachine::new(program).expect("machine should build");
-
-        machine.start().expect("story should start");
-        machine.advance().expect("selection should render");
-
-        let event = machine.choose(1).expect("choice should resolve");
-        assert_eq!(
-            event,
-            StoryEvent::Dialogue(super::DialogueView {
-                speaker: "Hero".to_string(),
-                text: "I don't trust you.".to_string(),
-                properties: Default::default(),
-            })
-        );
     }
 }

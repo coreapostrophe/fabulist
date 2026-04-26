@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::BTreeMap, fmt, rc::Rc};
 
-use crate::ir::FunctionId;
+use fabc_ir::FunctionId;
 
 use super::{error::RuntimeError, scope::Scope};
 

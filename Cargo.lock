@@ -357,6 +357,7 @@ dependencies = [
  "fabc_error",
  "fabc_llvm",
  "fabc_parser",
+ "fabc_rt",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -379,6 +380,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fabc_ir"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "fabc_lexer"
 version = "0.1.0"
 dependencies = [
@@ -392,8 +400,10 @@ version = "0.1.0"
 dependencies = [
  "fabc_analyzer",
  "fabc_error",
+ "fabc_ir",
  "fabc_parser",
  "fabc_reg_test",
+ "fabc_rt",
  "inkwell",
  "serde",
  "thiserror 2.0.18",
@@ -420,6 +430,14 @@ dependencies = [
 [[package]]
 name = "fabc_reg_test"
 version = "0.1.0"
+
+[[package]]
+name = "fabc_rt"
+version = "0.1.0"
+dependencies = [
+ "fabc_ir",
+ "thiserror 2.0.18",
+]
 
 [[package]]
 name = "fabulate"

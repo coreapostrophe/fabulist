@@ -21,16 +21,12 @@ use crate::{
     ir::{FunctionId, StoryProgram},
 };
 
-use super::{ClosureValue, ObjectRef, Scope, Value};
+use super::{
+    ClosureValue, CompiledFunctionHost, CompiledInvocationResult, ObjectRef, Scope, Value,
+};
 
 type RawPtr = *mut c_void;
 type NativeClosureFn = unsafe extern "C" fn(RawPtr, RawPtr) -> RawPtr;
-
-#[derive(Debug, Clone)]
-pub struct NativeInvocationResult {
-    pub value: Value,
-    pub goto: Option<String>,
-}
 
 #[derive(Clone)]
 struct NativeFunctionMetadata {
@@ -135,13 +131,13 @@ impl NativeClosureHost {
         }))
     }
 
-    pub fn invoke_function(
+    fn invoke_function_inner(
         &self,
         function_id: FunctionId,
         captured: Scope,
         context: ObjectRef,
         args: Vec<Value>,
-    ) -> std::result::Result<NativeInvocationResult, String> {
+    ) -> std::result::Result<CompiledInvocationResult, String> {
         let Some(metadata) = self.functions.get(&function_id) else {
             return Err(format!("unknown native closure {function_id}"));
         };
@@ -167,7 +163,7 @@ impl NativeClosureHost {
         function: NativeClosureFn,
         frame: Scope,
         context: ObjectRef,
-    ) -> std::result::Result<NativeInvocationResult, String> {
+    ) -> std::result::Result<CompiledInvocationResult, String> {
         let frame_ptr = Box::into_raw(Box::new(frame)) as RawPtr;
         let context_ptr = Box::into_raw(Box::new(context)) as RawPtr;
 
@@ -194,16 +190,28 @@ impl NativeClosureHost {
 
         let outcome = unsafe { take_outcome(outcome_ptr) };
         Ok(match outcome {
-            NativeOutcome::Continue => NativeInvocationResult {
+            NativeOutcome::Continue => CompiledInvocationResult {
                 value: Value::None,
                 goto: None,
             },
-            NativeOutcome::Return(value) => NativeInvocationResult { value, goto: None },
-            NativeOutcome::Goto(target) => NativeInvocationResult {
+            NativeOutcome::Return(value) => CompiledInvocationResult { value, goto: None },
+            NativeOutcome::Goto(target) => CompiledInvocationResult {
                 value: Value::None,
                 goto: Some(target),
             },
         })
+    }
+}
+
+impl CompiledFunctionHost for NativeClosureHost {
+    fn invoke_function(
+        &self,
+        function_id: FunctionId,
+        captured: Scope,
+        context: ObjectRef,
+        args: Vec<Value>,
+    ) -> std::result::Result<CompiledInvocationResult, String> {
+        self.invoke_function_inner(function_id, captured, context, args)
     }
 }
 

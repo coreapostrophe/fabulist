@@ -4,13 +4,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use fabc_llvm::{
-    ir::{FunctionId, StoryProgram},
-    runtime::StoryMachine,
-};
+use fabc_rt::StoryMachine;
+
+use fabc_llvm::ir::{FunctionId, StoryProgram};
 
 #[cfg(feature = "llvm-backend")]
-use fabc_llvm::runtime::{NativeClosureHost, Value};
+use fabc_llvm::runtime::NativeClosureHost;
+
+#[cfg(feature = "llvm-backend")]
+use fabc_rt::Value;
 
 #[cfg(not(feature = "llvm-backend"))]
 use fabc_llvm::Error as LlvmError;

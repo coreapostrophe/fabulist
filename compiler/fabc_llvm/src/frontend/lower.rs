@@ -249,13 +249,13 @@ impl Lowerer {
                 ..
             } => Expr::Binary {
                 left: Box::new(self.lower_expr(left)?),
-                operator: (*operator).into(),
+                operator: lower_binary_operator(*operator),
                 right: Box::new(self.lower_expr(right)?),
             },
             ParserExpr::Unary {
                 operator, right, ..
             } => Expr::Unary {
-                operator: (*operator).into(),
+                operator: lower_unary_operator(*operator),
                 right: Box::new(self.lower_expr(right)?),
             },
             ParserExpr::Assignment { name, value, .. } => Expr::Assignment {
@@ -356,31 +356,27 @@ impl Lowerer {
     }
 }
 
-impl From<ParserBinaryOperator> for BinaryOperator {
-    fn from(value: ParserBinaryOperator) -> Self {
-        match value {
-            ParserBinaryOperator::EqualEqual => BinaryOperator::EqualEqual,
-            ParserBinaryOperator::NotEqual => BinaryOperator::NotEqual,
-            ParserBinaryOperator::Greater => BinaryOperator::Greater,
-            ParserBinaryOperator::GreaterEqual => BinaryOperator::GreaterEqual,
-            ParserBinaryOperator::Less => BinaryOperator::Less,
-            ParserBinaryOperator::LessEqual => BinaryOperator::LessEqual,
-            ParserBinaryOperator::Add => BinaryOperator::Add,
-            ParserBinaryOperator::Subtraction => BinaryOperator::Subtract,
-            ParserBinaryOperator::Multiply => BinaryOperator::Multiply,
-            ParserBinaryOperator::Divide => BinaryOperator::Divide,
-            ParserBinaryOperator::And => BinaryOperator::And,
-            ParserBinaryOperator::Or => BinaryOperator::Or,
-        }
+fn lower_binary_operator(value: ParserBinaryOperator) -> BinaryOperator {
+    match value {
+        ParserBinaryOperator::EqualEqual => BinaryOperator::EqualEqual,
+        ParserBinaryOperator::NotEqual => BinaryOperator::NotEqual,
+        ParserBinaryOperator::Greater => BinaryOperator::Greater,
+        ParserBinaryOperator::GreaterEqual => BinaryOperator::GreaterEqual,
+        ParserBinaryOperator::Less => BinaryOperator::Less,
+        ParserBinaryOperator::LessEqual => BinaryOperator::LessEqual,
+        ParserBinaryOperator::Add => BinaryOperator::Add,
+        ParserBinaryOperator::Subtraction => BinaryOperator::Subtract,
+        ParserBinaryOperator::Multiply => BinaryOperator::Multiply,
+        ParserBinaryOperator::Divide => BinaryOperator::Divide,
+        ParserBinaryOperator::And => BinaryOperator::And,
+        ParserBinaryOperator::Or => BinaryOperator::Or,
     }
 }
 
-impl From<ParserUnaryOperator> for UnaryOperator {
-    fn from(value: ParserUnaryOperator) -> Self {
-        match value {
-            ParserUnaryOperator::Not => UnaryOperator::Not,
-            ParserUnaryOperator::Negate => UnaryOperator::Negate,
-        }
+fn lower_unary_operator(value: ParserUnaryOperator) -> UnaryOperator {
+    match value {
+        ParserUnaryOperator::Not => UnaryOperator::Not,
+        ParserUnaryOperator::Negate => UnaryOperator::Negate,
     }
 }
 

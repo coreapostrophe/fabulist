@@ -28,6 +28,7 @@ fabc_analyzer = { path = "../fabc_analyzer" }
 fabc_error = { path = "../fabc_error" }
 fabc_llvm = { path = "../fabc_llvm", default-features = false }
 fabc_parser = { path = "../fabc_parser" }
+fabc_rt = { path = "../fabc_rt" }
 
 [lib]
 bench = false

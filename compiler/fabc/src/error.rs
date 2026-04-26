@@ -1,6 +1,7 @@
 use std::{io, path::PathBuf};
 
-use fabc_llvm::{runtime::RuntimeError as StoryRuntimeError, Error as LlvmError};
+use fabc_llvm::Error as LlvmError;
+use fabc_rt::RuntimeError as StoryRuntimeError;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

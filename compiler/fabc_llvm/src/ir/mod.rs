@@ -1,10 +1,4 @@
-mod expr;
-mod stmt;
-mod story;
-
-pub use expr::{BinaryOperator, Expr, Literal, MemberSegment, UnaryOperator};
-pub use stmt::{Block, Stmt};
-pub use story::{
-    DialogueSpec, FunctionId, FunctionSpec, PartSpec, QuoteSpec, SelectionSpec, StepSpec,
-    StoryProgram,
+pub use fabc_ir::{
+    BinaryOperator, Block, DialogueSpec, Expr, FunctionId, FunctionSpec, Literal, MemberSegment,
+    PartSpec, QuoteSpec, SelectionSpec, StepSpec, Stmt, StoryProgram, UnaryOperator,
 };
