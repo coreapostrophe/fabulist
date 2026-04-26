@@ -197,7 +197,7 @@ mod tests {
     use fabc_error::kind::{CompileErrorKind, ErrorKind};
     use fabc_llvm::{
         ir::{Expr, Literal, StepSpec, Stmt},
-        runtime::StoryEvent,
+        runtime::{DialogueView, NarrationView, StoryEvent, Value as RuntimeValue},
     };
     use serde_json::Value;
 
@@ -483,7 +483,7 @@ mod tests {
         let event = machine.start().expect("start bundle story");
         assert_eq!(
             event,
-            StoryEvent::Dialogue(fabc_llvm::runtime::DialogueView {
+            StoryEvent::Dialogue(DialogueView {
                 speaker: "Guide".to_string(),
                 text: "Welcome".to_string(),
                 properties: Default::default(),
@@ -499,7 +499,7 @@ mod tests {
         let event = machine.choose(0).expect("resolve choice");
         assert_eq!(
             event,
-            StoryEvent::Narration(fabc_llvm::runtime::NarrationView {
+            StoryEvent::Narration(NarrationView {
                 text: "Done".to_string(),
                 properties: Default::default(),
             })
@@ -543,7 +543,7 @@ mod tests {
         let event = machine.start().expect("start fallback story");
         assert_eq!(
             event,
-            StoryEvent::Narration(fabc_llvm::runtime::NarrationView {
+            StoryEvent::Narration(NarrationView {
                 text: "Fallback works".to_string(),
                 properties: Default::default(),
             })
@@ -598,7 +598,7 @@ mod tests {
         let event = machine.start().expect("start native bundle story");
         assert_eq!(
             event,
-            StoryEvent::Dialogue(fabc_llvm::runtime::DialogueView {
+            StoryEvent::Dialogue(DialogueView {
                 speaker: "Hero".to_string(),
                 text: "Hello there!".to_string(),
                 properties: Default::default(),
@@ -614,11 +614,11 @@ mod tests {
         let event = machine.choose(0).expect("resolve native choice");
         assert_eq!(
             machine.context_value("total"),
-            Some(fabc_llvm::runtime::Value::Number(30.0))
+            Some(RuntimeValue::Number(30.0))
         );
         assert_eq!(
             event,
-            StoryEvent::Dialogue(fabc_llvm::runtime::DialogueView {
+            StoryEvent::Dialogue(DialogueView {
                 speaker: "Villain".to_string(),
                 text: "I've been expecting you.".to_string(),
                 properties: Default::default(),
@@ -676,7 +676,7 @@ mod tests {
         let event = machine.start().expect("start native bundle story");
         assert_eq!(
             event,
-            StoryEvent::Dialogue(fabc_llvm::runtime::DialogueView {
+            StoryEvent::Dialogue(DialogueView {
                 speaker: "Guide".to_string(),
                 text: "Choose carefully.".to_string(),
                 properties: Default::default(),
@@ -693,7 +693,7 @@ mod tests {
         assert_eq!(machine.context_value("after_jump"), None);
         assert_eq!(
             event,
-            StoryEvent::Dialogue(fabc_llvm::runtime::DialogueView {
+            StoryEvent::Dialogue(DialogueView {
                 speaker: "Guide".to_string(),
                 text: "Nested goto worked.".to_string(),
                 properties: Default::default(),

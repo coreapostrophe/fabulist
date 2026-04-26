@@ -191,6 +191,7 @@ mod tests {
     use super::*;
     use crate::test_utils::{info, number_expr, story_identifier_expr};
     use crate::types::BindingKind;
+    use fabc_error::kind::{CompileErrorKind, ErrorKind};
 
     #[test]
     fn let_stmt_binds_symbol_and_annotation() {
@@ -281,12 +282,9 @@ mod tests {
 
         let kinds: Vec<_> = analyzer.errors.iter().map(|e| e.kind.clone()).collect();
         assert!(
-            kinds.iter().any(|k| matches!(
-                k,
-                fabc_error::kind::ErrorKind::Compile(
-                    fabc_error::kind::CompileErrorKind::TypeInference
-                )
-            )),
+            kinds
+                .iter()
+                .any(|k| matches!(k, ErrorKind::Compile(CompileErrorKind::TypeInference))),
             "unexpected error kinds: {:?}",
             kinds
         );

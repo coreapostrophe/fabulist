@@ -2,24 +2,24 @@ use fabc_error::{
     kind::{CompileErrorKind, InternalErrorKind},
     Error,
 };
-use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
+use fabc_parser::ast::{
+    expr::{literal::Literal, primitive::Primitive, Expr, Primary},
+    stmt::{block::BlockStmt, Stmt as ParserStmt},
+};
 
 use crate::{
     types::{
         BindingDetails, BindingKind, DataType, ModuleSymbolType, StorySymbolType, SymbolAnnotation,
     },
-    AnalysisResult, Analyzable,
+    AnalysisResult, Analyzable, Analyzer,
 };
 
-fn analyze_block_in_current_scope(
-    block: &fabc_parser::ast::stmt::block::BlockStmt,
-    analyzer: &mut crate::Analyzer,
-) -> AnalysisResult {
+fn analyze_block_in_current_scope(block: &BlockStmt, analyzer: &mut Analyzer) -> AnalysisResult {
     let mut return_type: Option<ModuleSymbolType> = None;
 
     for statement in &block.statements {
         match statement {
-            fabc_parser::ast::stmt::Stmt::Return(return_statement) => {
+            ParserStmt::Return(return_statement) => {
                 let analyzed_return = return_statement.analyze(analyzer);
                 if let Some(ret_type) = analyzed_return.mod_sym_type {
                     return_type = Some(ret_type);
@@ -78,7 +78,7 @@ fn supports_dynamic_members(sym_type: &ModuleSymbolType) -> bool {
 }
 
 impl Analyzable for Expr {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         match self {
             Expr::Primary { value, .. } => {
                 let result = value.analyze(analyzer);
@@ -436,7 +436,7 @@ impl Analyzable for Expr {
 }
 
 impl Analyzable for Literal {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let data_type = match self {
             Literal::Number { .. } => DataType::Number,
             Literal::String { .. } => DataType::String,
@@ -461,7 +461,7 @@ impl Analyzable for Literal {
 }
 
 impl Analyzable for Primitive {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         match self {
             Primitive::Object { info, value } => {
                 let Some(obj_type) = value.analyze(analyzer).mod_sym_type else {
@@ -703,7 +703,7 @@ impl Analyzable for Primitive {
 }
 
 impl Analyzable for Primary {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         match self {
             Primary::Literal(lit) => lit.analyze(analyzer),
             Primary::Primitive(prim) => prim.analyze(analyzer),
@@ -713,16 +713,16 @@ impl Analyzable for Primary {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
+    use crate::test_utils::{identifier_expr, info, number_expr, string_expr};
     use crate::types::BindingKind;
-    use crate::{
-        test_utils::{identifier_expr, info, number_expr, string_expr},
-        Analyzer,
-    };
     use fabc_error::kind::{CompileErrorKind, ErrorKind};
-    use fabc_parser::ast::expr::BinaryOperator;
-    use fabc_parser::ast::stmt::{
-        block::BlockStmt, expr::ExprStmt, r#let::LetStmt, r#return::ReturnStmt, Stmt,
+    use fabc_parser::ast::{
+        decl::object::ObjectDecl,
+        expr::BinaryOperator,
+        stmt::{block::BlockStmt, expr::ExprStmt, r#let::LetStmt, r#return::ReturnStmt, Stmt},
     };
 
     #[test]
@@ -744,11 +744,11 @@ mod tests {
 
     #[test]
     fn invalid_member_access_is_reported() {
-        let mut fields = std::collections::BTreeMap::new();
+        let mut fields = BTreeMap::new();
         fields.insert("foo".to_string(), number_expr(30, 2.0));
         let record = Primitive::Object {
             info: info(31),
-            value: fabc_parser::ast::decl::object::ObjectDecl {
+            value: ObjectDecl {
                 info: info(32),
                 map: fields,
             },

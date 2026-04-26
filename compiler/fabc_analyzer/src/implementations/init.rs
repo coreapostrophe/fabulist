@@ -17,13 +17,10 @@ use fabc_parser::ast::init::{
 
 use crate::{
     types::{ModuleSymbolType, StorySymbolType, Symbol},
-    AnalysisResult, Analyzable,
+    AnalysisResult, Analyzable, Analyzer,
 };
 
-fn bind_part_symbol(
-    part: &Part,
-    analyzer: &mut crate::Analyzer,
-) -> Option<Symbol<StorySymbolType>> {
+fn bind_part_symbol(part: &Part, analyzer: &mut Analyzer) -> Option<Symbol<StorySymbolType>> {
     if let Some(symbol) = analyzer.mut_story_sym_table().lookup_symbol(&part.ident) {
         return Some(symbol.clone());
     }
@@ -43,7 +40,7 @@ fn bind_part_symbol(
 }
 
 impl Analyzable for Init {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         match self {
             Init::Story(story_init) => story_init.analyze(analyzer),
             Init::Module(module_init) => module_init.analyze(analyzer),
@@ -52,7 +49,7 @@ impl Analyzable for Init {
 }
 
 impl Analyzable for ModuleInit {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         if let Some(module_alias) = self.alias.as_ref() {
             let sym_type = ModuleSymbolType::Module {
                 name: module_alias.clone(),
@@ -85,7 +82,7 @@ impl Analyzable for ModuleInit {
 }
 
 impl Analyzable for StoryInit {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         for part in &self.parts {
             let Some(part_symbol) = bind_part_symbol(part, analyzer) else {
                 return AnalysisResult::default();
@@ -107,7 +104,7 @@ impl Analyzable for StoryInit {
 }
 
 impl Analyzable for Metadata {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         self.object.analyze(analyzer);
 
         AnalysisResult::default()
@@ -115,7 +112,7 @@ impl Analyzable for Metadata {
 }
 
 impl Analyzable for Part {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let Some(part_symbol) = bind_part_symbol(self, analyzer) else {
             return AnalysisResult::default();
         };
@@ -131,7 +128,7 @@ impl Analyzable for Part {
 }
 
 impl Analyzable for Element {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         match self {
             Element::Dialogue(dialogue) => {
                 dialogue.analyze(analyzer);
@@ -149,7 +146,7 @@ impl Analyzable for Element {
 }
 
 impl Analyzable for DialogueElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let speaker_symbol = {
             let Some(symbol) = analyzer
                 .mut_story_sym_table()
@@ -175,7 +172,7 @@ impl Analyzable for DialogueElement {
 }
 
 impl Analyzable for SelectionElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         self.choices.iter().for_each(|choice| {
             choice.analyze(analyzer);
         });
@@ -185,7 +182,7 @@ impl Analyzable for SelectionElement {
 }
 
 impl Analyzable for NarrationElement {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         self.quote.analyze(analyzer);
 
         AnalysisResult::default()
@@ -194,11 +191,12 @@ impl Analyzable for NarrationElement {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
     use crate::test_utils::{info, string_expr};
-    use crate::Analyzer;
     use fabc_parser::ast::{
-        decl::quote::QuoteDecl,
+        decl::{object::ObjectDecl, quote::QuoteDecl},
         init::story::{
             metadata::Metadata,
             part::{
@@ -268,14 +266,14 @@ mod tests {
 
     #[test]
     fn story_init_traverses_metadata_and_parts() {
-        let mut metadata_map = std::collections::BTreeMap::new();
+        let mut metadata_map = BTreeMap::new();
         metadata_map.insert("title".to_string(), string_expr(90, "Story"));
 
         let story = StoryInit {
             info: info(91),
             metadata: Some(Metadata {
                 info: info(92),
-                object: fabc_parser::ast::decl::object::ObjectDecl {
+                object: ObjectDecl {
                     info: info(93),
                     map: metadata_map,
                 },

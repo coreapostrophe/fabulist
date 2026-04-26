@@ -3,11 +3,11 @@ use fabc_parser::ast::decl::{object::ObjectDecl, quote::QuoteDecl};
 
 use crate::{
     types::{DataType, Field, ModuleSymbolType, SymbolAnnotation},
-    AnalysisResult, Analyzable,
+    AnalysisResult, Analyzable, Analyzer,
 };
 
 impl Analyzable for QuoteDecl {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         if let Some(properties) = &self.properties {
             properties.analyze(analyzer);
         }
@@ -17,7 +17,7 @@ impl Analyzable for QuoteDecl {
 }
 
 impl Analyzable for ObjectDecl {
-    fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+    fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
         let mut fields: Vec<Field> = Vec::new();
         for (key, value_expr) in self.map.iter() {
             let expr_val = {
@@ -56,15 +56,14 @@ impl Analyzable for ObjectDecl {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
-    use crate::{
-        test_utils::{info, number_expr, string_expr},
-        Analyzer,
-    };
+    use crate::test_utils::{info, number_expr, string_expr};
 
     #[test]
     fn object_decl_turns_into_record_type() {
-        let mut map = std::collections::BTreeMap::new();
+        let mut map = BTreeMap::new();
         map.insert("x".to_string(), number_expr(2, 1.0));
         map.insert("name".to_string(), string_expr(3, "foo"));
 

@@ -2,8 +2,18 @@ use std::collections::BTreeMap;
 
 use fabc_parser::ast::{
     decl::quote::QuoteDecl,
-    expr::{literal::Literal as ParserLiteral, primitive::Primitive, Expr as ParserExpr, Primary},
-    init::{story::StoryInit, Init},
+    expr::{
+        literal::Literal as ParserLiteral, primitive::Primitive,
+        BinaryOperator as ParserBinaryOperator, Expr as ParserExpr, Primary,
+        UnaryOperator as ParserUnaryOperator,
+    },
+    init::{
+        story::{
+            part::{element::Element as StoryElement, Part as StoryPart},
+            StoryInit,
+        },
+        Init,
+    },
     stmt::{
         block::BlockStmt, expr::ExprStmt, goto::GotoStmt, r#if::ElseClause, r#if::IfStmt,
         r#let::LetStmt, r#return::ReturnStmt, Stmt as ParserStmt,
@@ -89,15 +99,15 @@ impl Lowerer {
         Ok(start)
     }
 
-    fn lower_part(&mut self, part: &fabc_parser::ast::init::story::part::Part) -> Result<PartSpec> {
+    fn lower_part(&mut self, part: &StoryPart) -> Result<PartSpec> {
         let mut steps = Vec::new();
 
         for element in &part.elements {
             match element {
-                fabc_parser::ast::init::story::part::element::Element::Narration(narration) => {
+                StoryElement::Narration(narration) => {
                     steps.push(StepSpec::Narration(self.lower_quote(&narration.quote)?));
                 }
-                fabc_parser::ast::init::story::part::element::Element::Dialogue(dialogue) => {
+                StoryElement::Dialogue(dialogue) => {
                     for quote in &dialogue.quotes {
                         steps.push(StepSpec::Dialogue(DialogueSpec {
                             speaker: dialogue.speaker.clone(),
@@ -105,7 +115,7 @@ impl Lowerer {
                         }));
                     }
                 }
-                fabc_parser::ast::init::story::part::element::Element::Selection(selection) => {
+                StoryElement::Selection(selection) => {
                     let mut choices = Vec::with_capacity(selection.choices.len());
                     for choice in &selection.choices {
                         choices.push(self.lower_quote(choice)?);
@@ -150,7 +160,7 @@ impl Lowerer {
 
     fn lower_object_map(
         &mut self,
-        map: &std::collections::BTreeMap<String, ParserExpr>,
+        map: &BTreeMap<String, ParserExpr>,
     ) -> Result<BTreeMap<String, Expr>> {
         let mut lowered = BTreeMap::new();
         for (key, value) in map {
@@ -346,30 +356,30 @@ impl Lowerer {
     }
 }
 
-impl From<fabc_parser::ast::expr::BinaryOperator> for BinaryOperator {
-    fn from(value: fabc_parser::ast::expr::BinaryOperator) -> Self {
+impl From<ParserBinaryOperator> for BinaryOperator {
+    fn from(value: ParserBinaryOperator) -> Self {
         match value {
-            fabc_parser::ast::expr::BinaryOperator::EqualEqual => BinaryOperator::EqualEqual,
-            fabc_parser::ast::expr::BinaryOperator::NotEqual => BinaryOperator::NotEqual,
-            fabc_parser::ast::expr::BinaryOperator::Greater => BinaryOperator::Greater,
-            fabc_parser::ast::expr::BinaryOperator::GreaterEqual => BinaryOperator::GreaterEqual,
-            fabc_parser::ast::expr::BinaryOperator::Less => BinaryOperator::Less,
-            fabc_parser::ast::expr::BinaryOperator::LessEqual => BinaryOperator::LessEqual,
-            fabc_parser::ast::expr::BinaryOperator::Add => BinaryOperator::Add,
-            fabc_parser::ast::expr::BinaryOperator::Subtraction => BinaryOperator::Subtract,
-            fabc_parser::ast::expr::BinaryOperator::Multiply => BinaryOperator::Multiply,
-            fabc_parser::ast::expr::BinaryOperator::Divide => BinaryOperator::Divide,
-            fabc_parser::ast::expr::BinaryOperator::And => BinaryOperator::And,
-            fabc_parser::ast::expr::BinaryOperator::Or => BinaryOperator::Or,
+            ParserBinaryOperator::EqualEqual => BinaryOperator::EqualEqual,
+            ParserBinaryOperator::NotEqual => BinaryOperator::NotEqual,
+            ParserBinaryOperator::Greater => BinaryOperator::Greater,
+            ParserBinaryOperator::GreaterEqual => BinaryOperator::GreaterEqual,
+            ParserBinaryOperator::Less => BinaryOperator::Less,
+            ParserBinaryOperator::LessEqual => BinaryOperator::LessEqual,
+            ParserBinaryOperator::Add => BinaryOperator::Add,
+            ParserBinaryOperator::Subtraction => BinaryOperator::Subtract,
+            ParserBinaryOperator::Multiply => BinaryOperator::Multiply,
+            ParserBinaryOperator::Divide => BinaryOperator::Divide,
+            ParserBinaryOperator::And => BinaryOperator::And,
+            ParserBinaryOperator::Or => BinaryOperator::Or,
         }
     }
 }
 
-impl From<fabc_parser::ast::expr::UnaryOperator> for UnaryOperator {
-    fn from(value: fabc_parser::ast::expr::UnaryOperator) -> Self {
+impl From<ParserUnaryOperator> for UnaryOperator {
+    fn from(value: ParserUnaryOperator) -> Self {
         match value {
-            fabc_parser::ast::expr::UnaryOperator::Not => UnaryOperator::Not,
-            fabc_parser::ast::expr::UnaryOperator::Negate => UnaryOperator::Negate,
+            ParserUnaryOperator::Not => UnaryOperator::Not,
+            ParserUnaryOperator::Negate => UnaryOperator::Negate,
         }
     }
 }

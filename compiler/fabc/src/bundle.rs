@@ -12,6 +12,9 @@ use fabc_llvm::{
 #[cfg(feature = "llvm-backend")]
 use fabc_llvm::runtime::{NativeClosureHost, Value};
 
+#[cfg(not(feature = "llvm-backend"))]
+use fabc_llvm::Error as LlvmError;
+
 use crate::{error::Error, Result};
 
 pub const COMPILED_BUNDLE_FORMAT_VERSION: u32 = 1;
@@ -121,7 +124,7 @@ impl CompiledBundle {
     #[cfg(not(feature = "llvm-backend"))]
     pub fn native_story_machine(&self) -> Result<StoryMachine> {
         let _ = self;
-        Err(Error::from(fabc_llvm::Error::LlvmFeatureDisabled))
+        Err(Error::from(LlvmError::LlvmFeatureDisabled))
     }
 }
 

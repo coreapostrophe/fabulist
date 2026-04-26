@@ -1,5 +1,7 @@
 use std::{io, path::PathBuf};
 
+use fabc_llvm::{runtime::RuntimeError as StoryRuntimeError, Error as LlvmError};
+
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("failed to read `{path}`: {source}")]
@@ -46,29 +48,27 @@ pub enum Error {
     #[error("compiled bundle `{path}` is missing a function symbol for closure {function_id}")]
     MissingBundleFunctionSymbol { path: PathBuf, function_id: usize },
     #[error("failed to initialize story machine from compiled bundle: {0}")]
-    BundleRuntimeInitialization(#[source] fabc_llvm::runtime::RuntimeError),
+    BundleRuntimeInitialization(#[source] StoryRuntimeError),
     #[error(transparent)]
-    Backend(fabc_llvm::Error),
+    Backend(LlvmError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl From<fabc_llvm::Error> for Error {
-    fn from(error: fabc_llvm::Error) -> Self {
+impl From<LlvmError> for Error {
+    fn from(error: LlvmError) -> Self {
         match error {
-            fabc_llvm::Error::Io { path, source } => Error::Io { path, source },
-            fabc_llvm::Error::ParseDiagnostics { path, diagnostics } => {
+            LlvmError::Io { path, source } => Error::Io { path, source },
+            LlvmError::ParseDiagnostics { path, diagnostics } => {
                 Error::ParseDiagnostics { path, diagnostics }
             }
-            fabc_llvm::Error::SemanticDiagnostics { diagnostics } => {
+            LlvmError::SemanticDiagnostics { diagnostics } => {
                 Error::SemanticDiagnostics { diagnostics }
             }
-            fabc_llvm::Error::MissingStory { path } => Error::MissingStory { path },
-            fabc_llvm::Error::MultipleStories { path, count } => {
-                Error::MultipleStories { path, count }
-            }
-            fabc_llvm::Error::CircularImport { chain } => Error::CircularImport { chain },
-            fabc_llvm::Error::DuplicatePart {
+            LlvmError::MissingStory { path } => Error::MissingStory { path },
+            LlvmError::MultipleStories { path, count } => Error::MultipleStories { path, count },
+            LlvmError::CircularImport { chain } => Error::CircularImport { chain },
+            LlvmError::DuplicatePart {
                 part,
                 first,
                 second,
@@ -77,11 +77,11 @@ impl From<fabc_llvm::Error> for Error {
                 first,
                 second,
             },
-            fabc_llvm::Error::InvalidImportPath { from, import } => {
+            LlvmError::InvalidImportPath { from, import } => {
                 Error::InvalidImportPath { from, import }
             }
-            fabc_llvm::Error::InvalidExportsObject { path } => Error::InvalidExportsObject { path },
-            fabc_llvm::Error::InvalidExportValue { path, export } => {
+            LlvmError::InvalidExportsObject { path } => Error::InvalidExportsObject { path },
+            LlvmError::InvalidExportValue { path, export } => {
                 Error::InvalidExportValue { path, export }
             }
             other => Error::Backend(other),
