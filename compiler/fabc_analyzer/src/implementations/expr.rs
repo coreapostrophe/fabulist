@@ -5,9 +5,77 @@ use fabc_error::{
 use fabc_parser::ast::expr::{literal::Literal, primitive::Primitive, Expr, Primary};
 
 use crate::{
-    types::{BindingDetails, BindingKind, DataType, ModuleSymbolType, SymbolAnnotation},
+    types::{
+        BindingDetails, BindingKind, DataType, ModuleSymbolType, StorySymbolType, SymbolAnnotation,
+    },
     AnalysisResult, Analyzable,
 };
+
+fn analyze_block_in_current_scope(
+    block: &fabc_parser::ast::stmt::block::BlockStmt,
+    analyzer: &mut crate::Analyzer,
+) -> AnalysisResult {
+    let mut return_type: Option<ModuleSymbolType> = None;
+
+    for statement in &block.statements {
+        match statement {
+            fabc_parser::ast::stmt::Stmt::Return(return_statement) => {
+                let analyzed_return = return_statement.analyze(analyzer);
+                if let Some(ret_type) = analyzed_return.mod_sym_type {
+                    return_type = Some(ret_type);
+                }
+            }
+            _ => {
+                statement.analyze(analyzer);
+            }
+        }
+    }
+
+    AnalysisResult {
+        mod_sym_type: return_type,
+        ..Default::default()
+    }
+}
+
+fn is_unknown_mod_type(sym_type: &ModuleSymbolType) -> bool {
+    matches!(sym_type, ModuleSymbolType::Data(DataType::Unknown))
+}
+
+fn mod_types_compatible(left: &ModuleSymbolType, right: &ModuleSymbolType) -> bool {
+    left == right || is_unknown_mod_type(left) || is_unknown_mod_type(right)
+}
+
+fn merge_mod_types(left: &ModuleSymbolType, right: &ModuleSymbolType) -> ModuleSymbolType {
+    match (is_unknown_mod_type(left), is_unknown_mod_type(right)) {
+        (true, false) => right.clone(),
+        _ => left.clone(),
+    }
+}
+
+fn static_member_name(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Primary {
+            value: Primary::Primitive(Primitive::Identifier { name, .. }),
+            ..
+        }
+        | Expr::Primary {
+            value: Primary::Primitive(Primitive::StoryIdentifier { name, .. }),
+            ..
+        } => Some(name.clone()),
+        Expr::Primary {
+            value: Primary::Literal(Literal::String { value, .. }),
+            ..
+        } => Some(value.clone()),
+        _ => None,
+    }
+}
+
+fn supports_dynamic_members(sym_type: &ModuleSymbolType) -> bool {
+    matches!(
+        sym_type,
+        ModuleSymbolType::Data(DataType::Context | DataType::Unknown)
+    )
+}
 
 impl Analyzable for Expr {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -62,7 +130,7 @@ impl Analyzable for Expr {
                     sym_type.clone()
                 };
 
-                if left_sym_type != right_sym_type {
+                if !mod_types_compatible(&left_sym_type, &right_sym_type) {
                     analyzer.push_error(Error::new(
                         CompileErrorKind::ExpectedType {
                             expected: left_sym_type.to_string(),
@@ -77,13 +145,13 @@ impl Analyzable for Expr {
                     self.info().id,
                     SymbolAnnotation {
                         name: None,
-                        r#type: left_sym_type.clone(),
+                        r#type: merge_mod_types(&left_sym_type, &right_sym_type),
                         binding: None,
                     },
                 );
 
                 AnalysisResult {
-                    mod_sym_type: Some(left_sym_type),
+                    mod_sym_type: Some(merge_mod_types(&left_sym_type, &right_sym_type)),
                     ..Default::default()
                 }
             }
@@ -110,7 +178,7 @@ impl Analyzable for Expr {
                     sym_type.clone()
                 };
 
-                if name_sym_type != value_sym_type {
+                if !mod_types_compatible(&name_sym_type, &value_sym_type) {
                     analyzer.push_error(Error::new(
                         CompileErrorKind::ExpectedType {
                             expected: name_sym_type.to_string(),
@@ -125,13 +193,13 @@ impl Analyzable for Expr {
                     self.info().id,
                     SymbolAnnotation {
                         name: None,
-                        r#type: value_sym_type.clone(),
+                        r#type: merge_mod_types(&name_sym_type, &value_sym_type),
                         binding: None,
                     },
                 );
 
                 AnalysisResult {
-                    mod_sym_type: Some(value_sym_type),
+                    mod_sym_type: Some(merge_mod_types(&name_sym_type, &value_sym_type)),
                     ..Default::default()
                 }
             }
@@ -180,7 +248,7 @@ impl Analyzable for Expr {
                                 sym_type.clone()
                             };
 
-                            if arg_sym_type != parameters[i] {
+                            if !mod_types_compatible(&arg_sym_type, &parameters[i]) {
                                 analyzer.push_error(Error::new(
                                     CompileErrorKind::ExpectedType {
                                         expected: parameters[i].to_string(),
@@ -279,7 +347,9 @@ impl Analyzable for Expr {
                         return AnalysisResult::default();
                     };
 
-                    if let ModuleSymbolType::Data(DataType::Record { .. }) = left_type {
+                    if supports_dynamic_members(&left_type) {
+                        ModuleSymbolType::Data(DataType::Unknown)
+                    } else if let ModuleSymbolType::Data(DataType::Record { .. }) = left_type {
                         left_type
                     } else {
                         analyzer.push_error(Error::new(
@@ -293,25 +363,43 @@ impl Analyzable for Expr {
                     }
                 };
 
+                if is_unknown_mod_type(&current_type) {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: None,
+                            r#type: ModuleSymbolType::Data(DataType::Unknown),
+                            binding: None,
+                        },
+                    );
+
+                    return AnalysisResult {
+                        mod_sym_type: Some(ModuleSymbolType::Data(DataType::Unknown)),
+                        ..Default::default()
+                    };
+                }
+
                 for member in members.iter() {
-                    let Some(member_name_type) = member.analyze(analyzer).mod_sym_type else {
-                        analyzer.push_error(Error::new(
-                            CompileErrorKind::TypeInference,
-                            info.span.clone(),
-                        ));
-                        return AnalysisResult::default();
+                    let member_name = if let Some(member_name) = static_member_name(member) {
+                        member_name
+                    } else {
+                        let Some(member_name_type) = member.analyze(analyzer).mod_sym_type else {
+                            analyzer.push_error(Error::new(
+                                CompileErrorKind::TypeInference,
+                                info.span.clone(),
+                            ));
+                            return AnalysisResult::default();
+                        };
+                        member_name_type.to_string()
                     };
 
                     if let ModuleSymbolType::Data(DataType::Record { fields }) = &current_type {
-                        if let Some(field) = fields
-                            .iter()
-                            .find(|f| f.name == member_name_type.to_string())
-                        {
+                        if let Some(field) = fields.iter().find(|f| f.name == member_name) {
                             current_type = (*field.r#type).clone();
                         } else {
                             analyzer.push_error(Error::new(
                                 CompileErrorKind::InvalidMemberAccess {
-                                    member: member_name_type.to_string(),
+                                    member: member_name,
                                 },
                                 info.span.clone(),
                             ));
@@ -420,6 +508,8 @@ impl Analyzable for Primitive {
                     BindingKind::Upvalue
                 };
                 let distance = current_level.saturating_sub(ident_sym.depth);
+                let mod_sym_type = matches!(ident_sym.r#type, StorySymbolType::Part)
+                    .then_some(ModuleSymbolType::Data(DataType::String));
 
                 analyzer.annotate_story_symbol(
                     self.info().id,
@@ -435,9 +525,20 @@ impl Analyzable for Primitive {
                     },
                 );
 
+                if let Some(mod_sym_type) = mod_sym_type.clone() {
+                    analyzer.annotate_mod_symbol(
+                        self.info().id,
+                        SymbolAnnotation {
+                            name: Some(name.clone()),
+                            r#type: mod_sym_type,
+                            binding: None,
+                        },
+                    );
+                }
+
                 AnalysisResult {
+                    mod_sym_type,
                     story_sym_type: Some(ident_sym.r#type),
-                    ..Default::default()
                 }
             }
             Primitive::Identifier { info, name } => {
@@ -527,7 +628,11 @@ impl Analyzable for Primitive {
 
                 let mut param_types = Vec::new();
                 for param in params {
-                    let Some(param_sym_type) = param.analyze(analyzer).mod_sym_type else {
+                    let Primitive::Identifier {
+                        info: param_info,
+                        name,
+                    } = param
+                    else {
                         analyzer.push_error(Error::new(
                             CompileErrorKind::TypeInference,
                             info.span.clone(),
@@ -535,35 +640,39 @@ impl Analyzable for Primitive {
                         analyzer.mut_mod_sym_table().exit_scope();
                         return AnalysisResult::default();
                     };
-                    param_types.push(param_sym_type.clone());
 
-                    if let Primitive::Identifier { name, .. } = param {
-                        if analyzer
+                    let param_sym_type = ModuleSymbolType::Data(DataType::Unknown);
+                    let symbol = {
+                        let Some(symbol) = analyzer
                             .mut_mod_sym_table()
-                            .assign_symbol(name, param_sym_type)
-                            .is_none()
-                        {
+                            .assign_symbol(name, param_sym_type.clone())
+                        else {
                             analyzer.push_error(Error::new(
                                 InternalErrorKind::InvalidAssignment,
                                 info.span.clone(),
                             ));
                             analyzer.mut_mod_sym_table().exit_scope();
                             return AnalysisResult::default();
-                        }
-                    }
+                        };
+                        symbol.clone()
+                    };
+
+                    analyzer.annotate_mod_symbol(param_info.id, symbol.into());
+                    param_types.push(param_sym_type);
                 }
 
-                let body_sym_type = {
-                    let Some(sym_type) = body.analyze(analyzer).mod_sym_type else {
-                        analyzer.push_error(Error::new(
-                            CompileErrorKind::TypeInference,
-                            info.span.clone(),
-                        ));
-                        analyzer.mut_mod_sym_table().exit_scope();
-                        return AnalysisResult::default();
+                let previous_error_count = analyzer.errors.len();
+                let body_sym_type =
+                    match analyze_block_in_current_scope(body, analyzer).mod_sym_type {
+                        Some(sym_type) => sym_type,
+                        None if analyzer.errors.len() == previous_error_count => {
+                            ModuleSymbolType::Data(DataType::None)
+                        }
+                        None => {
+                            analyzer.mut_mod_sym_table().exit_scope();
+                            return AnalysisResult::default();
+                        }
                     };
-                    sym_type.clone()
-                };
 
                 analyzer.mut_mod_sym_table().exit_scope();
 
@@ -612,7 +721,9 @@ mod tests {
     };
     use fabc_error::kind::{CompileErrorKind, ErrorKind};
     use fabc_parser::ast::expr::BinaryOperator;
-    use fabc_parser::ast::stmt::{block::BlockStmt, expr::ExprStmt, r#let::LetStmt, Stmt};
+    use fabc_parser::ast::stmt::{
+        block::BlockStmt, expr::ExprStmt, r#let::LetStmt, r#return::ReturnStmt, Stmt,
+    };
 
     #[test]
     fn binary_mismatch_reports_error() {
@@ -717,7 +828,131 @@ mod tests {
         let binding = annotation.binding.as_ref().expect("binding missing");
 
         assert_eq!(binding.kind, BindingKind::Upvalue);
-        assert_eq!(binding.distance, 2);
+        assert_eq!(binding.distance, 1);
         assert_eq!(binding.slot, 0);
+    }
+
+    #[test]
+    fn closure_parameters_bind_as_local_unknowns() {
+        let mut analyzer = Analyzer::default();
+
+        let closure = Expr::Primary {
+            info: info(300),
+            value: Primary::Primitive(Primitive::Closure {
+                info: info(301),
+                params: vec![
+                    Primitive::Identifier {
+                        info: info(302),
+                        name: "x".to_string(),
+                    },
+                    Primitive::Identifier {
+                        info: info(303),
+                        name: "y".to_string(),
+                    },
+                ],
+                body: BlockStmt {
+                    info: info(304),
+                    first_return: None,
+                    statements: vec![Stmt::Expr(ExprStmt {
+                        info: info(305),
+                        expr: Expr::Binary {
+                            info: info(306),
+                            left: Box::new(identifier_expr(307, "x")),
+                            operator: BinaryOperator::Add,
+                            right: Box::new(identifier_expr(308, "y")),
+                        },
+                    })],
+                },
+            }),
+        };
+
+        closure.analyze(&mut analyzer);
+
+        assert!(analyzer.errors.is_empty());
+
+        for node_id in [1307, 1308] {
+            let annotation = analyzer
+                .mod_sym_annotations
+                .get(&node_id)
+                .expect("identifier annotation missing");
+            let binding = annotation.binding.as_ref().expect("binding missing");
+
+            assert_eq!(binding.kind, BindingKind::Local);
+            assert_eq!(binding.distance, 0);
+        }
+    }
+
+    #[test]
+    fn closure_without_explicit_return_defaults_to_none() {
+        let mut analyzer = Analyzer::default();
+
+        let closure = Expr::Primary {
+            info: info(400),
+            value: Primary::Primitive(Primitive::Closure {
+                info: info(401),
+                params: Vec::new(),
+                body: BlockStmt {
+                    info: info(402),
+                    first_return: None,
+                    statements: vec![Stmt::Expr(ExprStmt {
+                        info: info(403),
+                        expr: number_expr(404, 1.0),
+                    })],
+                },
+            }),
+        };
+
+        let result = closure.analyze(&mut analyzer);
+
+        assert!(analyzer.errors.is_empty());
+        assert_eq!(
+            result.mod_sym_type,
+            Some(ModuleSymbolType::Function {
+                return_type: Box::new(ModuleSymbolType::Data(DataType::None)),
+                parameters: Vec::new(),
+                arity: 0,
+            })
+        );
+    }
+
+    #[test]
+    fn call_accepts_known_arguments_for_unknown_params() {
+        let mut analyzer = Analyzer::default();
+
+        let call = Expr::Call {
+            info: info(500),
+            callee: Box::new(Expr::Primary {
+                info: info(501),
+                value: Primary::Primitive(Primitive::Closure {
+                    info: info(502),
+                    params: vec![Primitive::Identifier {
+                        info: info(503),
+                        name: "x".to_string(),
+                    }],
+                    body: BlockStmt {
+                        info: info(504),
+                        first_return: Some(0),
+                        statements: vec![Stmt::Return(ReturnStmt {
+                            info: info(505),
+                            value: Some(Expr::Binary {
+                                info: info(506),
+                                left: Box::new(identifier_expr(507, "x")),
+                                operator: BinaryOperator::Add,
+                                right: Box::new(number_expr(508, 1.0)),
+                            }),
+                        })],
+                    },
+                }),
+            }),
+            arguments: vec![number_expr(509, 5.0)],
+        };
+
+        let result = call.analyze(&mut analyzer);
+
+        assert!(analyzer.errors.is_empty());
+        assert_eq!(
+            result.mod_sym_type,
+            Some(ModuleSymbolType::Data(DataType::Number))
+        );
     }
 }

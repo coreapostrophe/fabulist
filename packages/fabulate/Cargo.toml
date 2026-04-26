@@ -5,6 +5,21 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+default = ["llvm17-0"]
+llvm-backend = ["fabc/llvm-backend"]
+llvm11-0 = ["fabc/llvm11-0"]
+llvm11-0-no-llvm-linking = ["fabc/llvm11-0-no-llvm-linking"]
+llvm14-0 = ["fabc/llvm14-0"]
+llvm14-0-no-llvm-linking = ["fabc/llvm14-0-no-llvm-linking"]
+llvm15-0 = ["fabc/llvm15-0"]
+llvm15-0-no-llvm-linking = ["fabc/llvm15-0-no-llvm-linking"]
+llvm16-0 = ["fabc/llvm16-0"]
+llvm16-0-no-llvm-linking = ["fabc/llvm16-0-no-llvm-linking"]
+llvm17-0 = ["fabc/llvm17-0"]
+llvm17-0-no-llvm-linking = ["fabc/llvm17-0-no-llvm-linking"]
+
 [dependencies]
 thiserror.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
+fabc = { path = "../../compiler/fabc", default-features = false }

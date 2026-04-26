@@ -2,6 +2,7 @@ use fabc_error::{
     kind::{CompileErrorKind, InternalErrorKind},
     Error,
 };
+use fabc_parser::ast::expr::{primitive::Primitive, Expr, Primary};
 use fabc_parser::ast::stmt::{
     block::BlockStmt,
     expr::ExprStmt,
@@ -69,25 +70,53 @@ impl Analyzable for ExprStmt {
 
 impl Analyzable for GotoStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
-        let target_type = {
-            let Some(symbol) = self.target.analyze(analyzer).story_sym_type else {
+        if let Expr::Primary {
+            value: Primary::Primitive(Primitive::Identifier { name, .. }),
+            ..
+        } = self.target.as_ref()
+        {
+            if let Some(symbol) = analyzer.mut_story_sym_table().lookup_symbol(name) {
+                if matches!(symbol.r#type, StorySymbolType::Part) {
+                    return AnalysisResult::default();
+                }
+            }
+        }
+
+        let previous_error_count = analyzer.errors.len();
+        let analyzed_target = self.target.analyze(analyzer);
+
+        if let Some(target_type) = analyzed_target.story_sym_type {
+            if !matches!(target_type, StorySymbolType::Part) {
+                analyzer.push_error(Error::new(
+                    CompileErrorKind::ExpectedType {
+                        expected: "part or String".to_string(),
+                        found: format!("{}", target_type),
+                    },
+                    self.info.span.clone(),
+                ));
+            }
+
+            return AnalysisResult::default();
+        }
+
+        match analyzed_target.mod_sym_type {
+            Some(ModuleSymbolType::Data(DataType::String | DataType::Unknown)) => {}
+            Some(found) => {
+                analyzer.push_error(Error::new(
+                    CompileErrorKind::ExpectedType {
+                        expected: "part or String".to_string(),
+                        found: found.to_string(),
+                    },
+                    self.info.span.clone(),
+                ));
+            }
+            None if analyzer.errors.len() == previous_error_count => {
                 analyzer.push_error(Error::new(
                     CompileErrorKind::TypeInference,
                     self.info.span.clone(),
                 ));
-                return AnalysisResult::default();
-            };
-            symbol.clone()
-        };
-
-        if !matches!(target_type, StorySymbolType::Part) {
-            analyzer.push_error(Error::new(
-                CompileErrorKind::ExpectedType {
-                    expected: "part".to_string(),
-                    found: format!("{}", target_type),
-                },
-                self.info.span.clone(),
-            ));
+            }
+            None => {}
         }
 
         AnalysisResult::default()

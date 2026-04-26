@@ -42,10 +42,10 @@ pub struct Analyzer {
 }
 
 impl Analyzer {
-    pub fn analyze(inits: Vec<Init>) -> AnalyzerResult {
+    pub fn analyze(inits: &[Init]) -> AnalyzerResult {
         let mut analyzer = Self::default();
 
-        for init in &inits {
+        for init in inits {
             init.analyze(&mut analyzer);
         }
 

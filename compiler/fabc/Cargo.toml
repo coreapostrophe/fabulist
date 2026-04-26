@@ -5,10 +5,29 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+default = ["llvm17-0"]
+llvm-backend = ["fabc_llvm/llvm-backend"]
+llvm11-0 = ["llvm-backend", "fabc_llvm/llvm11-0"]
+llvm11-0-no-llvm-linking = ["llvm-backend", "fabc_llvm/llvm11-0-no-llvm-linking"]
+llvm14-0 = ["llvm-backend", "fabc_llvm/llvm14-0"]
+llvm14-0-no-llvm-linking = ["llvm-backend", "fabc_llvm/llvm14-0-no-llvm-linking"]
+llvm15-0 = ["llvm-backend", "fabc_llvm/llvm15-0"]
+llvm15-0-no-llvm-linking = ["llvm-backend", "fabc_llvm/llvm15-0-no-llvm-linking"]
+llvm16-0 = ["llvm-backend", "fabc_llvm/llvm16-0"]
+llvm16-0-no-llvm-linking = ["llvm-backend", "fabc_llvm/llvm16-0-no-llvm-linking"]
+llvm17-0 = ["llvm-backend", "fabc_llvm/llvm17-0"]
+llvm17-0-no-llvm-linking = ["llvm-backend", "fabc_llvm/llvm17-0-no-llvm-linking"]
+
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 
-fabc_vm = { path = "../fabc_vm" }
+fabc_analyzer = { path = "../fabc_analyzer" }
+fabc_error = { path = "../fabc_error" }
+fabc_llvm = { path = "../fabc_llvm", default-features = false }
+fabc_parser = { path = "../fabc_parser" }
 
 [lib]
 bench = false

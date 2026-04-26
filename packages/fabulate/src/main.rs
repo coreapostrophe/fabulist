@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::process::ExitCode;
 
 use crate::commands::Commands;
 
@@ -14,7 +15,14 @@ struct Cli {
     command: Commands,
 }
 
-fn main() {
+fn main() -> ExitCode {
     let cli = Cli::parse();
-    cli.command.exec();
+
+    match cli.command.exec() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
 }

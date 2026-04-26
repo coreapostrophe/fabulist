@@ -16,9 +16,31 @@ use fabc_parser::ast::init::{
 };
 
 use crate::{
-    types::{ModuleSymbolType, StorySymbolType},
+    types::{ModuleSymbolType, StorySymbolType, Symbol},
     AnalysisResult, Analyzable,
 };
+
+fn bind_part_symbol(
+    part: &Part,
+    analyzer: &mut crate::Analyzer,
+) -> Option<Symbol<StorySymbolType>> {
+    if let Some(symbol) = analyzer.mut_story_sym_table().lookup_symbol(&part.ident) {
+        return Some(symbol.clone());
+    }
+
+    let Some(symbol) = analyzer
+        .mut_story_sym_table()
+        .assign_symbol(&part.ident, StorySymbolType::Part)
+    else {
+        analyzer.push_error(Error::new(
+            InternalErrorKind::InvalidAssignment,
+            part.info.span.clone(),
+        ));
+        return None;
+    };
+
+    Some(symbol.clone())
+}
 
 impl Analyzable for Init {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
@@ -64,9 +86,18 @@ impl Analyzable for ModuleInit {
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
+        for part in &self.parts {
+            let Some(part_symbol) = bind_part_symbol(part, analyzer) else {
+                return AnalysisResult::default();
+            };
+
+            analyzer.annotate_story_symbol(part.info.id, part_symbol.into());
+        }
+
         if let Some(metadata) = &self.metadata {
             metadata.analyze(analyzer);
         }
+
         self.parts.iter().for_each(|part| {
             part.analyze(analyzer);
         });
@@ -85,18 +116,8 @@ impl Analyzable for Metadata {
 
 impl Analyzable for Part {
     fn analyze(&self, analyzer: &mut crate::Analyzer) -> AnalysisResult {
-        let part_symbol = {
-            let Some(symbol) = analyzer
-                .mut_story_sym_table()
-                .assign_symbol(&self.ident, StorySymbolType::Part)
-            else {
-                analyzer.push_error(Error::new(
-                    InternalErrorKind::InvalidAssignment,
-                    self.info.span.clone(),
-                ));
-                return AnalysisResult::default();
-            };
-            symbol.clone()
+        let Some(part_symbol) = bind_part_symbol(self, analyzer) else {
+            return AnalysisResult::default();
         };
 
         self.elements.iter().for_each(|element| {

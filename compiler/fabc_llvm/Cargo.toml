@@ -1,0 +1,35 @@
+[package]
+name = "fabc_llvm"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = []
+llvm-backend = []
+llvm11-0 = ["llvm-backend", "dep:inkwell", "inkwell/llvm11-0"]
+llvm11-0-no-llvm-linking = ["llvm-backend", "dep:inkwell", "inkwell/llvm11-0-no-llvm-linking"]
+llvm14-0 = ["llvm-backend", "dep:inkwell", "inkwell/llvm14-0"]
+llvm14-0-no-llvm-linking = ["llvm-backend", "dep:inkwell", "inkwell/llvm14-0-no-llvm-linking"]
+llvm15-0 = ["llvm-backend", "dep:inkwell", "inkwell/llvm15-0"]
+llvm15-0-no-llvm-linking = ["llvm-backend", "dep:inkwell", "inkwell/llvm15-0-no-llvm-linking"]
+llvm16-0 = ["llvm-backend", "dep:inkwell", "inkwell/llvm16-0"]
+llvm16-0-no-llvm-linking = ["llvm-backend", "dep:inkwell", "inkwell/llvm16-0-no-llvm-linking"]
+llvm17-0 = ["llvm-backend", "dep:inkwell", "inkwell/llvm17-0"]
+llvm17-0-no-llvm-linking = ["llvm-backend", "dep:inkwell", "inkwell/llvm17-0-no-llvm-linking"]
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+
+fabc_analyzer = { path = "../fabc_analyzer" }
+fabc_error = { path = "../fabc_error" }
+fabc_parser = { path = "../fabc_parser" }
+inkwell = { version = "0.4", optional = true, default-features = false }
+
+[dev-dependencies]
+fabc_reg_test = { path = "../fabc_reg_test" }
+
+[lib]
+bench = false
