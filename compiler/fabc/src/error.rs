@@ -1,7 +1,8 @@
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, result::Result as StdResult};
 
 use fabc_llvm::Error as LlvmError;
 use fabc_rt::RuntimeError as StoryRuntimeError;
+use serde_json::Error as JsonError;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -37,12 +38,12 @@ pub enum Error {
     #[error("export `{export}` in `{path}` must be a literal, story reference, or imported module member")]
     InvalidExportValue { path: PathBuf, export: String },
     #[error("failed to encode compiled story bundle manifest: {0}")]
-    BundleManifestSerialize(#[source] serde_json::Error),
+    BundleManifestSerialize(#[source] JsonError),
     #[error("failed to parse compiled story bundle manifest `{path}`: {source}")]
     BundleManifestParse {
         path: PathBuf,
         #[source]
-        source: serde_json::Error,
+        source: JsonError,
     },
     #[error("unsupported bundle format version {found} in `{path}`")]
     UnsupportedBundleFormatVersion { path: PathBuf, found: u32 },
@@ -50,11 +51,19 @@ pub enum Error {
     MissingBundleFunctionSymbol { path: PathBuf, function_id: usize },
     #[error("failed to initialize story machine from compiled bundle: {0}")]
     BundleRuntimeInitialization(#[source] StoryRuntimeError),
+    #[error("failed to encode embedded standalone story: {0}")]
+    StandaloneStorySerialize(#[source] JsonError),
+    #[error("standalone launcher command `{command}` failed with status {status}: {stderr}")]
+    StandaloneBuildCommand {
+        command: String,
+        status: i32,
+        stderr: String,
+    },
     #[error(transparent)]
     Backend(LlvmError),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;
 
 impl From<LlvmError> for Error {
     fn from(error: LlvmError) -> Self {

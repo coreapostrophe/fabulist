@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, result::Result as StdResult};
 
 use thiserror::Error;
 
@@ -59,8 +59,14 @@ pub enum Error {
     NativeJit(String),
     #[error("LLVM code generation failed: {0}")]
     Codegen(String),
+    #[error("LLVM target initialization failed: {0}")]
+    TargetInitialization(String),
+    #[error("LLVM target machine creation failed: {0}")]
+    TargetMachine(String),
+    #[error("failed to write object file `{path}`: {message}")]
+    ObjectWrite { path: PathBuf, message: String },
     #[error("LLVM code generation requires enabling one of the `llvmXX-0` crate features")]
     LlvmFeatureDisabled,
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;

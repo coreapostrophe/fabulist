@@ -80,6 +80,16 @@ impl StoryCompiler {
         self.emit_program_llvm_ir(&program, module_name)
     }
 
+    pub fn emit_entry_object_file(
+        &self,
+        entry: impl AsRef<Path>,
+        module_name: &str,
+        output: impl AsRef<Path>,
+    ) -> Result<CompiledLlvmArtifact> {
+        let program = self.lower_entry(entry)?;
+        self.emit_program_object_file(&program, module_name, output)
+    }
+
     #[allow(unused_variables)]
     pub fn emit_program_llvm_ir(
         &self,
@@ -97,14 +107,77 @@ impl StoryCompiler {
         program: &StoryProgram,
         module_name: &str,
     ) -> Result<CompiledLlvmArtifact> {
+        self.emit_program_llvm_artifact_with_options(program, module_name, None::<&Path>)
+    }
+
+    #[allow(unused_variables)]
+    pub fn emit_program_object_file(
+        &self,
+        program: &StoryProgram,
+        module_name: &str,
+        output: impl AsRef<Path>,
+    ) -> Result<CompiledLlvmArtifact> {
+        self.emit_program_llvm_artifact_with_options(program, module_name, Some(output.as_ref()))
+    }
+
+    #[allow(unused_variables)]
+    fn emit_program_llvm_artifact_with_options(
+        &self,
+        program: &StoryProgram,
+        module_name: &str,
+        object_output: Option<&Path>,
+    ) -> Result<CompiledLlvmArtifact> {
         let program = program.clone();
 
         #[cfg(feature = "llvm-backend")]
         {
             use inkwell::context::Context;
+            use inkwell::targets::{
+                CodeModel, FileType, InitializationConfig, RelocMode, Target, TargetMachine,
+            };
+            use inkwell::OptimizationLevel;
 
             let context = Context::create();
             let artifact = crate::llvm::LlvmEmitter::new(&context, module_name)?.emit(&program)?;
+
+            if let Some(output_path) = object_output {
+                let output_path = output_path.to_path_buf();
+                Target::initialize_native(&InitializationConfig::default())
+                    .map_err(|error| Error::TargetInitialization(error.to_string()))?;
+
+                let triple = TargetMachine::get_default_triple();
+                let target = Target::from_triple(&triple)
+                    .map_err(|error| Error::TargetMachine(error.to_string()))?;
+                let cpu = TargetMachine::get_host_cpu_name();
+                let features = TargetMachine::get_host_cpu_features();
+                let target_machine = target
+                    .create_target_machine(
+                        &triple,
+                        cpu.to_str().map_err(|error| Error::TargetMachine(error.to_string()))?,
+                        features
+                            .to_str()
+                            .map_err(|error| Error::TargetMachine(error.to_string()))?,
+                        OptimizationLevel::Default,
+                        RelocMode::PIC,
+                        CodeModel::Default,
+                    )
+                    .ok_or_else(|| {
+                        Error::TargetMachine(
+                            "LLVM could not create a native target machine".to_string(),
+                        )
+                    })?;
+
+                artifact.module.set_triple(&triple);
+                let data_layout = target_machine.get_target_data().get_data_layout();
+                artifact.module.set_data_layout(&data_layout);
+                target_machine
+                    .write_to_file(&artifact.module, FileType::Object, &output_path)
+                    .map_err(|error| Error::ObjectWrite {
+                        path: output_path,
+                        message: error.to_string(),
+                    })?;
+            }
+
             Ok(CompiledLlvmArtifact {
                 llvm_ir: artifact.module.print_to_string().to_string(),
                 function_symbols: artifact.function_symbols,
@@ -113,7 +186,7 @@ impl StoryCompiler {
 
         #[cfg(not(feature = "llvm-backend"))]
         {
-            let _ = (program, module_name);
+            let _ = (program, module_name, object_output);
             Err(Error::LlvmFeatureDisabled)
         }
     }
@@ -123,6 +196,7 @@ impl StoryCompiler {
 mod tests {
     use std::{
         env, fs,
+        path::PathBuf,
         time::{SystemTime, UNIX_EPOCH},
     };
 
@@ -202,7 +276,7 @@ mod tests {
         )));
     }
 
-    fn temp_case_dir(name: &str) -> std::path::PathBuf {
+    fn temp_case_dir(name: &str) -> PathBuf {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("time went backwards")

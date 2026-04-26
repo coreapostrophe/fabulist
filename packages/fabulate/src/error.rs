@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, result::Result as StdResult};
 
 use fabc::{Error as CompilerError, StoryRuntimeError};
 
@@ -12,4 +12,4 @@ pub enum Error {
     Compiler(#[from] CompilerError),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;

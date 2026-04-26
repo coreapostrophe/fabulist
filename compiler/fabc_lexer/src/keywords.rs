@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum KeywordKind {
@@ -35,7 +35,7 @@ pub enum KeywordKind {
 }
 
 impl Display for KeywordKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             KeywordKind::Let => write!(f, "let"),
             KeywordKind::Fn => write!(f, "fn"),

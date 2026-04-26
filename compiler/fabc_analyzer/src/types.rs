@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Field {
@@ -18,7 +18,7 @@ pub enum DataType {
 }
 
 impl Display for DataType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             DataType::Unknown => write!(f, "Unknown"),
             DataType::Number => write!(f, "Number"),
@@ -51,7 +51,7 @@ pub enum ModuleSymbolType {
 }
 
 impl Display for ModuleSymbolType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             ModuleSymbolType::Module { name } => write!(f, "module {name}"),
             ModuleSymbolType::Data(data_type) => write!(f, "{data_type}"),
@@ -74,7 +74,7 @@ pub enum StorySymbolType {
 }
 
 impl Display for StorySymbolType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             StorySymbolType::Part => write!(f, "part"),
             StorySymbolType::Speaker => write!(f, "speaker"),

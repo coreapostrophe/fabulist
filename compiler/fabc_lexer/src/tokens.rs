@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use crate::keywords::KeywordKind;
 
@@ -51,7 +51,7 @@ pub enum TokenKind<'src> {
 }
 
 impl<'src> Display for TokenKind<'src> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             TokenKind::Commat => write!(f, "@"),
             TokenKind::LeftParen => write!(f, "("),

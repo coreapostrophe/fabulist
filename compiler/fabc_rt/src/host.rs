@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use fabc_ir::FunctionId;
 
 use super::{ObjectRef, Scope, Value};
@@ -8,12 +10,18 @@ pub struct CompiledInvocationResult {
     pub goto: Option<String>,
 }
 
-pub trait CompiledFunctionHost: std::fmt::Debug {
+pub trait CompiledFunctionHost: Debug {
     fn invoke_function(
         &self,
         function_id: FunctionId,
         captured: Scope,
         context: ObjectRef,
         args: Vec<Value>,
-    ) -> std::result::Result<CompiledInvocationResult, String>;
+    ) -> Result<CompiledInvocationResult, String>;
+
+    fn resolve_function_symbol(&self, symbol: &str) -> Result<FunctionId, String> {
+        Err(format!(
+            "compiled function host cannot resolve symbol `{symbol}`"
+        ))
+    }
 }

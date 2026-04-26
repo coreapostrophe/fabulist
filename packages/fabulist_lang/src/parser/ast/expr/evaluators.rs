@@ -612,6 +612,8 @@ impl Evaluable for Expr {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use crate::{
         interpreter::runtime_value::RuntimeValue,
         parser::{
@@ -717,7 +719,7 @@ mod tests {
             })
             .expect("Failed to evaluate object primitive");
 
-        let mut expected_properties = std::collections::HashMap::new();
+        let mut expected_properties = HashMap::new();
 
         expected_properties.insert(
             "a".to_string(),

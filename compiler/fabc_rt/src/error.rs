@@ -1,3 +1,5 @@
+use std::result::Result as StdResult;
+
 use thiserror::Error;
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
@@ -42,4 +44,4 @@ pub enum RuntimeError {
     UnexpectedControlFlow,
 }
 
-pub type Result<T> = std::result::Result<T, RuntimeError>;
+pub type Result<T> = StdResult<T, RuntimeError>;

@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Display};
+use std::{collections::VecDeque, fmt::{Display, Formatter, Result as FmtResult}};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub struct ListKey<T>(pub VecDeque<T>);
@@ -55,7 +55,7 @@ impl From<&String> for ListKey<String> {
 }
 
 impl Display for ListKey<String> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{:?}", self)
     }
 }

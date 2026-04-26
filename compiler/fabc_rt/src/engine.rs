@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, rc::Rc};
+use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
 
 use fabc_ir::{
     BinaryOperator, Block, Expr, Literal, MemberSegment, QuoteSpec, SelectionSpec, StepSpec, Stmt,
@@ -115,7 +115,7 @@ impl StoryMachine {
         Ok(Self {
             program,
             globals: Scope::new(),
-            context: std::rc::Rc::new(std::cell::RefCell::new(context)),
+            context: Rc::new(RefCell::new(context)),
             cursor: None,
             compiled_executor,
         })

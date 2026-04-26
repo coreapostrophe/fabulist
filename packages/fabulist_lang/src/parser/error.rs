@@ -2,7 +2,10 @@
 
 #![warn(missing_docs)]
 
-use std::{fmt::Display, ops::Add};
+use std::{
+    fmt::{Display, Formatter, Result as FmtResult},
+    ops::Add,
+};
 
 use pest::iterators::Pair;
 
@@ -18,7 +21,7 @@ pub struct LineCol {
 }
 
 impl Display for LineCol {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}:{}", self.line, self.column)
     }
 }

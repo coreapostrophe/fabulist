@@ -1,3 +1,5 @@
+use std::result::Result as StdResult;
+
 use crate::story::reference::ListKey;
 
 #[derive(thiserror::Error, Debug)]
@@ -23,4 +25,4 @@ pub enum Error {
     EndOfStory,
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = StdResult<T, Error>;

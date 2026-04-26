@@ -13,6 +13,10 @@ pub struct Compile {
     #[arg(short = 'o', long)]
     pub output: Option<PathBuf>,
 
+    /// Optional output path for the generated native object file
+    #[arg(long = "object-output")]
+    pub object_output: Option<PathBuf>,
+
     /// Optional output directory for a compiled bundle containing LLVM IR and story metadata
     #[arg(long = "bundle")]
     pub bundle_output: Option<PathBuf>,
@@ -27,6 +31,7 @@ impl Compile {
         let artifact = Compiler::compile_with_options(CompileOptions {
             entry: self.input.clone(),
             output: self.output.clone(),
+            object_output: self.object_output.clone(),
             module_name: self.module_name.clone(),
             bundle_output: self.bundle_output.clone(),
         })?;
@@ -36,6 +41,14 @@ impl Compile {
             artifact.entry.display(),
             artifact.output_path.display()
         );
+
+        if let Some(object_path) = artifact.object_path {
+            println!(
+                "Wrote native object file for {} to {}",
+                artifact.entry.display(),
+                object_path.display()
+            );
+        }
 
         if let Some(bundle) = artifact.bundle {
             println!(
