@@ -89,7 +89,7 @@ fn build_command_emits_runnable_standalone_executable() {
 }
 
 fn fabulate_bin() -> String {
-    env::var("CARGO_BIN_EXE_fabulate").expect("cargo should expose the fabulate binary path")
+    env!("CARGO_BIN_EXE_fabulate").to_owned()
 }
 
 fn temp_case_dir(name: &str) -> PathBuf {
