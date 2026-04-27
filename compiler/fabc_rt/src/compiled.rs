@@ -14,10 +14,12 @@ use super::{
 
 type RawPtr = *mut c_void;
 
+// SAFETY: compiled closures use the runtime ABI defined in this module and exchange
+// ownership through opaque boxed pointers that remain valid for the duration of the call.
 pub type CompiledClosureFn = unsafe extern "C" fn(RawPtr, RawPtr) -> RawPtr;
 pub type RuntimeSymbol = (&'static str, usize);
 
-type InvokeFunctionFn = unsafe fn(
+type InvokeFunctionFn = fn(
     *const c_void,
     FunctionId,
     Scope,
@@ -48,7 +50,7 @@ pub struct LinkedCompiledFunctionHost {
 struct ActiveHostDispatch {
     host: *const c_void,
     invoke_function: InvokeFunctionFn,
-    resolve_function_symbol: unsafe fn(*const c_void, &str) -> Result<FunctionId, String>,
+    resolve_function_symbol: fn(*const c_void, &str) -> Result<FunctionId, String>,
 }
 
 impl ActiveHostDispatch {
@@ -155,11 +157,15 @@ pub fn invoke_compiled_with_active_host<T: CompiledFunctionHost>(
         slot.borrow_mut().take();
     });
 
+    // SAFETY: `function` came from the linked launcher or LLVM JIT, and both pointers were
+    // allocated just above and stay live for the duration of the compiled call.
     let outcome_ptr = unsafe { function(frame_ptr, context_ptr) };
 
     ACTIVE_HOST.with(|slot| {
         slot.replace(previous_host);
     });
+    // SAFETY: the compiled ABI only borrows these boxes during the call, so reclaiming them
+    // here drops the original `Scope` and `ObjectRef` exactly once.
     unsafe {
         drop(Box::from_raw(frame_ptr as *mut Scope));
         drop(Box::from_raw(context_ptr as *mut ObjectRef));
@@ -169,7 +175,7 @@ pub fn invoke_compiled_with_active_host<T: CompiledFunctionHost>(
         return Err(error);
     }
 
-    let outcome = unsafe { take_outcome(outcome_ptr) };
+    let outcome = take_outcome(outcome_ptr);
     Ok(match outcome {
         NativeOutcome::Continue => CompiledInvocationResult {
             value: Value::None,
@@ -337,27 +343,31 @@ fn box_value(value: Value) -> RawPtr {
     Box::into_raw(Box::new(value)) as RawPtr
 }
 
-unsafe fn take_value(ptr: RawPtr) -> Value {
-    *Box::from_raw(ptr as *mut Value)
+// ABI ownership helpers: `take_*` consumes a box allocated by this module exactly once,
+// while `clone_*` only borrows through a live pointer supplied by compiled code.
+fn take_value(ptr: RawPtr) -> Value {
+    unsafe { *Box::from_raw(ptr as *mut Value) }
 }
 
-unsafe fn clone_scope(ptr: RawPtr) -> Scope {
-    (*(ptr as *mut Scope)).clone()
+fn clone_scope(ptr: RawPtr) -> Scope {
+    unsafe { (*(ptr as *mut Scope)).clone() }
 }
 
-unsafe fn clone_context(ptr: RawPtr) -> ObjectRef {
-    (*(ptr as *mut ObjectRef)).clone()
+fn clone_context(ptr: RawPtr) -> ObjectRef {
+    unsafe { (*(ptr as *mut ObjectRef)).clone() }
 }
 
 fn box_outcome(outcome: NativeOutcome) -> RawPtr {
     Box::into_raw(Box::new(outcome)) as RawPtr
 }
 
-unsafe fn take_outcome(ptr: RawPtr) -> NativeOutcome {
-    *Box::from_raw(ptr as *mut NativeOutcome)
+fn take_outcome(ptr: RawPtr) -> NativeOutcome {
+    unsafe { *Box::from_raw(ptr as *mut NativeOutcome) }
 }
 
 fn read_string(bytes: *const i8, len: u64) -> Result<String, String> {
+    // SAFETY: the ABI passes a borrowed `(ptr, len)` pair to UTF-8 data that stays valid for
+    // the duration of this conversion.
     let bytes = unsafe { slice::from_raw_parts(bytes as *const u8, len as usize) };
     str::from_utf8(bytes)
         .map(str::to_owned)
@@ -397,51 +407,49 @@ impl CompiledFunctionHost for ActiveCompiledFunctionHostRef {
         context: ObjectRef,
         args: Vec<Value>,
     ) -> Result<CompiledInvocationResult, String> {
-        unsafe {
-            (self.dispatch.invoke_function)(
-                self.dispatch.host,
-                function_id,
-                captured,
-                context,
-                args,
-            )
-        }
+        (self.dispatch.invoke_function)(self.dispatch.host, function_id, captured, context, args)
     }
 
     fn resolve_function_symbol(&self, symbol: &str) -> Result<FunctionId, String> {
-        unsafe { (self.dispatch.resolve_function_symbol)(self.dispatch.host, symbol) }
+        (self.dispatch.resolve_function_symbol)(self.dispatch.host, symbol)
     }
 }
 
-unsafe fn invoke_function_impl<T: CompiledFunctionHost>(
+fn invoke_function_impl<T: CompiledFunctionHost>(
     host: *const c_void,
     function_id: FunctionId,
     captured: Scope,
     context: ObjectRef,
     args: Vec<Value>,
 ) -> Result<CompiledInvocationResult, String> {
-    (&*(host as *const T)).invoke_function(function_id, captured, context, args)
+    // SAFETY: `ActiveHostDispatch::new` stores a pointer to `T` alongside this matching
+    // monomorphized callback, so casting `host` back to `T` is valid here.
+    unsafe { (&*(host as *const T)).invoke_function(function_id, captured, context, args) }
 }
 
-unsafe fn resolve_function_symbol_impl<T: CompiledFunctionHost>(
+fn resolve_function_symbol_impl<T: CompiledFunctionHost>(
     host: *const c_void,
     symbol: &str,
 ) -> Result<FunctionId, String> {
-    (&*(host as *const T)).resolve_function_symbol(symbol)
+    // SAFETY: `host` was erased from `&T` in `ActiveHostDispatch::new`, and this callback is
+    // only used with that same concrete `T`.
+    unsafe { (&*(host as *const T)).resolve_function_symbol(symbol) }
 }
 
+// Exported ABI entry points remain `unsafe` whenever compiled code passes raw pointers into the
+// runtime. The compiler and linked launcher are the only intended callers.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fabc_rt_value_none() -> RawPtr {
+pub extern "C" fn fabc_rt_value_none() -> RawPtr {
     box_value(Value::None)
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fabc_rt_value_number(value: f64) -> RawPtr {
+pub extern "C" fn fabc_rt_value_number(value: f64) -> RawPtr {
     box_value(Value::Number(value))
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fabc_rt_value_boolean(value: bool) -> RawPtr {
+pub extern "C" fn fabc_rt_value_boolean(value: bool) -> RawPtr {
     box_value(Value::Boolean(value))
 }
 
@@ -473,7 +481,7 @@ pub unsafe extern "C" fn fabc_rt_context_value(context: RawPtr) -> RawPtr {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fabc_rt_object_new() -> RawPtr {
+pub extern "C" fn fabc_rt_object_new() -> RawPtr {
     box_value(Value::object(BTreeMap::new()))
 }
 
@@ -743,7 +751,7 @@ fn binary_value(
     right: RawPtr,
     handler: impl FnOnce(Value, Value) -> Result<Value, super::RuntimeError>,
 ) -> RawPtr {
-    match handler(unsafe { take_value(left) }, unsafe { take_value(right) }) {
+    match handler(take_value(left), take_value(right)) {
         Ok(value) => box_value(value),
         Err(error) => {
             set_last_error(error.to_string());
@@ -764,7 +772,7 @@ pub unsafe extern "C" fn fabc_rt_is_truthy(value: RawPtr) -> bool {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fabc_rt_outcome_continue() -> RawPtr {
+pub extern "C" fn fabc_rt_outcome_continue() -> RawPtr {
     box_outcome(NativeOutcome::Continue)
 }
 

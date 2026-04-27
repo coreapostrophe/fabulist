@@ -85,6 +85,8 @@ impl NativeClosureHost {
                 .map_err(|error| {
                     Error::NativeJit(format!("failed to resolve `{symbol}`: {error}"))
                 })?;
+            // SAFETY: the symbol was emitted by our LLVM backend, which gives every compiled
+            // closure the `CompiledClosureFn` ABI expected by the runtime bridge.
             let function_ptr = unsafe { std::mem::transmute::<usize, CompiledClosureFn>(address) };
 
             symbols.insert(symbol.clone(), function.id);

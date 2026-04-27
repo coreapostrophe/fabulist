@@ -488,6 +488,8 @@ impl<'ctx> LlvmEmitter<'ctx> {
 
         for (index, value) in arguments.iter().enumerate() {
             let offset = self.context.i32_type().const_int(index as u64, false);
+            // SAFETY: `buffer` was allocated with exactly `arguments.len()` elements, and the
+            // loop index comes from enumerating that same slice, so this GEP stays in bounds.
             let slot = unsafe {
                 self.builder.build_gep(
                     self.abi.value_ptr_type,
