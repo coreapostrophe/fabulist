@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  LLVM_SYS_170_PREFIX: /usr/lib/llvm-17
 
 jobs:
   test:
@@ -25,6 +26,10 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
+      - name: Install LLVM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm-17-dev libpolly-17-dev
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
