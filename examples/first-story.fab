@@ -1,0 +1,39 @@
+Story { start: "secret" }
+
+# secret
+[Mira]
+> "If the wardens ask, you never saw me in the archive."
+    - "I'll protect your secret." {
+        next: () => {
+            context.mira_trust = "high";
+            goto escape;
+        }
+    }
+    - "They deserve to know." {
+        next: () => {
+            context.mira_trust = "low";
+            goto escape;
+        }
+    }
+
+# escape
+[Mira]
+> "The bells are already ringing." {
+    next: () => {
+        if (context.mira_trust == "high") {
+            goto hidden_gate;
+        } else {
+            goto river_wall;
+        }
+    }
+}
+
+# hidden_gate
+[Mira]
+> "You kept my secret. Stay close."
+* "Mira parts the ivy, reveals a narrow gate hidden in the stone, and leads you out before the wardens seal the square."
+
+# river_wall
+[Mira]
+> "You chose the wardens over me. Find your own way out."
+* "Mira disappears into the alleys, and you are left to scramble up the river wall alone while the bells ring behind you."

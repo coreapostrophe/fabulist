@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use fabc_error::{kind::InternalErrorKind, Error};
 use fabc_parser::ast::init::{
     module::ModuleInit,
@@ -16,6 +18,7 @@ use fabc_parser::ast::init::{
 };
 
 use crate::{
+    reachability::{extract_start_part, report_unreachable_parts, StoryReachability},
     types::{ModuleSymbolType, StorySymbolType, Symbol},
     AnalysisResult, Analyzable, Analyzer,
 };
@@ -83,13 +86,22 @@ impl Analyzable for ModuleInit {
 
 impl Analyzable for StoryInit {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
+        let mut known_parts = HashSet::new();
+
         for part in &self.parts {
+            known_parts.insert(part.ident.clone());
+
             let Some(part_symbol) = bind_part_symbol(part, analyzer) else {
                 return AnalysisResult::default();
             };
 
             analyzer.annotate_story_symbol(part.info.id, part_symbol.into());
         }
+
+        analyzer.begin_story_reachability(StoryReachability::new(
+            extract_start_part(self),
+            known_parts,
+        ));
 
         if let Some(metadata) = &self.metadata {
             metadata.analyze(analyzer);
@@ -98,6 +110,8 @@ impl Analyzable for StoryInit {
         self.parts.iter().for_each(|part| {
             part.analyze(analyzer);
         });
+
+        report_unreachable_parts(self, analyzer);
 
         AnalysisResult::default()
     }
@@ -117,9 +131,13 @@ impl Analyzable for Part {
             return AnalysisResult::default();
         };
 
+        analyzer.set_current_story_part(Some(self.ident.clone()));
+
         self.elements.iter().for_each(|element| {
             element.analyze(analyzer);
         });
+
+        analyzer.set_current_story_part(None);
 
         analyzer.annotate_story_symbol(self.info.id, part_symbol.into());
 

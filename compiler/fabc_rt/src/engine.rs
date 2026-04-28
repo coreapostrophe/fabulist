@@ -616,14 +616,7 @@ impl StoryMachine {
                 return Ok(());
             }
 
-            self.cursor = if cursor.part_index + 1 < self.program.parts.len() {
-                Some(Cursor {
-                    part_index: cursor.part_index + 1,
-                    step_index: 0,
-                })
-            } else {
-                None
-            };
+            self.cursor = None;
         }
 
         Ok(())
@@ -639,7 +632,7 @@ mod tests {
         QuoteSpec, SelectionSpec, StepSpec, Stmt, StoryProgram,
     };
 
-    use super::{DialogueView, StoryEvent, StoryMachine};
+    use super::{DialogueView, NarrationView, StoryEvent, StoryMachine};
     use crate::{RuntimeError, Value};
 
     #[test]
@@ -747,6 +740,32 @@ mod tests {
         .expect_err("missing start part should fail");
 
         assert_eq!(error, RuntimeError::UnknownPart("missing".to_string()));
+    }
+
+    #[test]
+    fn machine_does_not_fall_through_to_unreachable_parts() {
+        let mut machine = StoryMachine::new(program_with_dangling_part())
+            .expect("build story with dangling part");
+
+        let event = machine.start().expect("start story");
+        let StoryEvent::Selection(selection) = event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices[0].text, "Go");
+
+        let event = machine.choose(0).expect("follow explicit goto");
+        assert_eq!(
+            event,
+            StoryEvent::Narration(NarrationView {
+                text: "Reached the connected ending.".to_string(),
+                properties: Default::default(),
+            })
+        );
+
+        let event = machine
+            .advance()
+            .expect("connected ending should terminate story");
+        assert_eq!(event, StoryEvent::Finished);
     }
 
     fn program_with_context_mutation() -> StoryProgram {
@@ -931,6 +950,52 @@ mod tests {
                 })],
             }],
             functions: Vec::new(),
+        }
+    }
+
+    fn program_with_dangling_part() -> StoryProgram {
+        StoryProgram {
+            start_part: "intro".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![
+                PartSpec {
+                    id: "intro".to_string(),
+                    steps: vec![StepSpec::Selection(SelectionSpec {
+                        choices: vec![QuoteSpec {
+                            node_id: 0,
+                            text: "Go".to_string(),
+                            properties: BTreeMap::new(),
+                            next_action: Some(0),
+                        }],
+                    })],
+                },
+                PartSpec {
+                    id: "connected".to_string(),
+                    steps: vec![StepSpec::Narration(QuoteSpec {
+                        node_id: 1,
+                        text: "Reached the connected ending.".to_string(),
+                        properties: BTreeMap::new(),
+                        next_action: None,
+                    })],
+                },
+                PartSpec {
+                    id: "dangling".to_string(),
+                    steps: vec![StepSpec::Narration(QuoteSpec {
+                        node_id: 2,
+                        text: "This dangling part should never render.".to_string(),
+                        properties: BTreeMap::new(),
+                        next_action: None,
+                    })],
+                },
+            ],
+            functions: vec![FunctionSpec {
+                id: 0,
+                node_id: 0,
+                params: Vec::new(),
+                body: Block {
+                    statements: vec![Stmt::Goto(Expr::StoryReference("connected".to_string()))],
+                },
+            }],
         }
     }
 }

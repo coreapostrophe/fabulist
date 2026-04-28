@@ -5,6 +5,10 @@
 //
 // Copyright (c) 2025 Daveren John Reyes Cordero
 
+#![deprecated(
+    note = "fabulist_derive is deprecated; use the compiler toolchain under compiler/ and the fabulate CLI instead"
+)]
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, Error};
 

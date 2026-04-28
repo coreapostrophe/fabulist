@@ -14,6 +14,7 @@ pub enum CompileErrorKind {
     TypeInference,
     UnclosedDelimiter,
     UninitializedVariable,
+    UnreachablePart { part: String },
     NotCallable,
 }
 
@@ -94,6 +95,7 @@ impl CompileErrorKind {
             CompileErrorKind::TypeInference => "Type Inference",
             CompileErrorKind::UnclosedDelimiter => "Unclosed delimiter",
             CompileErrorKind::UninitializedVariable => "Uninitialized variable",
+            CompileErrorKind::UnreachablePart { .. } => "Unreachable part",
             CompileErrorKind::NotCallable => "Not callable",
         }
     }
@@ -115,6 +117,9 @@ impl CompileErrorKind {
             }
             CompileErrorKind::UninitializedVariable => {
                 "Variable used before initialization".to_string()
+            }
+            CompileErrorKind::UnreachablePart { part } => {
+                format!("Part '{}' is unreachable from the story start", part)
             }
             CompileErrorKind::TypeInference => "Unable to infer type".to_string(),
             CompileErrorKind::ExpectedSymbol { expected, found } => {

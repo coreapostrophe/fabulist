@@ -6,11 +6,13 @@ use fabc_parser::ast::init::Init;
 use fabc_parser::Parsable;
 
 use crate::{
+    reachability::StoryReachability,
     symbol_table::SymbolTable,
     types::{ModuleSymbolType, StorySymbolType, SymbolAnnotation},
 };
 
 pub mod implementations;
+mod reachability;
 pub mod symbol_table;
 #[cfg(test)]
 pub mod test_utils;
@@ -30,6 +32,7 @@ pub struct AnalyzerResult {
     pub story_sym_annotations: HashMap<usize, SymbolAnnotation<StorySymbolType>>,
     pub mod_sym_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
     pub errors: Vec<Error>,
+    pub warnings: Vec<Error>,
 }
 
 #[derive(Default)]
@@ -38,7 +41,9 @@ pub struct Analyzer {
     mod_sym_table: SymbolTable<ModuleSymbolType>,
     story_sym_annotations: HashMap<usize, SymbolAnnotation<StorySymbolType>>,
     mod_sym_annotations: HashMap<usize, SymbolAnnotation<ModuleSymbolType>>,
+    story_reachability: Option<StoryReachability>,
     errors: Vec<Error>,
+    warnings: Vec<Error>,
 }
 
 impl Analyzer {
@@ -53,6 +58,7 @@ impl Analyzer {
             story_sym_annotations: analyzer.story_sym_annotations,
             mod_sym_annotations: analyzer.mod_sym_annotations,
             errors: analyzer.errors,
+            warnings: analyzer.warnings,
         }
     }
 
@@ -90,7 +96,35 @@ impl Analyzer {
         self.mod_sym_annotations.insert(node_id, symbol);
     }
 
+    pub(crate) fn begin_story_reachability(&mut self, reachability: StoryReachability) {
+        self.story_reachability = Some(reachability);
+    }
+
+    pub(crate) fn story_reachability(&self) -> Option<&StoryReachability> {
+        self.story_reachability.as_ref()
+    }
+
+    pub(crate) fn set_current_story_part(&mut self, part: Option<String>) {
+        if let Some(reachability) = self.story_reachability.as_mut() {
+            reachability.set_current_part(part);
+        }
+    }
+
+    pub(crate) fn record_story_target_reference(&mut self, target: Option<String>) {
+        if let Some(reachability) = self.story_reachability.as_mut() {
+            reachability.record_target(target);
+        }
+    }
+
+    pub(crate) fn take_story_reachability(&mut self) -> Option<StoryReachability> {
+        self.story_reachability.take()
+    }
+
     pub(crate) fn push_error(&mut self, error: Error) {
         self.errors.push(error);
+    }
+
+    pub(crate) fn push_warning(&mut self, warning: Error) {
+        self.warnings.push(warning);
     }
 }

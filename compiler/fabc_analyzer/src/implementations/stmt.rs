@@ -14,6 +14,7 @@ use fabc_parser::ast::stmt::{
 };
 
 use crate::{
+    reachability::record_story_target,
     types::{DataType, ModuleSymbolType, StorySymbolType},
     AnalysisResult, Analyzable, Analyzer,
 };
@@ -70,6 +71,8 @@ impl Analyzable for ExprStmt {
 
 impl Analyzable for GotoStmt {
     fn analyze(&self, analyzer: &mut Analyzer) -> AnalysisResult {
+        record_story_target(&self.target, analyzer);
+
         if let Expr::Primary {
             value: Primary::Primitive(Primitive::Identifier { name, .. }),
             ..

@@ -437,10 +437,12 @@ fn run() -> Result<(), Box<dyn StdError>> {
         match event {
             StoryEvent::Narration(view) => {
                 println!("{}", view.text);
+                prompt_continue()?;
                 event = machine.advance()?;
             }
             StoryEvent::Dialogue(view) => {
                 println!("[{}] {}", view.speaker, view.text);
+                prompt_continue()?;
                 event = machine.advance()?;
             }
             StoryEvent::Selection(selection) => {
@@ -454,6 +456,17 @@ fn run() -> Result<(), Box<dyn StdError>> {
             StoryEvent::Finished => return Ok(()),
         }
     }
+}
+
+fn prompt_continue() -> io::Result<()> {
+    let stdin = io::stdin();
+    let mut line = String::new();
+
+    print!("> ");
+    io::stdout().flush()?;
+    stdin.read_line(&mut line)?;
+
+    Ok(())
 }
 
 fn prompt_choice(choice_count: usize) -> io::Result<usize> {
