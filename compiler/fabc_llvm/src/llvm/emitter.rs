@@ -637,3 +637,72 @@ impl<'ctx> LlvmEmitter<'ctx> {
             .is_some()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use inkwell::context::Context;
+
+    use super::LlvmEmitter;
+    use crate::ir::{
+        BinaryOperator, Block, Expr, FunctionSpec, Literal, MemberSegment, PartSpec, Stmt,
+        StoryProgram,
+    };
+
+    #[test]
+    fn emitter_generates_story_start_function_and_runtime_calls() {
+        let context = Context::create();
+        let artifact = LlvmEmitter::new(&context, "emitter_test")
+            .expect("create emitter")
+            .emit(&program_with_addition_and_goto())
+            .expect("emit llvm artifact");
+
+        let ir = artifact.module.print_to_string().to_string();
+        assert!(ir.contains("fabc_story_start"));
+        assert!(ir.contains("fabc_fn_0"));
+        assert!(ir.contains("fabc_rt_binary_add"));
+        assert_eq!(
+            artifact.function_symbols.get(&0).map(String::as_str),
+            Some("fabc_fn_0")
+        );
+    }
+
+    fn program_with_addition_and_goto() -> StoryProgram {
+        StoryProgram {
+            start_part: "part_1".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![
+                PartSpec {
+                    id: "part_1".to_string(),
+                    steps: Vec::new(),
+                },
+                PartSpec {
+                    id: "part_2".to_string(),
+                    steps: Vec::new(),
+                },
+            ],
+            functions: vec![FunctionSpec {
+                id: 0,
+                node_id: 0,
+                params: Vec::new(),
+                body: Block {
+                    statements: vec![
+                        Stmt::Expr(Expr::Assignment {
+                            target: Box::new(Expr::MemberAccess {
+                                base: Box::new(Expr::Context),
+                                members: vec![MemberSegment::Key("total".to_string())],
+                            }),
+                            value: Box::new(Expr::Binary {
+                                left: Box::new(Expr::Literal(Literal::Number(10.0))),
+                                operator: BinaryOperator::Add,
+                                right: Box::new(Expr::Literal(Literal::Number(20.0))),
+                            }),
+                        }),
+                        Stmt::Goto(Expr::StoryReference("part_2".to_string())),
+                    ],
+                },
+            }],
+        }
+    }
+}

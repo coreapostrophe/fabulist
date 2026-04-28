@@ -1,3 +1,8 @@
+use std::{
+    path::{Path, PathBuf},
+    time::{SystemTime, UNIX_EPOCH},
+};
+
 pub const SIMPLE_STORY: &str = r##"
 Story { start:  "dialogue_1" }
 
@@ -45,3 +50,19 @@ Story { start:  "part_1" }
 [Hero]
 > "I don't trust you."
 "##;
+
+pub fn temp_case_dir(name: &str) -> PathBuf {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("time went backwards")
+        .as_nanos();
+    std::env::temp_dir().join(format!("{name}-{nonce}"))
+}
+
+pub fn workspace_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root should exist")
+        .to_path_buf()
+}

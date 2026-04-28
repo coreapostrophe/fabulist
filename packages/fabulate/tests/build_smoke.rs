@@ -1,10 +1,10 @@
 use std::{
     env, fs,
     io::Write,
-    path::PathBuf,
     process::{Command, Stdio},
-    time::{SystemTime, UNIX_EPOCH},
 };
+
+use fabc_reg_test::temp_case_dir;
 
 #[test]
 fn build_command_emits_runnable_standalone_executable() {
@@ -90,12 +90,4 @@ fn build_command_emits_runnable_standalone_executable() {
 
 fn fabulate_bin() -> String {
     env!("CARGO_BIN_EXE_fabulate").to_owned()
-}
-
-fn temp_case_dir(name: &str) -> PathBuf {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("time went backwards")
-        .as_nanos();
-    env::temp_dir().join(format!("{name}-{nonce}"))
 }

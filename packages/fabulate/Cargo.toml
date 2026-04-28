@@ -23,3 +23,6 @@ llvm17-0-no-llvm-linking = ["fabc/llvm17-0-no-llvm-linking"]
 thiserror.workspace = true
 clap = { version = "4.5.53", features = ["derive"] }
 fabc = { path = "../../compiler/fabc", default-features = false }
+
+[dev-dependencies]
+fabc_reg_test = { path = "../../compiler/fabc_reg_test" }

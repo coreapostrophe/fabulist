@@ -383,10 +383,12 @@ fn set_last_error(error: String) {
 fn with_active_host<T>(
     f: impl FnOnce(&dyn CompiledFunctionHost) -> Result<T, String>,
 ) -> Result<T, String> {
-    ACTIVE_HOST.with(|slot| match *slot.borrow() {
+    let dispatch = ACTIVE_HOST.with(|slot| *slot.borrow());
+
+    match dispatch {
         Some(dispatch) => f(&ActiveCompiledFunctionHostRef { dispatch }),
         None => Err("compiled function host is not active".to_string()),
-    })
+    }
 }
 
 struct ActiveCompiledFunctionHostRef {
@@ -807,5 +809,241 @@ pub unsafe extern "C" fn fabc_rt_outcome_into_value(outcome: RawPtr) -> RawPtr {
         NativeOutcome::Continue => box_value(Value::None),
         NativeOutcome::Return(value) => box_value(value),
         NativeOutcome::Goto(target) => box_value(Value::StoryRef(target)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::BTreeMap, rc::Rc};
+
+    use fabc_ir::{
+        Block, DialogueSpec, FunctionSpec, PartSpec, QuoteSpec, SelectionSpec, StepSpec,
+        StoryProgram,
+    };
+
+    use super::*;
+    use crate::{DialogueView, StoryEvent, StoryMachine};
+
+    static NO_PARAMS: &[&str] = &[];
+
+    #[test]
+    fn linked_host_drives_story_machine_and_updates_context() {
+        let host = Rc::new(LinkedCompiledFunctionHost::new(&[
+            LinkedFunctionDescriptor {
+                id: 0,
+                symbol: "fabc_fn_0",
+                params: NO_PARAMS,
+                function: compiled_sum_and_goto,
+            },
+        ]));
+        let program = story_program_with_selection(
+            "Hero",
+            "Hello there!",
+            "Hi!",
+            "Villain",
+            "I've been expecting you.",
+            vec![function_spec(0)],
+        );
+
+        let mut machine = StoryMachine::with_compiled_executor(program, BTreeMap::new(), host)
+            .expect("build story machine");
+
+        let event = machine.start().expect("start compiled story");
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Hero".to_string(),
+                text: "Hello there!".to_string(),
+                properties: Default::default(),
+            })
+        );
+
+        let event = machine.advance().expect("reach selection");
+        let StoryEvent::Selection(selection) = event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices[0].text, "Hi!");
+
+        let event = machine.choose(0).expect("resolve compiled choice");
+        assert_eq!(machine.context_value("total"), Some(Value::Number(30.0)));
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Villain".to_string(),
+                text: "I've been expecting you.".to_string(),
+                properties: Default::default(),
+            })
+        );
+    }
+
+    #[test]
+    fn linked_host_propagates_nested_closure_goto() {
+        let host = Rc::new(LinkedCompiledFunctionHost::new(&[
+            LinkedFunctionDescriptor {
+                id: 0,
+                symbol: "fabc_fn_0",
+                params: NO_PARAMS,
+                function: compiled_nested_jump,
+            },
+            LinkedFunctionDescriptor {
+                id: 1,
+                symbol: "fabc_fn_1",
+                params: NO_PARAMS,
+                function: compiled_inner_goto,
+            },
+        ]));
+        let program = story_program_with_selection(
+            "Guide",
+            "Choose carefully.",
+            "Jump",
+            "Guide",
+            "Nested goto worked.",
+            vec![function_spec(0), function_spec(1)],
+        );
+
+        let mut machine = StoryMachine::with_compiled_executor(program, BTreeMap::new(), host)
+            .expect("build story machine");
+
+        let event = machine.start().expect("start compiled story");
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Guide".to_string(),
+                text: "Choose carefully.".to_string(),
+                properties: Default::default(),
+            })
+        );
+
+        let event = machine.advance().expect("reach selection");
+        let StoryEvent::Selection(selection) = event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices[0].text, "Jump");
+
+        let event = machine.choose(0).expect("resolve compiled choice");
+        assert_eq!(machine.context_value("after_jump"), None);
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Guide".to_string(),
+                text: "Nested goto worked.".to_string(),
+                properties: Default::default(),
+            })
+        );
+    }
+
+    fn story_program_with_selection(
+        intro_speaker: &str,
+        intro_text: &str,
+        choice_text: &str,
+        outro_speaker: &str,
+        outro_text: &str,
+        functions: Vec<FunctionSpec>,
+    ) -> StoryProgram {
+        StoryProgram {
+            start_part: "part_1".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![
+                PartSpec {
+                    id: "part_1".to_string(),
+                    steps: vec![
+                        StepSpec::Dialogue(DialogueSpec {
+                            speaker: intro_speaker.to_string(),
+                            quote: QuoteSpec {
+                                node_id: 0,
+                                text: intro_text.to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: None,
+                            },
+                        }),
+                        StepSpec::Selection(SelectionSpec {
+                            choices: vec![QuoteSpec {
+                                node_id: 1,
+                                text: choice_text.to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: Some(0),
+                            }],
+                        }),
+                    ],
+                },
+                PartSpec {
+                    id: "part_2".to_string(),
+                    steps: vec![StepSpec::Dialogue(DialogueSpec {
+                        speaker: outro_speaker.to_string(),
+                        quote: QuoteSpec {
+                            node_id: 2,
+                            text: outro_text.to_string(),
+                            properties: BTreeMap::new(),
+                            next_action: None,
+                        },
+                    })],
+                },
+            ],
+            functions,
+        }
+    }
+
+    fn function_spec(id: usize) -> FunctionSpec {
+        FunctionSpec {
+            id,
+            node_id: id,
+            params: Vec::new(),
+            body: Block {
+                statements: Vec::new(),
+            },
+        }
+    }
+
+    unsafe extern "C" fn compiled_sum_and_goto(_frame: RawPtr, context: RawPtr) -> RawPtr {
+        let context_value = unsafe { fabc_rt_context_value(context) };
+        let key = unsafe { string_value("total") };
+        let sum =
+            unsafe { fabc_rt_binary_add(fabc_rt_value_number(10.0), fabc_rt_value_number(20.0)) };
+        unsafe { fabc_rt_member_assign(context_value, key, sum) };
+
+        // SAFETY: `context_value` originated from `fabc_rt_context_value` in this function.
+        unsafe {
+            drop(Box::from_raw(context_value as *mut Value));
+        }
+
+        let target = unsafe { fabc_rt_value_story_ref("part_2".as_ptr().cast(), 6) };
+        unsafe { fabc_rt_outcome_goto(target) }
+    }
+
+    unsafe extern "C" fn compiled_nested_jump(frame: RawPtr, context: RawPtr) -> RawPtr {
+        let closure_symbol = b"fabc_fn_1";
+        let closure = unsafe { fabc_rt_closure_new(closure_symbol.as_ptr().cast(), 9, frame) };
+        let mut args: [RawPtr; 0] = [];
+        let outcome = unsafe { fabc_rt_call(frame, context, closure, args.as_mut_ptr(), 0) };
+
+        if unsafe { fabc_rt_outcome_kind(outcome) } == 2 {
+            return outcome;
+        }
+
+        let ignored = unsafe { fabc_rt_outcome_into_value(outcome) };
+        // SAFETY: `ignored` originated from `fabc_rt_outcome_into_value` in this function.
+        unsafe {
+            drop(Box::from_raw(ignored as *mut Value));
+        }
+
+        let context_value = unsafe { fabc_rt_context_value(context) };
+        let key = unsafe { string_value("after_jump") };
+        unsafe { fabc_rt_member_assign(context_value, key, fabc_rt_value_boolean(true)) };
+
+        // SAFETY: `context_value` originated from `fabc_rt_context_value` in this function.
+        unsafe {
+            drop(Box::from_raw(context_value as *mut Value));
+        }
+
+        fabc_rt_outcome_continue()
+    }
+
+    unsafe extern "C" fn compiled_inner_goto(_frame: RawPtr, _context: RawPtr) -> RawPtr {
+        let target = unsafe { fabc_rt_value_story_ref("part_2".as_ptr().cast(), 6) };
+        unsafe { fabc_rt_outcome_goto(target) }
+    }
+
+    unsafe fn string_value(text: &str) -> RawPtr {
+        unsafe { fabc_rt_value_string(text.as_ptr().cast(), text.len() as u64) }
     }
 }

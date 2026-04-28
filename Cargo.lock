@@ -445,6 +445,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "fabc",
+ "fabc_reg_test",
  "thiserror 2.0.18",
 ]
 

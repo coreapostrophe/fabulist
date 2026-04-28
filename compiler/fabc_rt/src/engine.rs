@@ -629,3 +629,308 @@ impl StoryMachine {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use fabc_ir::{
+        BinaryOperator, Block, DialogueSpec, Expr, FunctionSpec, Literal, MemberSegment, PartSpec,
+        QuoteSpec, SelectionSpec, StepSpec, Stmt, StoryProgram,
+    };
+
+    use super::{DialogueView, StoryEvent, StoryMachine};
+    use crate::{RuntimeError, Value};
+
+    #[test]
+    fn interpreted_machine_updates_context_and_goto_targets() {
+        let mut machine =
+            StoryMachine::new(program_with_context_mutation()).expect("build interpreted machine");
+
+        let event = machine.start().expect("start story");
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Hero".to_string(),
+                text: "Hello there!".to_string(),
+                properties: Default::default(),
+            })
+        );
+
+        let event = machine.advance().expect("reach selection");
+        let StoryEvent::Selection(selection) = event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices[0].text, "Hi!");
+
+        let event = machine.choose(0).expect("resolve choice");
+        assert_eq!(machine.context_value("total"), Some(Value::Number(30.0)));
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Villain".to_string(),
+                text: "I've been expecting you.".to_string(),
+                properties: Default::default(),
+            })
+        );
+    }
+
+    #[test]
+    fn interpreted_machine_propagates_nested_closure_goto() {
+        let mut machine =
+            StoryMachine::new(program_with_nested_goto()).expect("build interpreted machine");
+
+        let event = machine.start().expect("start story");
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Guide".to_string(),
+                text: "Choose carefully.".to_string(),
+                properties: Default::default(),
+            })
+        );
+
+        let event = machine.advance().expect("reach selection");
+        let StoryEvent::Selection(selection) = event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices[0].text, "Jump");
+
+        let event = machine.choose(0).expect("resolve nested choice");
+        assert_eq!(machine.context_value("after_jump"), None);
+        assert_eq!(
+            event,
+            StoryEvent::Dialogue(DialogueView {
+                speaker: "Guide".to_string(),
+                text: "Nested goto worked.".to_string(),
+                properties: Default::default(),
+            })
+        );
+    }
+
+    #[test]
+    fn machine_reports_selection_state_errors() {
+        let mut selection_machine =
+            StoryMachine::new(program_with_selection_only()).expect("build selection machine");
+        let selection_event = selection_machine.start().expect("start selection story");
+        let StoryEvent::Selection(selection) = selection_event else {
+            panic!("expected selection event");
+        };
+        assert_eq!(selection.choices.len(), 1);
+
+        assert!(matches!(
+            selection_machine.advance(),
+            Err(RuntimeError::ChoiceExpected)
+        ));
+        assert!(matches!(
+            selection_machine.choose(1),
+            Err(RuntimeError::InvalidChoice { index: 1, len: 1 })
+        ));
+
+        let mut dialogue_machine =
+            StoryMachine::new(program_with_dialogue_only()).expect("build dialogue machine");
+        dialogue_machine.start().expect("start dialogue story");
+        assert!(matches!(
+            dialogue_machine.choose(0),
+            Err(RuntimeError::NotInSelection)
+        ));
+    }
+
+    #[test]
+    fn machine_rejects_missing_start_part() {
+        let error = StoryMachine::new(StoryProgram {
+            start_part: "missing".to_string(),
+            metadata: BTreeMap::new(),
+            parts: Vec::new(),
+            functions: Vec::new(),
+        })
+        .expect_err("missing start part should fail");
+
+        assert_eq!(error, RuntimeError::UnknownPart("missing".to_string()));
+    }
+
+    fn program_with_context_mutation() -> StoryProgram {
+        StoryProgram {
+            start_part: "part_1".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![
+                PartSpec {
+                    id: "part_1".to_string(),
+                    steps: vec![
+                        StepSpec::Dialogue(DialogueSpec {
+                            speaker: "Hero".to_string(),
+                            quote: QuoteSpec {
+                                node_id: 0,
+                                text: "Hello there!".to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: None,
+                            },
+                        }),
+                        StepSpec::Selection(SelectionSpec {
+                            choices: vec![QuoteSpec {
+                                node_id: 1,
+                                text: "Hi!".to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: Some(0),
+                            }],
+                        }),
+                    ],
+                },
+                PartSpec {
+                    id: "part_2".to_string(),
+                    steps: vec![StepSpec::Dialogue(DialogueSpec {
+                        speaker: "Villain".to_string(),
+                        quote: QuoteSpec {
+                            node_id: 2,
+                            text: "I've been expecting you.".to_string(),
+                            properties: BTreeMap::new(),
+                            next_action: None,
+                        },
+                    })],
+                },
+            ],
+            functions: vec![FunctionSpec {
+                id: 0,
+                node_id: 0,
+                params: Vec::new(),
+                body: Block {
+                    statements: vec![
+                        Stmt::Let {
+                            name: "x".to_string(),
+                            initializer: Expr::Literal(Literal::Number(10.0)),
+                        },
+                        Stmt::Let {
+                            name: "y".to_string(),
+                            initializer: Expr::Literal(Literal::Number(20.0)),
+                        },
+                        Stmt::Expr(Expr::Assignment {
+                            target: Box::new(Expr::MemberAccess {
+                                base: Box::new(Expr::Context),
+                                members: vec![MemberSegment::Key("total".to_string())],
+                            }),
+                            value: Box::new(Expr::Binary {
+                                left: Box::new(Expr::Identifier("x".to_string())),
+                                operator: BinaryOperator::Add,
+                                right: Box::new(Expr::Identifier("y".to_string())),
+                            }),
+                        }),
+                        Stmt::Goto(Expr::StoryReference("part_2".to_string())),
+                    ],
+                },
+            }],
+        }
+    }
+
+    fn program_with_nested_goto() -> StoryProgram {
+        StoryProgram {
+            start_part: "part_1".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![
+                PartSpec {
+                    id: "part_1".to_string(),
+                    steps: vec![
+                        StepSpec::Dialogue(DialogueSpec {
+                            speaker: "Guide".to_string(),
+                            quote: QuoteSpec {
+                                node_id: 0,
+                                text: "Choose carefully.".to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: None,
+                            },
+                        }),
+                        StepSpec::Selection(SelectionSpec {
+                            choices: vec![QuoteSpec {
+                                node_id: 1,
+                                text: "Jump".to_string(),
+                                properties: BTreeMap::new(),
+                                next_action: Some(0),
+                            }],
+                        }),
+                    ],
+                },
+                PartSpec {
+                    id: "part_2".to_string(),
+                    steps: vec![StepSpec::Dialogue(DialogueSpec {
+                        speaker: "Guide".to_string(),
+                        quote: QuoteSpec {
+                            node_id: 2,
+                            text: "Nested goto worked.".to_string(),
+                            properties: BTreeMap::new(),
+                            next_action: None,
+                        },
+                    })],
+                },
+            ],
+            functions: vec![
+                FunctionSpec {
+                    id: 0,
+                    node_id: 0,
+                    params: Vec::new(),
+                    body: Block {
+                        statements: vec![
+                            Stmt::Let {
+                                name: "jump".to_string(),
+                                initializer: Expr::Closure(1),
+                            },
+                            Stmt::Expr(Expr::Call {
+                                callee: Box::new(Expr::Identifier("jump".to_string())),
+                                arguments: Vec::new(),
+                            }),
+                            Stmt::Expr(Expr::Assignment {
+                                target: Box::new(Expr::MemberAccess {
+                                    base: Box::new(Expr::Context),
+                                    members: vec![MemberSegment::Key("after_jump".to_string())],
+                                }),
+                                value: Box::new(Expr::Literal(Literal::Boolean(true))),
+                            }),
+                        ],
+                    },
+                },
+                FunctionSpec {
+                    id: 1,
+                    node_id: 1,
+                    params: Vec::new(),
+                    body: Block {
+                        statements: vec![Stmt::Goto(Expr::StoryReference("part_2".to_string()))],
+                    },
+                },
+            ],
+        }
+    }
+
+    fn program_with_selection_only() -> StoryProgram {
+        StoryProgram {
+            start_part: "intro".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![PartSpec {
+                id: "intro".to_string(),
+                steps: vec![StepSpec::Selection(SelectionSpec {
+                    choices: vec![QuoteSpec {
+                        node_id: 0,
+                        text: "Only option".to_string(),
+                        properties: BTreeMap::new(),
+                        next_action: None,
+                    }],
+                })],
+            }],
+            functions: Vec::new(),
+        }
+    }
+
+    fn program_with_dialogue_only() -> StoryProgram {
+        StoryProgram {
+            start_part: "intro".to_string(),
+            metadata: BTreeMap::new(),
+            parts: vec![PartSpec {
+                id: "intro".to_string(),
+                steps: vec![StepSpec::Narration(QuoteSpec {
+                    node_id: 0,
+                    text: "Done".to_string(),
+                    properties: BTreeMap::new(),
+                    next_action: None,
+                })],
+            }],
+            functions: Vec::new(),
+        }
+    }
+}
