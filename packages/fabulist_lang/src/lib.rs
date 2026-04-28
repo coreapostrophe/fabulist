@@ -1,7 +1,4 @@
 #![warn(missing_docs)]
-#![deprecated(
-    note = "fabulist_lang is deprecated; use the compiler toolchain under compiler/ and the fabulate CLI instead"
-)]
 
 //! # Fabulist Language Library
 //!
