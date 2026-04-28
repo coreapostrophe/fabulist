@@ -405,7 +405,7 @@ fn main() {
 fn standalone_launcher_main() -> &'static str {
     r#"use std::{
     error::Error as StdError,
-    io::{self, Write},
+    io::{self, IsTerminal, Write},
     process::ExitCode,
     rc::Rc,
 };
@@ -460,10 +460,16 @@ fn run() -> Result<(), Box<dyn StdError>> {
 
 fn prompt_continue() -> io::Result<()> {
     let stdin = io::stdin();
+    let mut stdout = io::stdout();
+
+    if !stdin.is_terminal() || !stdout.is_terminal() {
+        return Ok(());
+    }
+
     let mut line = String::new();
 
-    print!("> ");
-    io::stdout().flush()?;
+    write!(stdout, "> ")?;
+    stdout.flush()?;
     stdin.read_line(&mut line)?;
 
     Ok(())

@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 
 use fabc::{CompiledBundle, StoryEvent};
@@ -48,10 +48,16 @@ impl Play {
 
 fn prompt_continue() -> Result<()> {
     let stdin = io::stdin();
+    let mut stdout = io::stdout();
+
+    if !stdin.is_terminal() || !stdout.is_terminal() {
+        return Ok(());
+    }
+
     let mut line = String::new();
 
-    print!("> ");
-    io::stdout().flush()?;
+    write!(stdout, "> ")?;
+    stdout.flush()?;
     stdin.read_line(&mut line)?;
 
     Ok(())
